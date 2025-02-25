@@ -1,0 +1,209 @@
+/* 
+ * Arquivo: public/assets/css/shares.css
+ * Estilos específicos para o módulo de Compartilhamento de Agendas
+ */
+
+/* Cabeçalho da página */
+.agenda-meta {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.agenda-meta h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Cards e containers */
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #004a8f;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.content-container {
+  margin-bottom: 2rem;
+}
+
+/* Espaçamentos */
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+/* URL pública */
+.public-url-container {
+  margin-top: 1rem;
+}
+
+.input-group {
+  display: flex;
+}
+
+.input-group .form-control {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Formulário de compartilhamento */
+.share-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.form-group-large {
+  flex: 3;
+}
+
+.form-group-small {
+  flex: 1;
+}
+
+/* Tabela de compartilhamentos */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 2px solid #ddd;
+  font-weight: 600;
+}
+
+.table td {
+  padding: 0.75rem;
+  border-top: 1px solid #ddd;
+}
+
+/* Toggle Switch para permissões */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 150px;
+  height: 30px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #004a8f;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(30px);
+}
+
+.toggle-label {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 12px;
+  color: white;
+  pointer-events: none;
+}
+
+.permission-form {
+  margin: 0;
+}
+
+/* Agendas compartilhadas */
+.agenda-owner {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.agenda-permission {
+  margin-top: 1rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-group-large,
+  .form-group-small {
+    width: 100%;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-group .form-control,
+  .input-group .btn {
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+}

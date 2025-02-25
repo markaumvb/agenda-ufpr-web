@@ -1,0 +1,157 @@
+<?php
+// Arquivo: app/views/shares/index.php
+?>
+
+<div class="page-header">
+    <div class="header-container">
+        <h1>Compartilhar Agenda</h1>
+        <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-secondary">Voltar para Agendas</a>
+    </div>
+    
+    <div class="agenda-meta">
+        <h2><?= htmlspecialchars($agenda['title']) ?></h2>
+        <span class="badge <?= $agenda['is_public'] ? 'badge-success' : 'badge-secondary' ?>">
+            <?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?>
+        </span>
+    </div>
+</div>
+
+<div class="content-container">
+    <!-- Configuração de visibilidade pública -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Visibilidade da Agenda</h3>
+        </div>
+        <div class="card-body">
+            <p>Status atual: <strong><?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?></strong></p>
+            
+            <?php if ($agenda['is_public']): ?>
+                <?php 
+                // Gerar URL pública
+                $publicUrl = PUBLIC_URL . '/public-agenda/' . ($agenda['public_hash'] ?? '');
+                ?>
+                <div class="public-url-container">
+                    <p>URL Pública:</p>
+                    <div class="input-group">
+                        <input type="text" value="<?= $publicUrl ?>" class="form-control" id="publicUrl" readonly>
+                        <button class="btn btn-primary" onclick="copyToClipboard('publicUrl')">Copiar</button>
+                    </div>
+                    <small class="form-text">Esta URL pode ser compartilhada com qualquer pessoa para visualização da agenda.</small>
+                </div>
+            <?php else: ?>
+                <p>Esta agenda está definida como privada. Para gerar uma URL pública, primeiro é necessário tornar a agenda pública.</p>
+            <?php endif; ?>
+            
+            <form action="<?= PUBLIC_URL ?>/agendas/toggle-public" method="post" class="mt-3">
+                <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
+                
+                <?php if ($agenda['is_public']): ?>
+                    <button type="submit" class="btn btn-danger">Tornar Privada</button>
+                <?php else: ?>
+                    <button type="submit" class="btn btn-success">Tornar Pública</button>
+                <?php endif; ?>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Compartilhamento com usuários -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3>Compartilhar com Usuários</h3>
+        </div>
+        <div class="card-body">
+            <form action="<?= PUBLIC_URL ?>/shares/add" method="post" class="share-form">
+                <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+                
+                <div class="form-row">
+                    <div class="form-group form-group-large">
+                        <label for="username">Nome de Usuário</label>
+                        <input type="text" id="username" name="username" required class="form-control" placeholder="Digite o nome de usuário para compartilhar">
+                    </div>
+                    
+                    <div class="form-group form-group-small">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="can_edit" value="1"> 
+                            <span class="checkmark"></span>
+                            Pode Editar
+                        </label>
+                    </div>
+                    
+                    <div class="form-group form-group-small">
+                        <button type="submit" class="btn btn-primary">Compartilhar</button>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <h4>Usuários com Acesso</h4>
+                
+                <?php if (empty($shares)): ?>
+                    <div class="empty-state">
+                        <p>Esta agenda ainda não foi compartilhada com nenhum usuário.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Permissão</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($shares as $share): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($share['username']) ?></td>
+                                        <td><?= htmlspecialchars($share['name']) ?></td>
+                                        <td><?= htmlspecialchars($share['email']) ?></td>
+                                        <td>
+                                            <form action="<?= PUBLIC_URL ?>/shares/update-permission" method="post" class="permission-form">
+                                                <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+                                                <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
+                                                
+                                                <label class="toggle-switch">
+                                                    <input type="checkbox" name="can_edit" onchange="this.form.submit()" <?= $share['can_edit'] ? 'checked' : '' ?>>
+                                                    <span class="toggle-slider"></span>
+                                                    <span class="toggle-label"><?= $share['can_edit'] ? 'Pode Editar' : 'Apenas Ver' ?></span>
+                                                </label>
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <form action="<?= PUBLIC_URL ?>/shares/remove" method="post" onsubmit="return confirm('Tem certeza que deseja remover o compartilhamento com este usuário?')">
+                                                <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+                                                <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-danger">Remover</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função para copiar URL para a área de transferência
+function copyToClipboard(elementId) {
+    const copyText = document.getElementById(elementId);
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); // Para dispositivos móveis
+    document.execCommand("copy");
+    
+    // Feedback visual
+    const button = copyText.nextElementSibling;
+    const originalText = button.textContent;
+    button.textContent = "Copiado!";
+    setTimeout(() => {
+        button.textContent = originalText;
+    }, 2000);
+}
+</script>

@@ -1,0 +1,25 @@
+# Arquivo: agenda_ufpr/public/.htaccess
+
+# Habilitar o módulo de reescrita de URL
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Definir diretório base (importante ajustar se necessário)
+    RewriteBase /agenda_ufpr/public
+    
+    # Não aplicar regras de reescrita a arquivos e diretórios existentes
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Redirecionar todas as requisições para o index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Impedir listagem de diretórios
+Options -Indexes
+
+# Definir charset padrão
+AddDefaultCharset UTF-8
+
+# Definir timezone padrão
+php_value date.timezone "America/Sao_Paulo"
