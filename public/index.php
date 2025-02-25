@@ -1,11 +1,4 @@
 <?php
-// Arquivo: agenda_ufpr/public/index.php
-
-/**
- * Ponto de entrada da aplicação
- * Este arquivo funciona como um front controller simples
- */
-
 // Carregar configurações e constantes
 require_once __DIR__ . '/../app/config/constants.php';
 

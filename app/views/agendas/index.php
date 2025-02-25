@@ -29,8 +29,6 @@
         <p>Nenhuma agenda encontrada.</p>
         <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
             <p>Tente uma busca diferente ou <a href="<?= PUBLIC_URL ?>/agendas">veja todas as agendas</a>.</p>
-        <?php else: ?>
-            <p>Que tal <a href="<?= PUBLIC_URL ?>/agendas/new">criar sua primeira agenda</a>?</p>
         <?php endif; ?>
     </div>
 <?php else: ?>

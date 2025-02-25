@@ -1,7 +1,3 @@
-<?php
-// Arquivo: agenda_ufpr/app/views/auth/login.php
-?>
-
 <div class="form-container">
     <h2 style="text-align: center; margin-bottom: 1.5rem;">Login</h2>
     

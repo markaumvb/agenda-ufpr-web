@@ -1,7 +1,3 @@
-<?php
-// Arquivo: agenda_ufpr/app/views/home.php
-?>
-
 <div class="container">
     <div class="hero-section">
         <h1>Bem-vindo ao Sistema de Agendamento UFPR</h1>
