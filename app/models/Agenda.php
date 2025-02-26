@@ -284,7 +284,7 @@ public function getAllAccessibleByUser($userId, $search = null) {
             return [];
         }
         
-        // Versão mais simples que deve funcionar em todos os ambientes
+        // Buscar as agendas do usuário e compartilhadas
         $query = "
             SELECT 
                 a.*,

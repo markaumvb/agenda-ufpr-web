@@ -18,9 +18,9 @@
     
     // Carregar CSS para agendas
 // No app/views/shared/header.php, dentro da seção que carrega CSS específicos
-if (strpos($currentUri, '/agendas/new') !== false || strpos($currentUri, '/agendas/create') !== false) {
-    echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/agendas/create.css">';
-}
+        if (strpos($currentUri, '/agendas') !== false) {
+            echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/agendas.css">';
+        }
     
     // Carregar CSS para compromissos
     if (strpos($currentUri, '/compromissos') !== false) {

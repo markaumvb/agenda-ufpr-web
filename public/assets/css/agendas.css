@@ -1,3 +1,9 @@
+/* 
+ * Arquivo: public/assets/css/agendas.css
+ * Estilos para o módulo de Agendas
+ */
+
+/* Cabeçalho de página */
 .page-header {
   margin-bottom: 2rem;
 }
@@ -7,6 +13,11 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* Pesquisa */
@@ -57,14 +68,29 @@
   font-weight: 600;
 }
 
+.agenda-visibility {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .agenda-card-body {
   padding: 1rem;
   flex: 1;
 }
 
+.agenda-owner {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
 .agenda-description {
   margin-bottom: 1rem;
   line-height: 1.5;
+}
+
+.text-muted {
+  color: #6c757d;
 }
 
 /* Estatísticas de agendas */
@@ -110,6 +136,19 @@
 
 .delete-form {
   display: inline;
+}
+
+/* Estado vazio */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
 }
 
 /* Responsividade */
