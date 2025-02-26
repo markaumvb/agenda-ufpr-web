@@ -134,4 +134,18 @@ class User {
             return false;
         }
     }
+
+    public function getById($id) {
+        try {
+            $query = "SELECT * FROM users WHERE id = :id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar usuário por ID: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

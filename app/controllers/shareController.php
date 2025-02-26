@@ -270,36 +270,54 @@ class ShareController {
         
         // Verificar se o usuário é o dono da agenda
         if (!$this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id'])) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para gerar URL pública para esta agenda';
+            $_SESSION['flash_message'] = 'Você não tem permissão para alterar a visibilidade desta agenda';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/public/agendas');
             exit;
         }
         
-        // Verificar se a agenda está marcada como pública
+        // Buscar a agenda
         $agenda = $this->agendaModel->getById($agendaId);
         
-        if (!$agenda['is_public']) {
-            // Atualizar a agenda para torná-la pública
-            $this->agendaModel->update($agendaId, [
-                'title' => $agenda['title'],
-                'description' => $agenda['description'],
-                'is_public' => 1,
-                'color' => $agenda['color']
-            ]);
-            
-            $_SESSION['flash_message'] = 'Agenda marcada como pública';
-            $_SESSION['flash_type'] = 'success';
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/public/agendas');
+            exit;
         }
         
-        // Gerar hash único para URL pública se não existir
-        if (empty($agenda['public_hash'])) {
-            $hash = bin2hex(random_bytes(16));
-            
-            // Atualizar o hash na agenda
+        // Definir nova visibilidade (alternar entre público e privado)
+        $newIsPublic = !$agenda['is_public'];
+        
+        // Se estiver tornando a agenda pública, gerar um hash
+        $hash = $agenda['public_hash'];
+        if ($newIsPublic && empty($hash)) {
+            $hash = md5(uniqid(rand(), true));
+        }
+        
+        // Atualizar a agenda
+        $result = $this->agendaModel->update($agendaId, [
+            'title' => $agenda['title'],
+            'description' => $agenda['description'],
+            'is_public' => $newIsPublic,
+            'color' => $agenda['color']
+        ]);
+        
+        // Se estiver tornando a agenda pública, atualizar o hash
+        if ($newIsPublic && empty($agenda['public_hash'])) {
             $this->agendaModel->updatePublicHash($agendaId, $hash);
+        }
+        
+        if ($result) {
+            if ($newIsPublic) {
+                $_SESSION['flash_message'] = 'Agenda marcada como pública com sucesso';
+            } else {
+                $_SESSION['flash_message'] = 'Agenda marcada como privada com sucesso';
+            }
+            $_SESSION['flash_type'] = 'success';
         } else {
-            $hash = $agenda['public_hash'];
+            $_SESSION['flash_message'] = 'Erro ao alterar visibilidade da agenda';
+            $_SESSION['flash_type'] = 'danger';
         }
         
         // Redirecionar para a página de compartilhamentos

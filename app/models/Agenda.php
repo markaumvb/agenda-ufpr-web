@@ -417,6 +417,9 @@ public function updatePublicHash($id, $hash) {
  * @param string $hash Hash público da agenda
  * @return array|bool Dados da agenda ou false se não encontrada
  */
+
+
+
 public function getByPublicHash($hash) {
     try {
         $query = "SELECT * FROM agendas WHERE public_hash = :hash LIMIT 1";
@@ -430,4 +433,5 @@ public function getByPublicHash($hash) {
         return false;
     }
 }
+
 }   

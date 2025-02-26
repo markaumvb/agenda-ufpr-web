@@ -1,5 +1,9 @@
+<?php
+// Arquivo: app/views/auth/login.php
+?>
+
 <div class="form-container">
-    <h2 style="text-align: center; margin-bottom: 1.5rem;">Login</h2>
+    <h2>Login</h2>
     
     <form action="<?= BASE_URL ?>/login-process" method="post">
         <div class="form-group">
@@ -16,9 +20,9 @@
             <button type="submit" class="btn btn-primary">Entrar</button>
         </div>
         
-        <p style="text-align: center; margin-top: 1rem;">
+        <div class="form-info">
             Este sistema utiliza autenticação através do RADIUS da UFPR.<br>
             Utilize suas credenciais institucionais.
-        </p>
+        </div>
     </form>
 </div>

@@ -58,12 +58,10 @@
                         <div class="calendar-day empty-day"></div>
                     <?php else: ?>
                         <div class="calendar-day <?= count($dayData['compromissos']) > 0 ? 'has-events' : '' ?> <?= date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ? 'today' : '' ?>">
-                            <div class="day-header">
-                                <span class="day-number"><?= $dayData['day'] ?></span>
-                                <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
-                                    <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&date=<?= sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ?>" class="add-event" title="Adicionar compromisso">+</a>
-                                <?php endif; ?>
-                            </div>
+                        <div class="day-header">
+                            <span class="day-number"><?= $dayData['day'] ?></span>
+                            <?php /* Remover o código do link com classe add-event */ ?>
+                        </div>
                             
                             <?php if (count($dayData['compromissos']) > 0): ?>
                                 <div class="day-events">

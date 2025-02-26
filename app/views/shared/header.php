@@ -16,11 +16,16 @@
     // Identificar a página atual para carregar apenas o CSS necessário
     $currentUri = $_SERVER['REQUEST_URI'];
     
+
+    if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/forms.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/auth/login.css">';
+    }
+    
     // Carregar CSS para agendas
-// No app/views/shared/header.php, dentro da seção que carrega CSS específicos
-        if (strpos($currentUri, '/agendas') !== false) {
-            echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/agendas.css">';
-        }
+    if (strpos($currentUri, '/agendas') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/agendas.css">';
+    }
     
     // Carregar CSS para compromissos
     if (strpos($currentUri, '/compromissos') !== false) {

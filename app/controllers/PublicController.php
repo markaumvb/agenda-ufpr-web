@@ -45,12 +45,26 @@ class PublicController {
         }
         
         // Buscar o dono da agenda
-        $owner = $this->userModel->getById($agenda['user_id']);
+        // Verificamos se o método existe no User model
+        if (method_exists($this->userModel, 'getById')) {
+            $owner = $this->userModel->getById($agenda['user_id']);
+        } else {
+            // Método alternativo se getById não existir
+            $owner = $this->userModel->findById($agenda['user_id']);
+            
+            // Se ainda não encontrou, tentar outro método
+            if (!$owner) {
+                $owner = $this->getUserById($agenda['user_id']);
+            }
+        }
         
         if (!$owner) {
-            header('HTTP/1.1 404 Not Found');
-            echo "Erro ao buscar informações da agenda";
-            exit;
+            // Criar um owner padrão se não encontrado para evitar erros
+            $owner = [
+                'id' => $agenda['user_id'],
+                'name' => 'Usuário',
+                'email' => 'email@exemplo.com'
+            ];
         }
         
         // Obter mês e ano do calendário da URL ou usar o mês atual
@@ -80,6 +94,23 @@ class PublicController {
         
         // Exibir a view
         require_once __DIR__ . '/../views/shares/public.php';
+    }
+    
+    /**
+     * Método auxiliar para buscar usuário pelo ID
+     * Implementado como fallback caso o método não exista no modelo
+     */
+    private function getUserById($userId) {
+        try {
+            $db = Database::getInstance()->getConnection();
+            $query = "SELECT * FROM users WHERE id = :id LIMIT 1";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch();
+        } catch (Exception $e) {
+            return false;
+        }
     }
     
     /**

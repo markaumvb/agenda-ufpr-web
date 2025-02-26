@@ -191,6 +191,11 @@ $routes = [
         'controller' => 'ShareController',
         'action' => 'shared',
         'method' => 'GET'
+    ],
+    '/shares/toggle-public' => [
+        'controller' => 'ShareController',
+        'action' => 'generatePublicUrl',
+        'method' => 'POST'
     ]
 ];
 
