@@ -6,455 +6,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="script.js" defer></script>
     <title><?= htmlspecialchars($agenda['title']) ?> - Agenda Pública</title>
-    
-    <style>
-        /* Reset e estilos gerais */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-        
-        /* Cabeçalho */
-        header {
-            background-color: <?= $agenda['color'] ?? '#004a8f' ?>;
-            color: #fff;
-            padding: 1.5rem 0;
-            margin-bottom: 2rem;
-        }
-        
-        .header-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        
-        .header-content h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .header-content .description {
-            font-style: italic;
-            opacity: 0.9;
-            max-width: 800px;
-        }
-        
-        .owner-info {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-        
-        /* Calendário */
-        .calendar-container {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .calendar-title {
-            margin: 0;
-            font-size: 1.5rem;
-            color: <?= $agenda['color'] ?? '#004a8f' ?>;
-        }
-        
-        .calendar-navigation {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s;
-            cursor: pointer;
-            border: none;
-        }
-        
-        .btn-outline {
-            background-color: transparent;
-            border: 1px solid #ddd;
-            color: #666;
-        }
-        
-        .btn-outline:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .calendar {
-            border: 1px solid #eee;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            background-color: #f5f5f5;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .weekday {
-            padding: 0.5rem;
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .calendar-week {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            border-bottom: 1px solid #eee;
-        }
-        
-        .calendar-week:last-child {
-            border-bottom: none;
-        }
-        
-        .calendar-day {
-            min-height: 100px;
-            padding: 0.5rem;
-            border-right: 1px solid #eee;
-            position: relative;
-        }
-        
-        .calendar-day:last-child {
-            border-right: none;
-        }
-        
-        .empty-day {
-            background-color: #f9f9f9;
-        }
-        
-        .day-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-        
-        .day-number {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .today .day-number {
-            background-color: <?= $agenda['color'] ?? '#004a8f' ?>;
-            color: #fff;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .has-events {
-            background-color: #f0f8ff;
-        }
-        
-        .day-events {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        
-        /* Eventos no calendário */
-        .event {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: flex;
-            align-items: center;
-            background-color: #e6f0fd;
-            border-left: 3px solid <?= $agenda['color'] ?? '#004a8f' ?>;
-        }
-        
-        .event-status-pendente {
-            border-left-color: #ffc107;
-            background-color: #fff9e6;
-        }
-        
-        .event-status-realizado {
-            border-left-color: #28a745;
-            background-color: #e6f4ea;
-        }
-        
-        .event-status-cancelado {
-            border-left-color: #dc3545;
-            background-color: #f8e6e6;
-            text-decoration: line-through;
-        }
-        
-        .event-status-aguardando_aprovacao {
-            border-left-color: #17a2b8;
-            background-color: #e6f7fa;
-        }
-        
-        .event-time {
-            font-weight: 600;
-            margin-right: 0.5rem;
-        }
-        
-        .more-events {
-            font-size: 0.8rem;
-            text-align: center;
-            color: #666;
-            background-color: #f5f5f5;
-            padding: 0.25rem;
-            border-radius: 4px;
-        }
-        
-        /* Lista de eventos */
-        .events-list-container {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .section-title {
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-            color: <?= $agenda['color'] ?? '#004a8f' ?>;
-        }
-        
-        .events-filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .filter-select, .filter-input {
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .filter-input {
-            min-width: 250px;
-        }
-        
-        .events-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        /* Cards de eventos */
-        .event-card {
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        .event-card.event-status-pendente {
-            border-left: 4px solid #ffc107;
-        }
-        
-        .event-card.event-status-realizado {
-            border-left: 4px solid #28a745;
-        }
-        
-        .event-card.event-status-cancelado {
-            border-left: 4px solid #dc3545;
-        }
-        
-        .event-card.event-status-aguardando_aprovacao {
-            border-left: 4px solid #17a2b8;
-        }
-        
-        .event-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .event-title {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-        
-        .event-card.event-status-cancelado .event-title {
-            text-decoration: line-through;
-        }
-        
-        .badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .badge-pendente {
-            background-color: #fff9e6;
-            color: #ffc107;
-        }
-        
-        .badge-realizado {
-            background-color: #e6f4ea;
-            color: #28a745;
-        }
-        
-        .badge-cancelado {
-            background-color: #f8e6e6;
-            color: #dc3545;
-        }
-        
-        .badge-aguardando_aprovacao {
-            background-color: #e6f7fa;
-            color: #17a2b8;
-        }
-        
-        .event-details {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .event-datetime {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .event-location, .event-recurrence {
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .event-description {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-            border-top: 1px solid #eee;
-        }
-        
-        /* Ícones básicos usando pseudo-elementos */
-        .icon-calendar::before {
-            content: "📅 ";
-        }
-        
-        .icon-clock::before {
-            content: "🕒 ";
-        }
-        
-        .icon-location::before {
-            content: "📍 ";
-        }
-        
-        .icon-repeat::before {
-            content: "🔄 ";
-        }
-        
-        /* Rodapé */
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        /* Estado vazio */
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin-top: 1rem;
-        }
-        
-        .empty-state p {
-            margin-bottom: 1rem;
-        }
-        
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .calendar-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-            
-            .calendar-navigation {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .weekday {
-                font-size: 0.8rem;
-                padding: 0.25rem;
-            }
-            
-            .calendar-day {
-                min-height: 80px;
-                font-size: 0.8rem;
-            }
-            
-            .events-filters {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .filter-input {
-                min-width: auto;
-            }
-            
-            .event-datetime {
-                flex-direction: column;
-                gap: 0.25rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/assets/css/shares/public.css">
+    <script src="<?= PUBLIC_URL ?>/assets/js/shares/public.js" defer></script>
 </head>
 <body>
-    <header>
+    <header style="background-color: <?= $agenda['color'] ?? '#004a8f' ?>;">
         <div class="container">
             <div class="header-content">
                 <h1><?= htmlspecialchars($agenda['title']) ?></h1>
@@ -474,7 +31,7 @@
         <!-- Calendário -->
         <div class="calendar-container">
             <div class="calendar-header">
-                <h2 class="calendar-title"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
+                <h2 class="calendar-title" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
                 <div class="calendar-navigation">
                     <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
                         &laquo; Mês Anterior
@@ -507,7 +64,7 @@
                             <?php else: ?>
                                 <div class="calendar-day <?= count($dayData['compromissos']) > 0 ? 'has-events' : '' ?> <?= date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ? 'today' : '' ?>">
                                     <div class="day-header">
-                                        <span class="day-number"><?= $dayData['day'] ?></span>
+                                        <span class="day-number" style="<?= date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ? 'background-color:' . ($agenda['color'] ?? '#004a8f') . ';' : '' ?>"><?= $dayData['day'] ?></span>
                                     </div>
                                     
                                     <?php if (count($dayData['compromissos']) > 0): ?>
@@ -519,7 +76,7 @@
                                                 // Não mostrar compromissos cancelados na visualização pública
                                                 if ($compromisso['status'] === 'cancelado') continue;
                                             ?>
-                                                <div class="event event-status-<?= $compromisso['status'] ?>" title="<?= htmlspecialchars($compromisso['title']) ?>">
+                                                <div class="event event-status-<?= $compromisso['status'] ?>" title="<?= htmlspecialchars($compromisso['title']) ?>" style="border-left-color: <?= $agenda['color'] ?? '#004a8f' ?>;">
                                                     <span class="event-time">
                                                         <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
                                                     </span>
@@ -553,7 +110,7 @@
         
         <!-- Lista de Compromissos -->
         <div class="events-list-container">
-            <h2 class="section-title">Compromissos</h2>
+            <h2 class="section-title" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;">Compromissos</h2>
             
             <?php if (empty($allCompromissos)): ?>
                 <div class="empty-state">
@@ -604,6 +161,7 @@
                         ?>
                         
                         <div class="event-card event-status-<?= $compromisso['status'] ?>" data-status="<?= $compromisso['status'] ?>" data-month="<?= $startDate->format('n') ?>" data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
+                            <!-- Conteúdo do card de evento -->
                             <div class="event-header">
                                 <h3 class="event-title"><?= htmlspecialchars($compromisso['title']) ?></h3>
                                 <div class="event-status">
@@ -705,10 +263,5 @@
             <p>&copy; <?= date('Y') ?> - Sistema de Agendamento UFPR</p>
         </div>
     </footer>
-    
-    <script>
-    // Filtros da lista de compromissos
-   
-    </script>
 </body>
 </html>
