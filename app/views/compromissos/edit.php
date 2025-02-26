@@ -8,6 +8,12 @@
         <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-link">Voltar</a>
     </div>
     
+    <?php if (!empty($compromisso['group_id'])): ?>
+        <div class="alert alert-info">
+            <strong>Compromisso Recorrente</strong> - Este compromisso faz parte de uma série recorrente.
+        </div>
+    <?php endif; ?>
+    
     <form action="<?= PUBLIC_URL ?>/compromissos/update" method="post">
         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
         
@@ -106,6 +112,19 @@
             </div>
         </div>
         
+        <?php if (!empty($compromisso['group_id'])): ?>
+        <div class="form-group recurring-options">
+            <label>Opções para eventos recorrentes</label>
+            <div class="checkbox-group">
+                <label class="checkbox-container">
+                    <input type="checkbox" name="update_future" value="1">
+                    <span class="checkmark"></span>
+                    Aplicar alterações a todos os eventos futuros desta série
+                </label>
+            </div>
+        </div>
+        <?php endif; ?>
+        
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar Alterações</button>
             <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-secondary">Cancelar</a>
@@ -115,9 +134,29 @@
                     <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                     <button type="submit" class="btn btn-danger">Excluir Compromisso</button>
                 </form>
+                
+                <?php if (!empty($compromisso['group_id'])): ?>
+                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
+                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <input type="hidden" name="delete_future" value="1">
+                    <button type="submit" class="btn btn-danger">Excluir Este e Futuros</button>
+                </form>
+                
+                <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos futuros desta série?');">
+                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <button type="submit" class="btn btn-warning">Cancelar Futuros</button>
+                </form>
+                <?php endif; ?>
             </div>
         </div>
     </form>
 </div>
 
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/edit.js"></script>
+<script>
+// Script específico para eventos recorrentes
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar exibição das opções de repetição
+    toggleRepeatOptions();
+});
+</script>

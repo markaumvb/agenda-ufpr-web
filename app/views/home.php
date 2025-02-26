@@ -1,8 +1,7 @@
 <div class="container">
     <div class="hero-section">
         <h1>Bem-vindo ao Sistema de Agendamento UFPR</h1>
-        <p>Gerencie suas agendas e compromissos de forma eficiente</p>
-        
+
         <?php if (!isset($_SESSION['user_id'])): ?>
             <div class="cta-buttons">
                 <a href="<?= BASE_URL ?>/login" class="btn btn-primary">Entrar</a>

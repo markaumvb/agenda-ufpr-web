@@ -13,7 +13,7 @@ define('BASE_URL', 'http://localhost/agenda_ufpr');
 define('PUBLIC_URL', BASE_URL . '/public');
 
 // Informações da aplicação
-define('APP_NAME', 'Sistema de Agendamento UFPR');
+define('APP_NAME', 'Sistema de Agendamento UFPR / Jandaia do Sul');
 define('APP_VERSION', '1.0.0');
 
 // Configurações de e-mail

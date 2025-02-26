@@ -94,24 +94,34 @@
             </div>
             
             <div class="agenda-card-footer">
-                <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>" class="btn btn-link">Ver Compromissos</a>
+
                 <div class="agenda-actions">
+                <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-primary">
+                    <i class="fas fa-calendar-alt"></i> Ver Compromissos
+                </a>
                     <?php if (!isset($agenda['is_owner']) || $agenda['is_owner']): ?>
-                        <a href="<?= PUBLIC_URL ?>/shares?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-info">Compartilhar</a>
-                        <a href="<?= PUBLIC_URL ?>/agendas/edit?id=<?= $agenda['id'] ?>" class="btn btn-sm btn-secondary">Editar</a>
+                        <a href="<?= PUBLIC_URL ?>/shares?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-share"></i> Compartilhar
+                        </a>
+                        
+                        <a href="<?= PUBLIC_URL ?>/agendas/edit?id=<?= $agenda['id'] ?>" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
                         
                         <?php if (isset($agenda['can_be_deleted']) && $agenda['can_be_deleted']): ?>
-                            <form action="<?= PUBLIC_URL ?>/agendas/delete" method="post" class="delete-form" 
-                                  onsubmit="return confirm('Tem certeza que deseja excluir esta agenda?');">
-                                <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
-                            </form>
-                        <?php else: ?>
-                            <button class="btn btn-sm btn-danger disabled" title="Não é possível excluir esta agenda pois possui compromissos pendentes ou aguardando aprovação" disabled>
-                                Excluir
+                        <form action="<?= PUBLIC_URL ?>/agendas/delete" method="post" class="delete-form" 
+                            onsubmit="return confirm('Tem certeza que deseja excluir esta agenda?');">
+                            <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fa-solid fa-trash"></i> Excluir
                             </button>
+                        </form>
+                        <?php else: ?>
+                        <button class="btn btn-sm btn-danger disabled" title="Não é possível excluir esta agenda pois possui compromissos pendentes ou aguardando aprovação" disabled>
+                            <i class="fa-solid fa-trash"></i> Excluir
+                        </button>
                         <?php endif; ?>
-                    <?php else: ?>
+                        <?php else: ?>
                         <?php if (isset($agenda['can_edit']) && $agenda['can_edit']): ?>
                             <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-primary">Novo Compromisso</a>
                         <?php endif; ?>

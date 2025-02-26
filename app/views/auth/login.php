@@ -4,11 +4,12 @@
 
 <div class="form-container">
     <h2>Login</h2>
+    <p>Somente pessoas com e-mail da @ufpr.br podem acessar ao sistema</p><br>
     
     <form action="<?= BASE_URL ?>/login-process" method="post">
         <div class="form-group">
-            <label for="username">Usuário:</label>
-            <input type="text" id="username" name="username" required autocomplete="username">
+            <label for="username">Usuário (usuário da UFPR):</label>
+            <input type="text" id="username" name="username" required autocomplete="username" placeholder="usuario@ufpr.br">
         </div>
         
         <div class="form-group">
@@ -20,9 +21,5 @@
             <button type="submit" class="btn btn-primary">Entrar</button>
         </div>
         
-        <div class="form-info">
-            Este sistema utiliza autenticação através do RADIUS da UFPR.<br>
-            Utilize suas credenciais institucionais.
-        </div>
     </form>
 </div>
