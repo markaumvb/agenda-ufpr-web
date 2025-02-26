@@ -93,7 +93,7 @@ class CompromissoController {
         // Obter os compromissos do mês
         $compromissos = $this->compromissoModel->getByAgendaAndDateRange(
             $agendaId,
-            $firstDay->format('Y-m-d'),
+            $firstDay->format('Y-m-d'), 
             $lastDay->format('Y-m-d')
         );
         
