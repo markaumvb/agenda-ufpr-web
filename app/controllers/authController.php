@@ -190,7 +190,7 @@ class AuthController {
         session_destroy();
         
         // Redirecionar para a página inicial
-        header('Location: ' . BASE_URL);
+        header('Location: ' . PUBLIC_URL . '/login');
         exit;
     }
 }

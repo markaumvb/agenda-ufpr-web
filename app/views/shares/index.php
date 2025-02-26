@@ -19,36 +19,14 @@
 <div class="content-container">
     <!-- Configuração de visibilidade pública -->
     <div class="card">
-    <div class="card-header">
-        <h3>Visibilidade da Agenda</h3>
-    </div>
-    <div class="card-body">
-        <p>Status atual: <strong><?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?></strong></p>
-        
-        <form action="<?= PUBLIC_URL ?>/shares/toggle-public" method="post" class="mt-3">
-            <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+        <div class="card-header">
+            <h3>Visibilidade da Agenda</h3>
+        </div>
+        <div class="card-body">
+            <p>Status atual: <strong><?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?></strong></p>
             
-            <?php if ($agenda['is_public']): ?>
-                <button type="submit" class="btn btn-danger">Tornar Privada</button>
-            <?php else: ?>
-                <button type="submit" class="btn btn-success">Tornar Pública</button>
-            <?php endif; ?>
-        </form>
-        
-        <?php if ($agenda['is_public'] && !empty($agenda['public_hash'])): ?>
-            <div class="public-url-container mt-3">
-                <p>URL Pública:</p>
-                <div class="input-group">
-                    <input type="text" value="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>" class="form-control" id="publicUrl" readonly>
-                    <button class="btn btn-primary" onclick="copyToClipboard('publicUrl')">Copiar</button>
-                </div>
-                <small class="form-text">Esta URL pode ser compartilhada com qualquer pessoa para visualização da agenda.</small>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-        
-        <form action="<?= PUBLIC_URL ?>/shares/toggle-public" method="post" class="mt-3">
+            <!-- Formulário para tornar pública/privada -->
+            <form action="<?= PUBLIC_URL ?>/shares/toggle-public" method="post" class="mt-3">
                 <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
                 
                 <?php if ($agenda['is_public']): ?>
@@ -57,7 +35,8 @@
                     <button type="submit" class="btn btn-success">Tornar Pública</button>
                 <?php endif; ?>
             </form>
-        
+            
+            <!-- Exibir URL pública se a agenda for pública e tiver hash -->
             <?php if ($agenda['is_public'] && !empty($agenda['public_hash'])): ?>
                 <div class="public-url-container mt-3">
                     <p>URL Pública:</p>
@@ -68,8 +47,7 @@
                     <small class="form-text">Esta URL pode ser compartilhada com qualquer pessoa para visualização da agenda.</small>
                 </div>
             <?php endif; ?>
-    </div>
-</div>
+        </div>
     </div>
     
     <!-- Compartilhamento com usuários -->

@@ -56,7 +56,7 @@
                     <h1><?= APP_NAME ?></h1>
                 </div>
                 <ul>
-                    <li><a href="<?= PUBLIC_URL ?>/">Início</a></li>
+                <li><a href="<?= PUBLIC_URL ?>/">Início</a></li>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li><a href="<?= PUBLIC_URL ?>/agendas">Minhas Agendas</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/shares/shared">Agendas Compartilhadas</a></li>
