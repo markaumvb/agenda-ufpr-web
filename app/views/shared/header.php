@@ -38,11 +38,14 @@
     }
     
     // Carregar CSS para formulários (criar nova agenda, editar compromisso, etc.)
-    if (strpos($currentUri, '/new') !== false || 
+   // Verificar se é uma página de formulário e incluir o CSS de formulários
+        if (strpos($currentUri, '/new') !== false || 
         strpos($currentUri, '/edit') !== false || 
-        strpos($currentUri, '/create') !== false) {
+        strpos($currentUri, '/login') !== false || 
+        strpos($currentUri, '/register') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/forms.css">';
-    }
+        }
+
     ?>
 </head>
 <body>

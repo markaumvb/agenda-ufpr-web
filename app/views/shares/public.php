@@ -252,16 +252,16 @@
                             </div>
                         </div>
                     <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    </main>
-    
-    <footer>
-        <div class="container">
-            <p>Esta é uma visualização pública da agenda "<?= htmlspecialchars($agenda['title']) ?>".</p>
-            <p>&copy; <?= date('Y') ?> - Sistema de Agendamento UFPR</p>
-        </div>
-    </footer>
-</body>
-</html>
+                    </div>
+                    <?php endif; ?>
+                    </div>
+                    </main>
+                    
+                    <footer>
+                        <div class="container">
+                            <p>Esta é uma visualização pública da agenda "<?= htmlspecialchars($agenda['title']) ?>".</p>
+                            <p>&copy; <?= date('Y') ?> - Sistema de Agendamento UFPR</p>
+                        </div>
+                    </footer>
+                    </body>
+                    </html>

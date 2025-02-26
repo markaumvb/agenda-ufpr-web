@@ -25,23 +25,28 @@
     <div class="card-body">
         <p>Status atual: <strong><?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?></strong></p>
         
-        <?php if ($agenda['is_public']): ?>
-            <?php 
-            // Gerar URL pública
-            $publicHash = isset($agenda['public_hash']) && !empty($agenda['public_hash']) ? $agenda['public_hash'] : '';
-            $publicUrl = $publicHash ? BASE_URL . '/public/public-agenda/' . $publicHash : 'URL ainda não gerada';
-            ?>
-            <div class="public-url-container">
+        <form action="<?= PUBLIC_URL ?>/shares/toggle-public" method="post" class="mt-3">
+            <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+            
+            <?php if ($agenda['is_public']): ?>
+                <button type="submit" class="btn btn-danger">Tornar Privada</button>
+            <?php else: ?>
+                <button type="submit" class="btn btn-success">Tornar Pública</button>
+            <?php endif; ?>
+        </form>
+        
+        <?php if ($agenda['is_public'] && !empty($agenda['public_hash'])): ?>
+            <div class="public-url-container mt-3">
                 <p>URL Pública:</p>
                 <div class="input-group">
-                    <input type="text" value="<?= $publicUrl ?>" class="form-control" id="publicUrl" readonly>
+                    <input type="text" value="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>" class="form-control" id="publicUrl" readonly>
                     <button class="btn btn-primary" onclick="copyToClipboard('publicUrl')">Copiar</button>
                 </div>
                 <small class="form-text">Esta URL pode ser compartilhada com qualquer pessoa para visualização da agenda.</small>
             </div>
-        <?php else: ?>
-            <p>Esta agenda está definida como privada. Para gerar uma URL pública, primeiro é necessário tornar a agenda pública.</p>
         <?php endif; ?>
+    </div>
+</div>
         
         <form action="<?= PUBLIC_URL ?>/shares/toggle-public" method="post" class="mt-3">
                 <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
