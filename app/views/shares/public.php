@@ -89,6 +89,7 @@
                                              data-id="<?= $compromisso['id'] ?>"
                                              data-title="<?= htmlspecialchars($compromisso['title']) ?>"
                                              data-description="<?= htmlspecialchars($compromisso['description']) ?>"
+                                             data-location="<?= htmlspecialchars($compromisso['location']) ?>"
                                              data-start="<?= $compromisso['start_datetime'] ?>"
                                              data-end="<?= $compromisso['end_datetime'] ?>"
                                              data-status="<?= $compromisso['status'] ?>">

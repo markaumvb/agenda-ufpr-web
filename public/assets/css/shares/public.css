@@ -1,7 +1,6 @@
-/* 
- * Arquivo: public/assets/css/shares/public.css
- * Estilos para a visualização pública de agendas
- */
+:root {
+  --agenda-color: <?= $agenda[ "color"] ?? "#004a8f" ?>;
+}
 
 body {
   font-family: Arial, sans-serif;

@@ -1,12 +1,8 @@
-/**
- * Script para interação com o calendário
- * Arquivo: public/assets/js/compromissos/calendar.js
- */
-
 document.addEventListener("DOMContentLoaded", function () {
   // Adicionar evento de clique para cada dia do calendário
   setupCalendarDayClicks();
   setupCloseButton();
+  highlightToday();
 });
 
 /**
@@ -38,6 +34,20 @@ function setupCloseButton() {
     closeButton.addEventListener("click", function () {
       hideDayEvents();
     });
+  }
+}
+
+/**
+ * Destaca o dia atual no calendário
+ */
+function highlightToday() {
+  const today = new Date().toISOString().split("T")[0];
+  const todayCell = document.querySelector(
+    `.calendar-day[data-date="${today}"]`
+  );
+
+  if (todayCell) {
+    todayCell.classList.add("today");
   }
 }
 
@@ -125,10 +135,10 @@ function showDayEvents(dayElement, date, agendaId) {
 
   if (canEdit && agendaId) {
     const addButton = document.createElement("div");
-    addButton.className = "add-event-button";
+    addButton.className = "add-event-button mt-3";
     addButton.innerHTML = `
           <a href="${BASE_URL}/public/compromissos/new?agenda_id=${agendaId}&date=${date}" class="btn btn-primary">
-              Novo Compromisso
+              <i class="fas fa-plus"></i> Novo Compromisso neste dia
           </a>
       `;
 
@@ -136,7 +146,17 @@ function showDayEvents(dayElement, date, agendaId) {
   }
 
   // Exibir o container
-  document.getElementById("day-events-container").style.display = "block";
+  const eventsContainer = document.getElementById("day-events-container");
+  eventsContainer.style.display = "block";
+
+  // Adicionar classe ativa no dia selecionado
+  document.querySelectorAll(".calendar-day").forEach((day) => {
+    day.classList.remove("selected-day");
+  });
+  dayElement.classList.add("selected-day");
+
+  // Rolar para o container de eventos
+  eventsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 /**
@@ -144,4 +164,9 @@ function showDayEvents(dayElement, date, agendaId) {
  */
 function hideDayEvents() {
   document.getElementById("day-events-container").style.display = "none";
+
+  // Remover classe ativa do dia selecionado
+  document.querySelectorAll(".calendar-day").forEach((day) => {
+    day.classList.remove("selected-day");
+  });
 }
