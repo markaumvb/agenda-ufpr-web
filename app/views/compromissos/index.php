@@ -24,9 +24,9 @@
 </div>
 
 <!-- Calendário -->
-<div class="calendar-container">
+<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>">
     <div class="calendar-header">
-        <h2 class="calendar-title"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
+        <h2 class="calendar-title" data-month="<?= $calendarData['month'] ?>" data-year="<?= $calendarData['year'] ?>"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
         <div class="calendar-navigation">
             <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>&month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
                 &laquo; Mês Anterior
@@ -64,7 +64,7 @@
                         $currentDate = sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
                         ?>
                         <div class="calendar-day <?= $hasEvents ? 'has-events' : '' ?> <?= $isToday ? 'today' : '' ?>" 
-                             onclick="showDayEvents('<?= $currentDate ?>', <?= $agenda['id'] ?>)">
+                             data-date="<?= $currentDate ?>">
                             <div class="day-header">
                                 <span class="day-number"><?= $dayData['day'] ?></span>
                             </div>
@@ -76,7 +76,13 @@
                                     $displayEvents = array_slice($dayData['compromissos'], 0, 3);
                                     foreach ($displayEvents as $compromisso): 
                                     ?>
-                                        <div class="event event-status-<?= $compromisso['status'] ?>">
+                                        <div class="event event-status-<?= $compromisso['status'] ?>"
+                                             data-id="<?= $compromisso['id'] ?>"
+                                             data-title="<?= htmlspecialchars($compromisso['title']) ?>"
+                                             data-description="<?= htmlspecialchars($compromisso['description']) ?>"
+                                             data-start="<?= $compromisso['start_datetime'] ?>"
+                                             data-end="<?= $compromisso['end_datetime'] ?>"
+                                             data-status="<?= $compromisso['status'] ?>">
                                             <span class="event-time">
                                                 <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
                                             </span>
@@ -101,6 +107,14 @@
     </div>
 </div>
 
+<!-- Container para exibir os compromissos do dia selecionado -->
+<div id="day-events-container" class="day-events-container" style="display: none;">
+    <div class="day-events-header">
+        <h3 id="day-events-title">Compromissos do dia</h3>
+        <button class="day-events-close">&times;</button>
+    </div>
+    <div id="day-events-list" class="day-events-list"></div>
+</div>
 
 <!-- Lista de Compromissos -->
 <div class="events-list-container">

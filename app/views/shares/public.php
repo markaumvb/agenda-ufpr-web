@@ -29,9 +29,9 @@
     
     <main class="container">
         <!-- Calendário -->
-        <div class="calendar-container public-view">
+        <div class="calendar-container public-view" data-agenda-id="<?= $agenda['id'] ?>">
     <div class="calendar-header">
-        <h2 class="calendar-title" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
+        <h2 class="calendar-title" data-month="<?= $calendarData['month'] ?>" data-year="<?= $calendarData['year'] ?>" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
         <div class="calendar-navigation">
             <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
                 &laquo; Mês Anterior
@@ -63,17 +63,16 @@
                         <div class="calendar-day empty-day"></div>
                     <?php else: ?>
                         <?php 
-                        // Determinar se o dia tem eventos, filtrando eventos cancelados na visualização pública
+                        // Filtrar eventos cancelados na visualização pública
                         $activeEvents = array_filter($dayData['compromissos'], function($comp) {
                             return $comp['status'] !== 'cancelado';
                         });
                         $hasEvents = !empty($activeEvents);
                         $isToday = date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
-                        $dayClasses = ['calendar-day'];
-                        if ($hasEvents) $dayClasses[] = 'has-events';
-                        if ($isToday) $dayClasses[] = 'today';
+                        $currentDate = sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
                         ?>
-                        <div class="<?= implode(' ', $dayClasses) ?>">
+                        <div class="calendar-day <?= $hasEvents ? 'has-events' : '' ?> <?= $isToday ? 'today' : '' ?>"
+                             data-date="<?= $currentDate ?>">
                             <div class="day-header">
                                 <span class="day-number" style="<?= $isToday ? 'background-color:' . ($agenda['color'] ?? '#004a8f') . ';' : '' ?>"><?= $dayData['day'] ?></span>
                             </div>
@@ -85,7 +84,14 @@
                                     $displayEvents = array_slice($activeEvents, 0, 3);
                                     foreach ($displayEvents as $compromisso): 
                                     ?>
-                                        <div class="event event-status-<?= $compromisso['status'] ?>" style="border-left-color: <?= $agenda['color'] ?? '#004a8f' ?>;">
+                                        <div class="event event-status-<?= $compromisso['status'] ?>" 
+                                             style="border-left-color: <?= $agenda['color'] ?? '#004a8f' ?>;"
+                                             data-id="<?= $compromisso['id'] ?>"
+                                             data-title="<?= htmlspecialchars($compromisso['title']) ?>"
+                                             data-description="<?= htmlspecialchars($compromisso['description']) ?>"
+                                             data-start="<?= $compromisso['start_datetime'] ?>"
+                                             data-end="<?= $compromisso['end_datetime'] ?>"
+                                             data-status="<?= $compromisso['status'] ?>">
                                             <span class="event-time">
                                                 <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
                                             </span>
@@ -261,6 +267,14 @@
                     <?php endif; ?>
                     </div>
                     </main>
+
+                    <div id="day-events-container" class="day-events-container" style="display: none;">
+    <div class="day-events-header">
+        <h3 id="day-events-title">Compromissos do dia</h3>
+        <button class="day-events-close">&times;</button>
+    </div>
+    <div id="day-events-list" class="day-events-list"></div>
+</div>
                     
                     <footer>
                         <div class="container">
@@ -268,5 +282,6 @@
                             <p>&copy; <?= date('Y') ?> - Sistema de Agendamento UFPR</p>
                         </div>
                     </footer>
+                    <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/public-calendar.js"></script>
                     </body>
                     </html>
