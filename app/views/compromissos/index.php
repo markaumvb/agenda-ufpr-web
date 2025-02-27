@@ -53,24 +53,30 @@
         
         <?php foreach ($calendarData['weeks'] as $week): ?>
             <div class="calendar-week">
-                <?php foreach ($week as $dayData): ?>
+                <?php foreach ($week as $dayIndex => $dayData): ?>
                     <?php if ($dayData['day'] === null): ?>
                         <div class="calendar-day empty-day"></div>
                     <?php else: ?>
-                        <div class="calendar-day <?= count($dayData['compromissos']) > 0 ? 'has-events' : '' ?> <?= date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ? 'today' : '' ?>">
-                        <div class="day-header">
-                            <span class="day-number"><?= $dayData['day'] ?></span>
-                            <?php /* Remover o código do link com classe add-event */ ?>
-                        </div>
+                        <?php 
+                        // Determinar se o dia tem eventos
+                        $hasEvents = !empty($dayData['compromissos']);
+                        $isToday = date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
+                        $currentDate = sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
+                        ?>
+                        <div class="calendar-day <?= $hasEvents ? 'has-events' : '' ?> <?= $isToday ? 'today' : '' ?>" 
+                             onclick="showDayEvents('<?= $currentDate ?>', <?= $agenda['id'] ?>)">
+                            <div class="day-header">
+                                <span class="day-number"><?= $dayData['day'] ?></span>
+                            </div>
                             
-                            <?php if (count($dayData['compromissos']) > 0): ?>
+                            <?php if ($hasEvents): ?>
                                 <div class="day-events">
                                     <?php 
                                     // Limitar a exibição para os 3 primeiros eventos
                                     $displayEvents = array_slice($dayData['compromissos'], 0, 3);
                                     foreach ($displayEvents as $compromisso): 
                                     ?>
-                                        <div class="event event-status-<?= $compromisso['status'] ?>" title="<?= htmlspecialchars($compromisso['title']) ?>">
+                                        <div class="event event-status-<?= $compromisso['status'] ?>">
                                             <span class="event-time">
                                                 <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
                                             </span>
@@ -94,6 +100,7 @@
         <?php endforeach; ?>
     </div>
 </div>
+
 
 <!-- Lista de Compromissos -->
 <div class="events-list-container">
@@ -280,3 +287,4 @@
 </div>
 
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/index.js"></script>
+<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/calendar.js"></script>

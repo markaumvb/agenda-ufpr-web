@@ -29,84 +29,89 @@
     
     <main class="container">
         <!-- Calendário -->
-        <div class="calendar-container">
-            <div class="calendar-header">
-                <h2 class="calendar-title" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
-                <div class="calendar-navigation">
-                    <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
-                        &laquo; Mês Anterior
-                    </a>
-                    <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>" class="btn btn-outline">
-                        Mês Atual
-                    </a>
-                    <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['nextMonth'] ?>&year=<?= $calendarData['nextYear'] ?>" class="btn btn-outline">
-                        Próximo Mês &raquo;
-                    </a>
-                </div>
-            </div>
-            
-            <div class="calendar">
-                <div class="calendar-weekdays">
-                    <div class="weekday">Dom</div>
-                    <div class="weekday">Seg</div>
-                    <div class="weekday">Ter</div>
-                    <div class="weekday">Qua</div>
-                    <div class="weekday">Qui</div>
-                    <div class="weekday">Sex</div>
-                    <div class="weekday">Sáb</div>
-                </div>
-                
-                <?php foreach ($calendarData['weeks'] as $week): ?>
-                    <div class="calendar-week">
-                        <?php foreach ($week as $dayData): ?>
-                            <?php if ($dayData['day'] === null): ?>
-                                <div class="calendar-day empty-day"></div>
-                            <?php else: ?>
-                                <div class="calendar-day <?= count($dayData['compromissos']) > 0 ? 'has-events' : '' ?> <?= date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ? 'today' : '' ?>">
-                                    <div class="day-header">
-                                        <span class="day-number" style="<?= date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']) ? 'background-color:' . ($agenda['color'] ?? '#004a8f') . ';' : '' ?>"><?= $dayData['day'] ?></span>
-                                    </div>
+        <div class="calendar-container public-view">
+    <div class="calendar-header">
+        <h2 class="calendar-title" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
+        <div class="calendar-navigation">
+            <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
+                &laquo; Mês Anterior
+            </a>
+            <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>" class="btn btn-outline">
+                Mês Atual
+            </a>
+            <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['nextMonth'] ?>&year=<?= $calendarData['nextYear'] ?>" class="btn btn-outline">
+                Próximo Mês &raquo;
+            </a>
+        </div>
+    </div>
+    
+    <div class="calendar">
+        <div class="calendar-weekdays">
+            <div class="weekday">Dom</div>
+            <div class="weekday">Seg</div>
+            <div class="weekday">Ter</div>
+            <div class="weekday">Qua</div>
+            <div class="weekday">Qui</div>
+            <div class="weekday">Sex</div>
+            <div class="weekday">Sáb</div>
+        </div>
+        
+        <?php foreach ($calendarData['weeks'] as $week): ?>
+            <div class="calendar-week">
+                <?php foreach ($week as $dayIndex => $dayData): ?>
+                    <?php if ($dayData['day'] === null): ?>
+                        <div class="calendar-day empty-day"></div>
+                    <?php else: ?>
+                        <?php 
+                        // Determinar se o dia tem eventos, filtrando eventos cancelados na visualização pública
+                        $activeEvents = array_filter($dayData['compromissos'], function($comp) {
+                            return $comp['status'] !== 'cancelado';
+                        });
+                        $hasEvents = !empty($activeEvents);
+                        $isToday = date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
+                        $dayClasses = ['calendar-day'];
+                        if ($hasEvents) $dayClasses[] = 'has-events';
+                        if ($isToday) $dayClasses[] = 'today';
+                        ?>
+                        <div class="<?= implode(' ', $dayClasses) ?>">
+                            <div class="day-header">
+                                <span class="day-number" style="<?= $isToday ? 'background-color:' . ($agenda['color'] ?? '#004a8f') . ';' : '' ?>"><?= $dayData['day'] ?></span>
+                            </div>
+                            
+                            <?php if ($hasEvents): ?>
+                                <div class="day-events">
+                                    <?php 
+                                    // Limitar a exibição para os 3 primeiros eventos ativos
+                                    $displayEvents = array_slice($activeEvents, 0, 3);
+                                    foreach ($displayEvents as $compromisso): 
+                                    ?>
+                                        <div class="event event-status-<?= $compromisso['status'] ?>" style="border-left-color: <?= $agenda['color'] ?? '#004a8f' ?>;">
+                                            <span class="event-time">
+                                                <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
+                                            </span>
+                                            <span class="event-title">
+                                                <?= htmlspecialchars(mb_strimwidth($compromisso['title'], 0, 20, '...')) ?>
+                                            </span>
+                                        </div>
+                                    <?php endforeach; ?>
                                     
-                                    <?php if (count($dayData['compromissos']) > 0): ?>
-                                        <div class="day-events">
-                                            <?php 
-                                            // Limitar a exibição para os 3 primeiros eventos
-                                            $displayEvents = array_slice($dayData['compromissos'], 0, 3);
-                                            foreach ($displayEvents as $compromisso): 
-                                                // Não mostrar compromissos cancelados na visualização pública
-                                                if ($compromisso['status'] === 'cancelado') continue;
-                                            ?>
-                                                <div class="event event-status-<?= $compromisso['status'] ?>" title="<?= htmlspecialchars($compromisso['title']) ?>" style="border-left-color: <?= $agenda['color'] ?? '#004a8f' ?>;">
-                                                    <span class="event-time">
-                                                        <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
-                                                    </span>
-                                                    <span class="event-title">
-                                                        <?= htmlspecialchars(mb_strimwidth($compromisso['title'], 0, 20, '...')) ?>
-                                                    </span>
-                                                </div>
-                                            <?php endforeach; ?>
-                                            
-                                            <?php 
-                                            // Contar compromissos não cancelados
-                                            $activeEvents = array_filter($dayData['compromissos'], function($comp) {
-                                                return $comp['status'] !== 'cancelado';
-                                            });
-                                            
-                                            if (count($activeEvents) > 3): 
-                                            ?>
-                                                <div class="more-events">
-                                                    +<?= count($activeEvents) - 3 ?> mais
-                                                </div>
-                                            <?php endif; ?>
+                                    <?php 
+                                    // Contar compromissos não cancelados
+                                    if (count($activeEvents) > 3): 
+                                    ?>
+                                        <div class="more-events">
+                                            +<?= count($activeEvents) - 3 ?> mais
                                         </div>
                                     <?php endif; ?>
                                 </div>
                             <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
+                        </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
-        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
         
         <!-- Lista de Compromissos -->
         <div class="events-list-container">

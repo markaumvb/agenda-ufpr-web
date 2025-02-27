@@ -93,7 +93,7 @@ class CompromissoController {
         // Obter os compromissos do mês
         $compromissos = $this->compromissoModel->getByAgendaAndDateRange(
             $agendaId,
-            $firstDay->format('Y-m-d'), 
+            $firstDay->format('Y-m-d'),
             $lastDay->format('Y-m-d')
         );
         
@@ -124,21 +124,200 @@ class CompromissoController {
     
     /**
      * Prepara os dados para o calendário
-     * [método original sem alterações]
+     * 
+     * @param int $month Mês (1-12)
+     * @param int $year Ano
+     * @param array $compromissos Lista de compromissos
+     * @return array Dados para o calendário
      */
     private function prepareCalendarData($month, $year, $compromissos) {
-        // Método original mantido sem alterações...
+        // Primeiro dia do mês
+        $firstDay = new DateTime("$year-$month-01");
+        
+        // Último dia do mês
+        $lastDay = new DateTime("$year-$month-" . $firstDay->format('t'));
+        
+        // Dia da semana do primeiro dia (0 = Domingo, 6 = Sábado)
+        $firstDayOfWeek = $firstDay->format('w');
+        
+        // Total de dias no mês
+        $totalDays = $lastDay->format('j');
+        
+        // Preparar array de semanas e dias
+        $weeks = [];
+        $day = 1;
+        $currentWeek = 0;
+        
+        // Inicializar a primeira semana com dias vazios
+        $weeks[$currentWeek] = array_fill(0, 7, ['day' => null, 'compromissos' => []]);
+        
+        // Preencher com os dias do mês anterior se necessário
+        for ($i = 0; $i < $firstDayOfWeek; $i++) {
+            $weeks[$currentWeek][$i] = ['day' => null, 'compromissos' => []];
+        }
+        
+        // Preencher os dias do mês
+        for ($i = $firstDayOfWeek; $i < 7; $i++) {
+            if ($day <= $totalDays) {
+                $dateStr = sprintf("%04d-%02d-%02d", $year, $month, $day);
+                $weeks[$currentWeek][$i] = ['day' => $day, 'compromissos' => []];
+                $day++;
+            }
+        }
+        
+        // Continuar com as próximas semanas
+        while ($day <= $totalDays) {
+            $currentWeek++;
+            $weeks[$currentWeek] = array_fill(0, 7, ['day' => null, 'compromissos' => []]);
+            
+            for ($i = 0; $i < 7; $i++) {
+                if ($day <= $totalDays) {
+                    $dateStr = sprintf("%04d-%02d-%02d", $year, $month, $day);
+                    $weeks[$currentWeek][$i] = ['day' => $day, 'compromissos' => []];
+                    $day++;
+                }
+            }
+        }
+        
+        // Adicionar compromissos ao calendário
+        foreach ($compromissos as $compromisso) {
+            $startDate = new DateTime($compromisso['start_datetime']);
+            $endDate = new DateTime($compromisso['end_datetime']);
+            
+            // Verificar se é o mês atual
+            if ($startDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) &&
+                $endDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
+                continue;
+            }
+            
+            // Se o compromisso começar antes do mês atual, ajustar para o primeiro dia
+            if ($startDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
+                $startDate = new DateTime("$year-$month-01");
+            }
+            
+            // Se o compromisso terminar depois do mês atual, ajustar para o último dia
+            if ($endDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
+                $endDate = $lastDay;
+            }
+            
+            // Percorrer todos os dias do compromisso
+            $currentDate = clone $startDate;
+            while ($currentDate <= $endDate) {
+                if ($currentDate->format('Y-m') == "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
+                    $day = $currentDate->format('j');
+                    
+                    // Encontrar a semana e dia correspondente
+                    foreach ($weeks as $weekIndex => $week) {
+                        foreach ($week as $dayIndex => $dayData) {
+                            if ($dayData['day'] == $day) {
+                                $weeks[$weekIndex][$dayIndex]['compromissos'][] = $compromisso;
+                            }
+                        }
+                    }
+                }
+                $currentDate->modify('+1 day');
+            }
+        }
+        
+        // Mapeamento dos nomes dos meses para português (opcional)
+        $monthNames = [
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Março',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
+            10 => 'Outubro',
+            11 => 'Novembro',
+            12 => 'Dezembro'
+        ];
+        
+        // Retornar dados para o calendário
+        return [
+            'month' => $month,
+            'year' => $year,
+            'weeks' => $weeks,
+            'monthName' => $monthNames[$month] ?? $firstDay->format('F'),
+            'previousMonth' => $month == 1 ? 12 : $month - 1,
+            'previousYear' => $month == 1 ? $year - 1 : $year,
+            'nextMonth' => $month == 12 ? 1 : $month + 1,
+            'nextYear' => $month == 12 ? $year + 1 : $year
+        ];
     }
     
     /**
      * Exibe o formulário para criar um novo compromisso
      */
     public function create() {
-        // Código original mantido sem alterações...
+        // Obter o ID da agenda da URL
+        $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
+        
+        // Se não foi fornecido um ID de agenda, redirecionar para a lista de agendas
+        if (!$agendaId) {
+            $_SESSION['flash_message'] = 'Agenda não especificada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/public/agendas');
+            exit;
+        }
+        
+        // Verificar se a agenda existe e se o usuário tem acesso a ela
+        $agenda = $this->agendaModel->getById($agendaId);
+        
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/public/agendas');
+            exit;
+        }
+        
+        // Verificar se o usuário é o dono da agenda ou tem permissão para editar
+        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+        $canEdit = $isOwner;
+        
+        if (!$isOwner) {
+            require_once __DIR__ . '/../models/AgendaShare.php';
+            $shareModel = new AgendaShare();
+            $canEdit = $shareModel->canEdit($agendaId, $_SESSION['user_id']);
+        }
+        
+        if (!$canEdit) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Data e hora padrão (próxima hora)
+        $defaultDate = new DateTime();
+        $defaultDate->setTime($defaultDate->format('H') + 1, 0);
+        $defaultStartDateTime = $defaultDate->format('Y-m-d\TH:i');
+        
+        $defaultEndDate = clone $defaultDate;
+        $defaultEndDate->modify('+1 hour');
+        $defaultEndDateTime = $defaultEndDate->format('Y-m-d\TH:i');
+        
+        // Obter datas pré-selecionadas da URL (se houver)
+        $selectedDate = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING);
+        if ($selectedDate) {
+            $selectedDate = new DateTime($selectedDate);
+            $defaultStartDateTime = $selectedDate->format('Y-m-d\TH:i');
+            
+            $defaultEndDate = clone $selectedDate;
+            $defaultEndDate->modify('+1 hour');
+            $defaultEndDateTime = $defaultEndDate->format('Y-m-d\TH:i');
+        }
+        
+        // Exibir a view
+        require_once __DIR__ . '/../views/shared/header.php';
+        require_once __DIR__ . '/../views/compromissos/create.php';
+        require_once __DIR__ . '/../views/shared/footer.php';
     }
     
     /**
-     * Salva um novo compromisso no banco de dados com suporte a recorrência
+     * Salva um novo compromisso no banco de dados
      */
     public function store() {
         // Verificar se é uma requisição POST
@@ -232,7 +411,7 @@ class CompromissoController {
             'status' => $status
         ];
         
-        // Salvar no banco - método atualizado irá criar todas as instâncias recorrentes
+        // Salvar no banco
         $result = $this->compromissoModel->create($data);
         
         if ($result) {
@@ -318,7 +497,7 @@ class CompromissoController {
     }
     
     /**
-     * Atualiza um compromisso existente com suporte a eventos recorrentes
+     * Atualiza um compromisso existente
      */
     public function update() {
         // Verificar se é uma requisição POST
@@ -399,7 +578,7 @@ class CompromissoController {
             'status' => $status
         ];
         
-        // Atualizar no banco - método modificado suporta atualizar ocorrências futuras
+        // Atualizar no banco
         $result = $this->compromissoModel->update($id, $data, $updateFutureOccurrences);
         
         if ($result) {
@@ -415,7 +594,7 @@ class CompromissoController {
     }
     
     /**
-     * Exclui um compromisso com suporte a eventos recorrentes
+     * Exclui um compromisso
      */
     public function delete() {
         // Verificar se é uma requisição POST
@@ -435,135 +614,243 @@ class CompromissoController {
             exit;
         }
         
-        // Buscar o compromisso
-        $compromisso = $this->compromissoModel->getById($id);
+// Buscar o compromisso
+$compromisso = $this->compromissoModel->getById($id);
         
-        if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
-            exit;
-        }
-        
-        // Buscar a agenda do compromisso
-        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
-        
-        // Verificar se o usuário é o dono da agenda ou tem permissão para editar
-        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
-        $canEdit = $isOwner;
-        
-        if (!$isOwner) {
-            require_once __DIR__ . '/../models/AgendaShare.php';
-            $shareModel = new AgendaShare();
-            $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
-        }
-        
-        if (!$canEdit) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para excluir este compromisso';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
-            exit;
-        }
-        
-        // Excluir o compromisso - método modificado suporta excluir ocorrências futuras
-        $result = $this->compromissoModel->delete($id, $deleteFuture);
-        
-        if ($result) {
-            $_SESSION['flash_message'] = 'Compromisso excluído com sucesso';
-            $_SESSION['flash_type'] = 'success';
-        } else {
-            $_SESSION['flash_message'] = 'Erro ao excluir compromisso';
-            $_SESSION['flash_type'] = 'danger';
-        }
-        
-        header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
-        exit;
-    }
-    
-    /**
-     * Cancela eventos futuros de uma série recorrente
-     */
-    public function cancelFuture() {
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
-            exit;
-        }
-        
-        // Obter o ID do compromisso
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        
-        if (!$id) {
-            $_SESSION['flash_message'] = 'Compromisso não especificado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
-            exit;
-        }
-        
-        // Buscar o compromisso
-        $compromisso = $this->compromissoModel->getById($id);
-        
-        if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
-            exit;
-        }
-        
-        // Verificar se é um evento recorrente
-        if (empty($compromisso['group_id'])) {
-            $_SESSION['flash_message'] = 'Este não é um compromisso recorrente';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
-            exit;
-        }
-        
-        // Buscar a agenda do compromisso
-        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
-        
-        // Verificar se o usuário é o dono da agenda ou tem permissão para editar
-        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
-        $canEdit = $isOwner;
-        
-        if (!$isOwner) {
-            require_once __DIR__ . '/../models/AgendaShare.php';
-            $shareModel = new AgendaShare();
-            $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
-        }
-        
-        if (!$canEdit) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para modificar este compromisso';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
-            exit;
-        }
-        
-        // Cancelar todas as ocorrências futuras
-        $result = $this->compromissoModel->cancelFutureOccurrences($id);
-        
-        if ($result) {
-            $_SESSION['flash_message'] = 'Compromissos futuros cancelados com sucesso';
-            $_SESSION['flash_type'] = 'success';
-        } else {
-            $_SESSION['flash_message'] = 'Erro ao cancelar compromissos futuros';
-            $_SESSION['flash_type'] = 'danger';
-        }
-        
-        header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
-        exit;
-    }
-    
-    /**
-     * Alterar o status de um compromisso
-     */
-    public function changeStatus() {
-        // Método original mantido sem alterações...
-    }
-    
-    /**
-     * Verifica se há conflito de horário (usado via AJAX)
-     */
-    public function checkConflict() {
-        // Método original mantido sem alterações...
-    }
+if (!$compromisso) {
+    $_SESSION['flash_message'] = 'Compromisso não encontrado';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Buscar a agenda do compromisso
+$agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+
+// Verificar se o usuário é o dono da agenda ou tem permissão para editar
+$isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+$canEdit = $isOwner;
+
+if (!$isOwner) {
+    require_once __DIR__ . '/../models/AgendaShare.php';
+    $shareModel = new AgendaShare();
+    $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
+}
+
+if (!$canEdit) {
+    $_SESSION['flash_message'] = 'Você não tem permissão para excluir este compromisso';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    exit;
+}
+
+// Excluir o compromisso
+$result = $this->compromissoModel->delete($id, $deleteFuture);
+
+if ($result) {
+    $_SESSION['flash_message'] = 'Compromisso excluído com sucesso';
+    $_SESSION['flash_type'] = 'success';
+} else {
+    $_SESSION['flash_message'] = 'Erro ao excluir compromisso';
+    $_SESSION['flash_type'] = 'danger';
+}
+
+header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+exit;
+}
+
+/**
+* Cancela eventos futuros de uma série recorrente
+*/
+public function cancelFuture() {
+// Verificar se é uma requisição POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Obter o ID do compromisso
+$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+
+if (!$id) {
+    $_SESSION['flash_message'] = 'Compromisso não especificado';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Buscar o compromisso
+$compromisso = $this->compromissoModel->getById($id);
+
+if (!$compromisso) {
+    $_SESSION['flash_message'] = 'Compromisso não encontrado';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Verificar se é um evento recorrente
+if (empty($compromisso['group_id'])) {
+    $_SESSION['flash_message'] = 'Este não é um compromisso recorrente';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    exit;
+}
+
+// Buscar a agenda do compromisso
+$agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+
+// Verificar se o usuário é o dono da agenda ou tem permissão para editar
+$isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+$canEdit = $isOwner;
+
+if (!$isOwner) {
+    require_once __DIR__ . '/../models/AgendaShare.php';
+    $shareModel = new AgendaShare();
+    $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
+}
+
+if (!$canEdit) {
+    $_SESSION['flash_message'] = 'Você não tem permissão para modificar este compromisso';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    exit;
+}
+
+// Cancelar todas as ocorrências futuras
+$result = $this->compromissoModel->cancelFutureOccurrences($id);
+
+if ($result) {
+    $_SESSION['flash_message'] = 'Compromissos futuros cancelados com sucesso';
+    $_SESSION['flash_type'] = 'success';
+} else {
+    $_SESSION['flash_message'] = 'Erro ao cancelar compromissos futuros';
+    $_SESSION['flash_type'] = 'danger';
+}
+
+header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+exit;
+}
+
+/**
+* Alterar o status de um compromisso
+*/
+public function changeStatus() {
+// Verificar se é uma requisição POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Obter dados do formulário
+$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+$status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
+
+if (!$id || !$status) {
+    $_SESSION['flash_message'] = 'Parâmetros inválidos';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Buscar o compromisso
+$compromisso = $this->compromissoModel->getById($id);
+
+if (!$compromisso) {
+    $_SESSION['flash_message'] = 'Compromisso não encontrado';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/agendas');
+    exit;
+}
+
+// Buscar a agenda do compromisso
+$agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+
+// Verificar se o usuário é o dono da agenda ou tem permissão para editar
+$isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+$canEdit = $isOwner;
+
+if (!$isOwner) {
+    require_once __DIR__ . '/../models/AgendaShare.php';
+    $shareModel = new AgendaShare();
+    $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
+}
+
+if (!$canEdit) {
+    $_SESSION['flash_message'] = 'Você não tem permissão para modificar este compromisso';
+    $_SESSION['flash_type'] = 'danger';
+    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    exit;
+}
+
+// Atualizar o status
+$data = [
+    'title' => $compromisso['title'],
+    'description' => $compromisso['description'],
+    'start_datetime' => $compromisso['start_datetime'],
+    'end_datetime' => $compromisso['end_datetime'],
+    'location' => $compromisso['location'],
+    'repeat_type' => $compromisso['repeat_type'],
+    'repeat_until' => $compromisso['repeat_until'],
+    'repeat_days' => $compromisso['repeat_days'],
+    'status' => $status
+];
+
+$result = $this->compromissoModel->update($id, $data);
+
+if ($result) {
+    $_SESSION['flash_message'] = 'Status do compromisso atualizado com sucesso';
+    $_SESSION['flash_type'] = 'success';
+} else {
+    $_SESSION['flash_message'] = 'Erro ao atualizar status do compromisso';
+    $_SESSION['flash_type'] = 'danger';
+}
+
+header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+exit;
+}
+
+/**
+* Verifica se há conflito de horário (usado via AJAX)
+*/
+public function checkConflict() {
+// Obter parâmetros da requisição
+$agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
+$startDatetime = filter_input(INPUT_GET, 'start', FILTER_SANITIZE_STRING);
+$endDatetime = filter_input(INPUT_GET, 'end', FILTER_SANITIZE_STRING);
+$compromissoId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+// Validar parâmetros
+if (!$agendaId || !$startDatetime || !$endDatetime) {
+    echo json_encode(['error' => 'Parâmetros inválidos']);
+    exit;
+}
+
+// Verificar se o usuário tem acesso à agenda
+$agenda = $this->agendaModel->getById($agendaId);
+if (!$agenda) {
+    echo json_encode(['error' => 'Agenda não encontrada']);
+    exit;
+}
+
+// Verificar se o usuário tem acesso à agenda
+$canAccess = $agenda['user_id'] == $_SESSION['user_id'];
+if (!$canAccess) {
+    require_once __DIR__ . '/../models/AgendaShare.php';
+    $shareModel = new AgendaShare();
+    $canAccess = $shareModel->checkAccess($agendaId, $_SESSION['user_id']);
+}
+
+if (!$canAccess) {
+    echo json_encode(['error' => 'Sem permissão para acessar esta agenda']);
+    exit;
+}
+
+// Verificar se há conflito
+$hasConflict = $this->compromissoModel->hasTimeConflict($agendaId, $startDatetime, $endDatetime, $compromissoId);
+
+// Retornar resultado em JSON
+echo json_encode(['conflict' => $hasConflict]);
+exit;
+}
 }

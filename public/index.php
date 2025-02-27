@@ -165,8 +165,6 @@ $routes = [
         'action' => 'checkConflict',
         'method' => 'GET'
     ],
-    
-    // Rotas de compartilhamento de agendas
     '/shares' => [
         'controller' => 'ShareController',
         'action' => 'index',
@@ -196,11 +194,15 @@ $routes = [
         'controller' => 'ShareController',
         'action' => 'generatePublicUrl',
         'method' => 'POST'
-    ]
+    ],
+    '/compromissos/cancel-future' => [
+    'controller' => 'CompromissoController',
+    'action' => 'cancelFuture',
+    'method' => 'POST'
+]
 ];
 
-// Rota para visualização pública
-// Esta é uma rota especial que captura o parâmetro hash da URL
+
 if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uri, $matches)) {
     $hash = $matches[1];
     require_once __DIR__ . '/../app/controllers/PublicController.php';
