@@ -1,9 +1,12 @@
 <?php
+// app/models/Compromisso.php
 
 class Compromisso {
     private $db;
     
-
+    /**
+     * Construtor
+     */
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
@@ -56,6 +59,118 @@ class Compromisso {
             $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
             $stmt->execute();
             
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar compromissos: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Obtém o total de compromissos de uma agenda
+     * 
+     * @param int $agendaId ID da agenda
+     * @param array $filters Filtros opcionais (status, data, etc)
+     * @return int Número total de compromissos
+     */
+    public function countByAgenda($agendaId, $filters = []) {
+        try {
+            $query = "SELECT COUNT(*) FROM compromissos WHERE agenda_id = :agenda_id";
+            $params = ['agenda_id' => $agendaId];
+            
+            // Aplicar filtros se houver
+            if (!empty($filters)) {
+                if (isset($filters['status']) && $filters['status'] !== 'all') {
+                    $query .= " AND status = :status";
+                    $params['status'] = $filters['status'];
+                }
+                
+                if (isset($filters['month']) && $filters['month'] !== 'all') {
+                    $query .= " AND MONTH(start_datetime) = :month";
+                    $params['month'] = $filters['month'];
+                }
+                
+                if (isset($filters['search']) && !empty($filters['search'])) {
+                    $query .= " AND (title LIKE :search OR description LIKE :search OR location LIKE :search)";
+                    $params['search'] = '%' . $filters['search'] . '%';
+                }
+            }
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
+            
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('Erro ao contar compromissos: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Obtém compromissos de uma agenda com paginação
+     * 
+     * @param int $agendaId ID da agenda
+     * @param int $offset Início da paginação
+     * @param int $limit Limite de registros
+     * @param array $filters Filtros opcionais (status, data, etc)
+     * @param string $orderBy Campo para ordenação
+     * @param string $order Direção da ordenação (ASC, DESC)
+     * @return array Lista de compromissos
+     */
+    public function getByAgendaPaginated($agendaId, $offset = 0, $limit = 10, $filters = [], $orderBy = 'start_datetime', $order = 'ASC') {
+        try {
+            $query = "SELECT * FROM compromissos WHERE agenda_id = :agenda_id";
+            $params = ['agenda_id' => $agendaId];
+            
+            // Aplicar filtros se houver
+            if (!empty($filters)) {
+                if (isset($filters['status']) && $filters['status'] !== 'all') {
+                    $query .= " AND status = :status";
+                    $params['status'] = $filters['status'];
+                }
+                
+                if (isset($filters['month']) && $filters['month'] !== 'all') {
+                    $query .= " AND MONTH(start_datetime) = :month";
+                    $params['month'] = $filters['month'];
+                }
+                
+                if (isset($filters['search']) && !empty($filters['search'])) {
+                    $query .= " AND (title LIKE :search OR description LIKE :search OR location LIKE :search)";
+                    $params['search'] = '%' . $filters['search'] . '%';
+                }
+            }
+            
+            // Ordenação
+            $validOrderColumns = ['start_datetime', 'end_datetime', 'title', 'status', 'created_at'];
+            $validOrderDirections = ['ASC', 'DESC'];
+            
+            if (!in_array($orderBy, $validOrderColumns)) {
+                $orderBy = 'start_datetime';
+            }
+            
+            if (!in_array(strtoupper($order), $validOrderDirections)) {
+                $order = 'ASC';
+            }
+            
+            $query .= " ORDER BY {$orderBy} {$order}";
+            
+            // Paginação
+            $query .= " LIMIT :offset, :limit";
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
+            
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            
+            $stmt->execute();
             return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log('Erro ao buscar compromissos: ' . $e->getMessage());
@@ -121,7 +236,12 @@ class Compromisso {
                 $stmt->bindParam(':status', $data['status'], PDO::PARAM_STR);
                 
                 if ($stmt->execute()) {
-                    return $this->db->lastInsertId();
+                    $newId = $this->db->lastInsertId();
+                    
+                    // Criar notificação para o dono da agenda
+                    $this->createNotificationForAgendaOwner($newId);
+                    
+                    return $newId;
                 }
                 
                 return false;
@@ -166,7 +286,7 @@ class Compromisso {
             
             $parentId = $this->db->lastInsertId();
             
-            // Criar eventos recorrentes baseados no tipo de repetição
+            // Criar ocorrências recorrentes baseadas no tipo de repetição
             $occurrences = $this->calculateOccurrences(
                 $data['repeat_type'],
                 $data['start_datetime'],
@@ -212,6 +332,9 @@ class Compromisso {
                 }
             }
             
+            // Criar notificação para o dono da agenda
+            $this->createNotificationForAgendaOwner($parentId);
+            
             // Se chegou até aqui, confirmar a transação
             $this->db->commit();
             
@@ -222,6 +345,120 @@ class Compromisso {
                 $this->db->rollBack();
             }
             error_log('Erro ao criar compromisso: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Cria uma notificação para o dono da agenda
+     * 
+     * @param int $compromissoId ID do compromisso criado
+     * @return bool Resultado da operação
+     */
+    private function createNotificationForAgendaOwner($compromissoId) {
+        try {
+            // Obter o compromisso
+            $compromisso = $this->getById($compromissoId);
+            if (!$compromisso) {
+                return false;
+            }
+            
+            // Obter a agenda
+            $query = "SELECT a.*, u.id as owner_id, u.name as owner_name FROM agendas a 
+                     JOIN users u ON a.user_id = u.id 
+                     WHERE a.id = :agenda_id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':agenda_id', $compromisso['agenda_id'], PDO::PARAM_INT);
+            $stmt->execute();
+            $agenda = $stmt->fetch();
+            
+            if (!$agenda) {
+                return false;
+            }
+            
+            // Se o usuário atual não for o dono da agenda, criar notificação
+            if ($_SESSION['user_id'] != $agenda['owner_id']) {
+                // Verificar se o módulo de notificação está disponível
+                if (!class_exists('Notification')) {
+                    require_once __DIR__ . '/Notification.php';
+                }
+                
+                $notificationModel = new Notification();
+                
+                // Formatar data
+                $dateObj = new DateTime($compromisso['start_datetime']);
+                $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+                
+                // Criar notificação
+                $message = "Novo compromisso \"{$compromisso['title']}\" foi adicionado em sua agenda \"{$agenda['title']}\" para {$formattedDate}";
+                
+                $notificationData = [
+                    'user_id' => $agenda['owner_id'],
+                    'compromisso_id' => $compromissoId,
+                    'message' => $message,
+                    'is_read' => 0
+                ];
+                
+                $notificationModel->create($notificationData);
+                
+                // Enviar e-mail (opcional)
+                $this->sendEmailNotification($agenda['owner_id'], $compromissoId);
+            }
+            
+            return true;
+        } catch (Exception $e) {
+            error_log('Erro ao criar notificação: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Envia notificação por e-mail (se configurado)
+     * 
+     * @param int $userId ID do usuário
+     * @param int $compromissoId ID do compromisso
+     * @return bool Resultado do envio
+     */
+    private function sendEmailNotification($userId, $compromissoId) {
+        try {
+            // Verificar se o serviço de e-mail está disponível
+            if (!class_exists('EmailService')) {
+                require_once __DIR__ . '/../services/EmailService.php';
+            }
+            
+            // Obter dados do usuário
+            $query = "SELECT * FROM users WHERE id = :id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $user = $stmt->fetch();
+            
+            if (!$user || empty($user['email'])) {
+                return false;
+            }
+            
+            // Obter dados do compromisso
+            $compromisso = $this->getById($compromissoId);
+            if (!$compromisso) {
+                return false;
+            }
+            
+            // Obter dados da agenda
+            $query = "SELECT * FROM agendas WHERE id = :id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $compromisso['agenda_id'], PDO::PARAM_INT);
+            $stmt->execute();
+            $agenda = $stmt->fetch();
+            
+            if (!$agenda) {
+                return false;
+            }
+            
+            // Enviar e-mail
+            $emailService = new EmailService();
+            return $emailService->sendNewCompromissoNotification($user, $compromisso, $agenda);
+        } catch (Exception $e) {
+            error_log('Erro ao enviar e-mail de notificação: ' . $e->getMessage());
             return false;
         }
     }

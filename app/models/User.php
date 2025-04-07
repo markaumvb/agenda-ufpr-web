@@ -1,15 +1,8 @@
 <?php
-// Arquivo: agenda_ufpr/app/models/User.php
 
-/**
- * Modelo para gerenciar os dados de usuários
- */
 class User {
     private $db;
     
-    /**
-     * Construtor
-     */
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
@@ -20,18 +13,69 @@ class User {
      * @param string $username Nome de usuário
      * @return array|false Dados do usuário ou false se não encontrado
      */
-    public function findByUsername($username) {
+    public function findByEmail($email) {
         try {
-            $query = "SELECT * FROM users WHERE username = :username LIMIT 1";
+            $query = "SELECT * FROM users WHERE email = :email LIMIT 1";
             $stmt = $this->db->prepare($query);
-            $stmt->execute(['username' => $username]);
+            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+            $stmt->execute();
             
             return $stmt->fetch();
         } catch (PDOException $e) {
-            error_log('Erro ao buscar usuário: ' . $e->getMessage());
+            error_log('Erro ao buscar usuário por e-mail: ' . $e->getMessage());
             return false;
         }
     }
+    
+
+public function updateLastLogin($id) {
+    try {
+        // Verificar se a coluna last_login existe na tabela
+        $checkQuery = "SHOW COLUMNS FROM users LIKE 'last_login'";
+        $checkStmt = $this->db->prepare($checkQuery);
+        $checkStmt->execute();
+        
+        // Se a coluna não existir, vamos criá-la
+        if ($checkStmt->rowCount() === 0) {
+            $alterQuery = "ALTER TABLE users ADD COLUMN last_login DATETIME NULL";
+            $alterStmt = $this->db->prepare($alterQuery);
+            $alterStmt->execute();
+        }
+        
+        // Atualizar a data do último login
+        $query = "UPDATE users SET last_login = NOW() WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log('Erro ao atualizar data de último login: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Verifica se o usuário completou o registro
+ * 
+ * @param int $id ID do usuário
+ * @return bool Se o usuário completou o registro
+ */
+public function isRegistrationComplete($id) {
+    try {
+        $query = "SELECT first_access FROM users WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $result = $stmt->fetch();
+        
+        // Se first_access for 0, o registro está completo
+        return $result && $result['first_access'] == 0;
+    } catch (PDOException $e) {
+        error_log('Erro ao verificar registro do usuário: ' . $e->getMessage());
+        return false;
+    }
+}
     
     /**
      * Cria um novo usuário

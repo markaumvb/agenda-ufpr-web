@@ -1,8 +1,9 @@
 <?php
-// Arquivo: agenda_ufpr/app/controllers/AuthController.php
+// Arquivo: app/controllers/AuthController.php
 
 /**
  * Controlador para autenticação e registro de usuários
+ * Versão aprimorada com tratamento de exceções e validação
  */
 class AuthController {
     private $radiusService;
@@ -20,177 +21,254 @@ class AuthController {
         require_once __DIR__ . '/../models/Database.php';
         require_once __DIR__ . '/../models/User.php';
         $this->userModel = new User();
+        
+        // Carregar classes de validação e tratamento de exceções
+        require_once __DIR__ . '/../helpers/Validator.php';
+        require_once __DIR__ . '/../helpers/ExceptionHandler.php';
     }
     
     /**
      * Exibe o formulário de login
      */
     public function showLoginForm() {
-        // Verifica se usuário já está logado
-        if (isset($_SESSION['user_id'])) {
-            header('Location: ' . BASE_URL);
-            exit;
+        try {
+            // Verifica se usuário já está logado
+            if (isset($_SESSION['user_id'])) {
+                header('Location: ' . BASE_URL . '/public');
+                exit;
+            }
+            
+            require_once __DIR__ . '/../views/shared/header.php';
+            require_once __DIR__ . '/../views/auth/login.php';
+            require_once __DIR__ . '/../views/shared/footer.php';
+        } catch (Exception $e) {
+            ExceptionHandler::handle($e);
         }
-        
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/auth/login.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
     }
     
     /**
      * Processa o login do usuário
      */
     public function login() {
-      // Verifica se é uma requisição POST
-      if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-          header('Location: ' . BASE_URL . '/public/login');
-          exit;
-      }
-      
-      // Obtém os dados do formulário
-      $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
-      $password = $_POST['password']; // Não sanitizar a senha para não alterar caracteres especiais
-      
-      // Valida os campos
-      if (empty($username) || empty($password)) {
-          $_SESSION['flash_message'] = 'Todos os campos são obrigatórios';
-          $_SESSION['flash_type'] = 'danger';
-          header('Location: ' . BASE_URL . '/public/login');
-          exit;
-      }
-      
-      // Tenta autenticar no RADIUS
-      $authenticated = $this->radiusService->authenticate($username, $password);
-      
-      if (!$authenticated) {
-          $_SESSION['flash_message'] = 'Credenciais inválidas';
-          $_SESSION['flash_type'] = 'danger';
-          header('Location: ' . BASE_URL . '/public/login');
-          exit;
-      }
-      
-      // Verifica se o usuário já existe no sistema
-      $user = $this->userModel->findByUsername($username);
-      
-      if (!$user) {
-          // Primeiro acesso do usuário - redirecionar para completar cadastro
-          $_SESSION['temp_username'] = $username;
-          $_SESSION['flash_message'] = 'Primeiro acesso detectado. Por favor, complete seu cadastro.';
-          $_SESSION['flash_type'] = 'success';
-          header('Location: ' . BASE_URL . '/public/register');
-          exit;
-      }
-      
-      // Login bem-sucedido - criar sessão
-      $_SESSION['user_id'] = $user['id'];
-      $_SESSION['username'] = $user['username'];
-      $_SESSION['user_name'] = $user['name'];
-      
-      $_SESSION['flash_message'] = 'Login realizado com sucesso';
-      $_SESSION['flash_type'] = 'success';
-      header('Location: ' . BASE_URL . '/public');
-      exit;
-  }
+        try {
+            // Verifica se é uma requisição POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new ValidationException(
+                    'Método de requisição inválido', 
+                    [], 
+                    'Método de requisição inválido'
+                );
+            }
+            
+            // Obter dados do formulário
+            $data = [
+                'username' => filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING),
+                'password' => $_POST['password'] ?? '' // Não sanitizar a senha
+            ];
+            
+            // Validar os campos
+            $rules = [
+                'username' => 'required|min:3',
+                'password' => 'required'
+            ];
+            
+            $validator = new Validator($data, $rules);
+            
+            if (!$validator->validate()) {
+                $_SESSION['validation_errors'] = $validator->getFirstErrors();
+                $_SESSION['error_fields'] = $validator->getFirstErrors();
+                
+                header('Location: ' . BASE_URL . '/public/login');
+                exit;
+            }
+            
+            // Tenta autenticar no RADIUS
+            $authenticated = $this->radiusService->authenticate($data['username'], $data['password']);
+            
+            if (!$authenticated) {
+                throw new AuthException(
+                    'Falha na autenticação RADIUS', 
+                    'Credenciais inválidas. Por favor, verifique seu usuário e senha.'
+                );
+            }
+            
+            // Verifica se o usuário já existe no sistema
+            $user = $this->userModel->findByUsername($data['username']);
+            
+            if (!$user) {
+                // Primeiro acesso do usuário - redirecionar para completar cadastro
+                $_SESSION['temp_username'] = $data['username'];
+                $_SESSION['flash_message'] = 'Primeiro acesso detectado. Por favor, complete seu cadastro.';
+                $_SESSION['flash_type'] = 'success';
+                
+                header('Location: ' . BASE_URL . '/public/register');
+                exit;
+            }
+            
+            // Login bem-sucedido - criar sessão
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['user_name'] = $user['name'];
+            
+            // Atualizar última data de login (opcional)
+            $this->userModel->updateLastLogin($user['id']);
+            
+            $_SESSION['flash_message'] = 'Login realizado com sucesso! Bem-vindo(a), ' . $user['name'] . '.';
+            $_SESSION['flash_type'] = 'success';
+            
+            header('Location: ' . BASE_URL . '/public');
+            exit;
+            
+        } catch (AppException $e) {
+            ExceptionHandler::handle($e);
+        } catch (Exception $e) {
+            ExceptionHandler::handle($e);
+        }
+    }
     
     /**
      * Exibe o formulário de registro (primeiro acesso)
      */
     public function showRegisterForm() {
-        // Verifica se há um usuário temporário (autenticado no RADIUS mas não cadastrado no sistema)
-        if (!isset($_SESSION['temp_username'])) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
+        try {
+            // Verifica se há um usuário temporário (autenticado no RADIUS mas não cadastrado no sistema)
+            if (!isset($_SESSION['temp_username'])) {
+                header('Location: ' . BASE_URL . '/public/login');
+                exit;
+            }
+            
+            $username = $_SESSION['temp_username'];
+            
+            require_once __DIR__ . '/../views/shared/header.php';
+            require_once __DIR__ . '/../views/auth/register.php';
+            require_once __DIR__ . '/../views/shared/footer.php';
+        } catch (Exception $e) {
+            ExceptionHandler::handle($e);
         }
-        
-        $username = $_SESSION['temp_username'];
-        
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/auth/register.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
     }
     
     /**
      * Processa o registro do usuário (primeiro acesso)
      */
     public function register() {
-        // Verifica se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/register');
+        try {
+            // Verifica se é uma requisição POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new ValidationException(
+                    'Método de requisição inválido', 
+                    [], 
+                    'Método de requisição inválido'
+                );
+            }
+            
+            // Verifica se há um usuário temporário
+            if (!isset($_SESSION['temp_username'])) {
+                header('Location: ' . BASE_URL . '/public/login');
+                exit;
+            }
+            
+            $username = $_SESSION['temp_username'];
+            
+            // Obter dados do formulário
+            $data = [
+                'username' => $username,
+                'name' => filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING),
+                'email' => filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)
+            ];
+            
+            // Guardar dados do formulário em caso de erro
+            $_SESSION['form_data'] = $data;
+            
+            // Validar os campos
+            $rules = [
+                'name' => 'required|min:3|max:100',
+                'email' => 'required|email'
+            ];
+            
+            $validator = new Validator($data, $rules);
+            
+            if (!$validator->validate()) {
+                $_SESSION['validation_errors'] = $validator->getFirstErrors();
+                $_SESSION['error_fields'] = $validator->getFirstErrors();
+                
+                header('Location: ' . BASE_URL . '/public/register');
+                exit;
+            }
+            
+            // Validação adicional para domínio de e-mail (opcional)
+            if (strpos($data['email'], '@ufpr.br') === false && strpos($data['email'], '@mail.ufpr.br') === false) {
+                $_SESSION['validation_errors'] = ['email' => 'Recomendamos usar seu e-mail institucional @ufpr.br'];
+                $_SESSION['error_fields'] = ['email' => 'Recomendamos usar seu e-mail institucional @ufpr.br'];
+                
+                // Esta é apenas uma recomendação, não um erro fatal
+                // Poderia ser uma validação obrigatória se necessário
+            }
+            
+            // Verificar se e-mail já está em uso
+            $existingUser = $this->userModel->findByEmail($data['email']);
+            if ($existingUser) {
+                throw new ValidationException(
+                    'E-mail já em uso', 
+                    ['email' => 'Este e-mail já está em uso por outro usuário.'],
+                    'Este e-mail já está em uso por outro usuário.'
+                );
+            }
+            
+            // Cadastra o usuário
+            $result = $this->userModel->create($data);
+            
+            if (!$result) {
+                throw new DatabaseException(
+                    'Erro ao cadastrar usuário', 
+                    'Erro ao cadastrar usuário. Por favor, tente novamente mais tarde.'
+                );
+            }
+            
+            // Limpa o usuário temporário e dados de formulário
+            unset($_SESSION['temp_username']);
+            unset($_SESSION['form_data']);
+            
+            // Busca o usuário recém-cadastrado
+            $user = $this->userModel->findByUsername($username);
+            
+            // Cria a sessão do usuário
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['user_name'] = $user['name'];
+            
+            $_SESSION['flash_message'] = 'Cadastro realizado com sucesso! Bem-vindo(a) ao Sistema de Agendamento UFPR.';
+            $_SESSION['flash_type'] = 'success';
+            
+            header('Location: ' . BASE_URL . '/public');
             exit;
+            
+        } catch (AppException $e) {
+            ExceptionHandler::handle($e);
+        } catch (Exception $e) {
+            ExceptionHandler::handle($e);
         }
-        
-        // Verifica se há um usuário temporário
-        if (!isset($_SESSION['temp_username'])) {
-            header('Location: ' . BASE_URL . '/login');
-            exit;
-        }
-        
-        $username = $_SESSION['temp_username'];
-        
-        // Obtém os dados do formulário
-        $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
-        $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-        
-        // Valida os campos
-        if (empty($name) || empty($email)) {
-            $_SESSION['flash_message'] = 'Todos os campos são obrigatórios';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/register');
-            exit;
-        }
-        
-        // Valida o e-mail
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['flash_message'] = 'E-mail inválido';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/register');
-            exit;
-        }
-        
-        // Cadastra o usuário
-        $userData = [
-            'username' => $username,
-            'name' => $name,
-            'email' => $email
-        ];
-        
-        $result = $this->userModel->create($userData);
-        
-        if (!$result) {
-            $_SESSION['flash_message'] = 'Erro ao cadastrar usuário';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/register');
-            exit;
-        }
-        
-        // Limpa o usuário temporário
-        unset($_SESSION['temp_username']);
-        
-        // Busca o usuário recém-cadastrado
-        $user = $this->userModel->findByUsername($username);
-        
-        // Cria a sessão do usuário
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['user_name'] = $user['name'];
-        
-        $_SESSION['flash_message'] = 'Cadastro realizado com sucesso';
-        $_SESSION['flash_type'] = 'success';
-        header('Location: ' . BASE_URL);
-        exit;
     }
     
     /**
      * Realiza o logout do usuário
      */
     public function logout() {
-        // Destruir todos os dados da sessão
-        session_start();
-        session_unset();
-        session_destroy();
-        
-        // Redirecionar para a página inicial
-        header('Location: ' . PUBLIC_URL . '/login');
-        exit;
+        try {
+            // Destruir todos os dados da sessão
+            session_unset();
+            session_destroy();
+            
+            // Iniciar nova sessão para mensagem flash
+            session_start();
+            
+            $_SESSION['flash_message'] = 'Logout realizado com sucesso!';
+            $_SESSION['flash_type'] = 'success';
+            
+            // Redirecionar para a página de login
+            header('Location: ' . PUBLIC_URL . '/login');
+            exit;
+        } catch (Exception $e) {
+            ExceptionHandler::handle($e);
+        }
     }
 }

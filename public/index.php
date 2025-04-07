@@ -193,7 +193,37 @@ $routes = [
         'controller' => 'ShareController',
         'action' => 'generatePublicUrl',
         'method' => 'POST'
-    ]
+    ],
+    '/api/check-server-status' => [
+        'controller' => 'ApiController',
+        'action' => 'checkServerStatus',
+        'method' => 'GET'
+    ],
+    '/api/check-time-conflict' => [
+        'controller' => 'ApiController',
+        'action' => 'checkTimeConflict',
+        'method' => 'GET'
+    ],
+    '/api/search-users' => [
+        'controller' => 'ApiController',
+        'action' => 'searchUsers',
+        'method' => 'GET'
+    ],
+    '/api/notifications' => [
+        'controller' => 'ApiController',
+        'action' => 'getNotifications',
+        'method' => 'GET'
+    ],
+    '/api/mark-notification-read' => [
+        'controller' => 'ApiController',
+        'action' => 'markNotificationRead',
+        'method' => 'POST'
+    ],
+    '/api/mark-all-notifications-read' => [
+        'controller' => 'ApiController',
+        'action' => 'markAllNotificationsRead',
+        'method' => 'POST'
+    ],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública
