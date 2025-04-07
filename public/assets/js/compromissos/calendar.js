@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
   setupCalendarDayClicks();
   setupCloseButton();
   highlightToday();
+
+  showTodayEvents();
 });
 
 /**
@@ -17,6 +19,14 @@ function setupCalendarDayClicks() {
     day.addEventListener("click", function () {
       const date = this.dataset.date;
       if (!date) return;
+
+      // Remover seleção anterior
+      document.querySelectorAll(".calendar-day").forEach((d) => {
+        d.classList.remove("selected-day");
+      });
+
+      // Adicionar classe de seleção ao dia clicado
+      this.classList.add("selected-day");
 
       const agendaId = document.querySelector(".calendar-container").dataset
         .agendaId;
