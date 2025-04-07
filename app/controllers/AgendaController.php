@@ -1,15 +1,9 @@
 <?php
-// Arquivo: app/controllers/AgendaController.php
-
-/**
- * Controlador para gerenciar as operações relacionadas a agendas
- */
+require_once __DIR__ . '/BaseController.php';
 class AgendaController {
     private $agendaModel;
     
-    /**
-     * Construtor
-     */
+
     public function __construct() {
         // Carregar o modelo de agenda
         require_once __DIR__ . '/../models/Database.php';

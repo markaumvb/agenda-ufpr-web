@@ -1,19 +1,14 @@
 <?php
-// Arquivo: app/controllers/ShareController.php
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/AuthorizationService.php';
 
-/**
- * Controlador para gerenciar o compartilhamento de agendas
- */
 class ShareController {
     private $agendaModel;
     private $shareModel;
     private $userModel;
+    private $authService;
     
-    /**
-     * Construtor
-     */
     public function __construct() {
-        // Carregar os modelos necessários
         require_once __DIR__ . '/../models/Database.php';
         require_once __DIR__ . '/../models/Agenda.php';
         require_once __DIR__ . '/../models/AgendaShare.php';
@@ -22,14 +17,12 @@ class ShareController {
         $this->agendaModel = new Agenda();
         $this->shareModel = new AgendaShare();
         $this->userModel = new User();
+        $this->authService = new AuthorizationService();
         
         // Verificar se o usuário está logado
         $this->checkAuth();
     }
     
-    /**
-     * Verifica se o usuário está autenticado
-     */
     private function checkAuth() {
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você precisa estar logado para acessar essa página';
@@ -39,9 +32,6 @@ class ShareController {
         }
     }
     
-    /**
-     * Exibe a página de gerenciamento de compartilhamentos de uma agenda
-     */
     public function index() {
         // Obter o ID da agenda da URL
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);

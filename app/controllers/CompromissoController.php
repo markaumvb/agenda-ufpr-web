@@ -1,24 +1,24 @@
 <?php
-// Arquivo: app/controllers/CompromissoController.php
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/CalendarService.php';
+require_once __DIR__ . '/../services/AuthorizationService.php';
 
-/**
- * Controlador para gerenciar os compromissos
- */
 class CompromissoController {
     private $compromissoModel;
     private $agendaModel;
+    private $calendarService;
+    private $authService;
     
-    /**
-     * Construtor
-     */
+
     public function __construct() {
-        // Carregar os modelos necessários
         require_once __DIR__ . '/../models/Database.php';
         require_once __DIR__ . '/../models/Compromisso.php';
         require_once __DIR__ . '/../models/Agenda.php';
         
         $this->compromissoModel = new Compromisso();
         $this->agendaModel = new Agenda();
+        $this->calendarService = new CalendarService();
+        $this->authService = new AuthorizationService();
         
         // Verificar se o usuário está logado
         $this->checkAuth();
@@ -36,9 +36,7 @@ class CompromissoController {
         }
     }
     
-    /**
-     * Exibe o calendário e a lista de compromissos de uma agenda
-     */
+
     public function index() {
         // Obter o ID da agenda da URL
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
@@ -61,7 +59,6 @@ class CompromissoController {
             exit;
         }
         
-        // Verificar se o usuário tem acesso à agenda
         $canAccess = $agenda['is_public'] || $agenda['user_id'] == $_SESSION['user_id'];
         
         if (!$canAccess) {
