@@ -10,7 +10,7 @@ define('ENVIRONMENT', 'development');
 
 // Configurações de URL
 define('BASE_URL', 'https://200.238.174.7/agenda_ufpr');
-define('PUBLIC_URL', BASE_URL . '/public');
+define('PUBLIC_URL', BASE_URL);
 
 // Informações da aplicação
 define('APP_NAME', 'Sistema de Agendamento UFPR / Jandaia do Sul');

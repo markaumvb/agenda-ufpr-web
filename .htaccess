@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /agenda_ufpr/public
+    RewriteBase /agenda_ufpr
     
     # Não aplicar regras de reescrita a arquivos e diretórios existentes
     RewriteCond %{REQUEST_FILENAME} !-f

@@ -1,24 +1,20 @@
 <?php
 // Carregar configurações e constantes
-require_once __DIR__ . '/../app/config/constants.php';
+require_once __DIR__ . '/app/config/constants.php';
 
-
+// Ativar debug
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Debug info
-echo "<pre>DEBUG: Request URI: " . $_SERVER['REQUEST_URI'] . "</pre>";
-echo "<pre>DEBUG: BASE_URL: " . (defined('BASE_URL') ? BASE_URL : 'Not defined') . "</pre>";
-echo "<pre>DEBUG: PHP Version: " . phpversion() . "</pre>";
 // Função para carregar classes automaticamente
 spl_autoload_register(function ($className) {
     // Lista de diretórios para buscar classes
     $directories = [
-        __DIR__ . '/../app/controllers/',
-        __DIR__ . '/../app/models/',
-        __DIR__ . '/../app/services/',
-        __DIR__ . '/../app/helpers/'
+        __DIR__ . '/app/controllers/',
+        __DIR__ . '/app/models/',
+        __DIR__ . '/app/services/',
+        __DIR__ . '/app/helpers/'
     ];
     
     // Verificar se o arquivo existe em algum dos diretórios
@@ -36,26 +32,25 @@ spl_autoload_register(function ($className) {
 // Sistema de roteamento revisado
 $requestUri = $_SERVER['REQUEST_URI'];
 
-// CORREÇÃO: Definir basePath de modo consistente
+// Definir basePath
 $scriptName = $_SERVER['SCRIPT_NAME'];
 $scriptDir = dirname($scriptName);
-$basePath = str_replace('/public', '', $scriptDir);
+$basePath = $scriptDir;
 
 // Remover a base path e parâmetros de query da URI
 $uri = parse_url($requestUri, PHP_URL_PATH);
 $uri = str_replace($basePath, '', $uri);
 
-// Ajustar a URI para processar corretamente
-// Se URI começa com /public, remover essa parte
-if (strpos($uri, '/public') === 0) {
-    $uri = substr($uri, strlen('/public'));
+// Se a URI estiver vazia, definir como '/'
+if (empty($uri)) {
+    $uri = '/';
 }
 
 // Rota padrão
-if ($uri === '/' || $uri === '/index.php' || $uri === '') {
-    require_once __DIR__ . '/../app/views/shared/header.php';
-    require_once __DIR__ . '/../app/views/home.php';
-    require_once __DIR__ . '/../app/views/shared/footer.php';
+if ($uri === '/' || $uri === '/index.php') {
+    require_once __DIR__ . '/app/views/shared/header.php';
+    require_once __DIR__ . '/app/views/home.php';
+    require_once __DIR__ . '/app/views/shared/footer.php';
     exit;
 }
 
@@ -235,10 +230,9 @@ $routes = [
     ],
 ];
 
-// Verificar se a rota corresponde a um padrão de agenda pública
 if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uri, $matches)) {
     $hash = $matches[1];
-    require_once __DIR__ . '/../app/controllers/PublicController.php';
+    require_once __DIR__ . '/app/controllers/PublicController.php';
     $controller = new PublicController();
     $controller->viewPublicAgenda($hash);
     exit;
@@ -272,6 +266,6 @@ if (array_key_exists($uri, $routes)) {
 
 // Se chegou até aqui, a rota não foi encontrada
 header('HTTP/1.1 404 Not Found');
-require_once __DIR__ . '/../app/views/shared/header.php';
-require_once __DIR__ . '/../app/views/errors/404.php';
-require_once __DIR__ . '/../app/views/shared/footer.php';
+require_once __DIR__ . '/app/views/shared/header.php';
+require_once __DIR__ . '/app/views/errors/404.php';
+require_once __DIR__ . '/app/views/shared/footer.php';
