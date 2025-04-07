@@ -25,7 +25,7 @@ define('MAIL_FROM_NAME', 'Sistema de Agendamento UFPR');
 
 // Configurações RADIUS (autenticação)
 define('RADIUS_SERVER', 'radius.ufpr.br');
-define('RADIUS_SECRET', 'senha_compartilhada');
+define('RADIUS_SECRET', 'rapadura');
 define('RADIUS_PORT', 1812);
 
 // Em ambiente de desenvolvimento, podemos simular o RADIUS

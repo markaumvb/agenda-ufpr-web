@@ -1,6 +1,6 @@
 <?php
 return [
-    'host'     => '200.238.174.7',
+    'host'     => 'localhost',
     'username' => 'agenda',
     'password' => 'u|3bxqxlPeUZ',
     'database' => 'agenda_ufpr',
