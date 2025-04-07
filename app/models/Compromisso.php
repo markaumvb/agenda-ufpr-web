@@ -1,15 +1,9 @@
 <?php
-// Arquivo: app/models/Compromisso.php
 
-/**
- * Modelo para gerenciar os dados de compromissos
- */
 class Compromisso {
     private $db;
     
-    /**
-     * Construtor
-     */
+
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
@@ -561,6 +555,9 @@ class Compromisso {
      * @return array Lista de ocorrências com datas de início e fim
      */
     private function calculateOccurrences($repeatType, $startDatetime, $endDatetime, $repeatUntil, $repeatDays) {
+        // Limitar número máximo de recorrências para evitar sobrecarga
+        $MAX_OCCURRENCES = 100;
+        
         // Converter strings para objetos DateTime
         $startDate = new DateTime($startDatetime);
         $endDate = new DateTime($endDatetime);
@@ -581,17 +578,19 @@ class Compromisso {
         // Definir a data atual para iteração
         $currentDate = clone $startDate;
         
+        // Contador de ocorrências para limitar
+        $occurrenceCount = 0;
+        
         // Para cada tipo de recorrência
         switch ($repeatType) {
             case 'daily':
                 // Avançar um dia de cada vez
                 $currentDate->modify('+1 day');
                 
-                while ($untilDate === null || $currentDate <= $untilDate) {
-                    // Dias da semana: 0 (Domingo) a 6 (Sábado)
+                while (($untilDate === null || $currentDate <= $untilDate) && $occurrenceCount < $MAX_OCCURRENCES) {
+                    // Pular fins de semana (sábado e domingo)
                     $dayOfWeek = (int)$currentDate->format('w');
                     
-                    // Pular fins de semana (sábado e domingo)
                     if ($dayOfWeek === 0 || $dayOfWeek === 6) {
                         $currentDate->modify('+1 day');
                         continue;
@@ -613,6 +612,7 @@ class Compromisso {
                     
                     // Avançar para o próximo dia
                     $currentDate->modify('+1 day');
+                    $occurrenceCount++;
                 }
                 break;
                 
@@ -623,7 +623,7 @@ class Compromisso {
                 // Avançar uma semana
                 $currentDate->modify('+1 week');
                 
-                while ($untilDate === null || $currentDate <= $untilDate) {
+                while (($untilDate === null || $currentDate <= $untilDate) && $occurrenceCount < $MAX_OCCURRENCES) {
                     // Calcular nova data de início
                     $newStart = clone $currentDate;
                     $newStart->setTime($startDate->format('H'), $startDate->format('i'), $startDate->format('s'));
@@ -640,6 +640,7 @@ class Compromisso {
                     
                     // Avançar para a próxima semana
                     $currentDate->modify('+1 week');
+                    $occurrenceCount++;
                 }
                 break;
                 
@@ -658,7 +659,7 @@ class Compromisso {
                 // Avançar um dia de cada vez
                 $currentDate->modify('+1 day');
                 
-                while ($untilDate === null || $currentDate <= $untilDate) {
+                while (($untilDate === null || $currentDate <= $untilDate) && $occurrenceCount < $MAX_OCCURRENCES) {
                     // Verificar se o dia da semana está selecionado
                     $dayOfWeek = (string)$currentDate->format('w');
                     
@@ -675,6 +676,8 @@ class Compromisso {
                             'start' => $newStart->format('Y-m-d H:i:s'),
                             'end' => $newEnd->format('Y-m-d H:i:s')
                         ];
+                        
+                        $occurrenceCount++;
                     }
                     
                     // Avançar para o próximo dia
@@ -705,18 +708,18 @@ class Compromisso {
             }
         }
         
-// Configurar versão (4) e variante (RFC 4122)
-$data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-
-// Formatar como string UUID
-$hex = bin2hex($data);
-return sprintf(
-    '%s-%s-%s-%s-%s',
-    substr($hex, 0, 8),
-    substr($hex, 8, 4),
-    substr($hex, 12, 4),
-    substr($hex, 16, 4),
-    substr($hex, 20, 12)
-);
-}
+        // Configurar versão (4) e variante (RFC 4122)
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        
+        // Formatar como string UUID
+        $hex = bin2hex($data);
+        return sprintf(
+            '%s-%s-%s-%s-%s',
+            substr($hex, 0, 8),
+            substr($hex, 8, 4),
+            substr($hex, 12, 4),
+            substr($hex, 16, 4),
+            substr($hex, 20, 12)
+        );
+    }
 }

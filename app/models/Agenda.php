@@ -1,15 +1,9 @@
 <?php
-// Arquivo: app/models/Agenda.php
 
-/**
- * Modelo para gerenciar os dados de agendas
- */
 class Agenda {
     private $db;
     
-    /**
-     * Construtor
-     */
+
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
@@ -269,169 +263,165 @@ class Agenda {
         }
     }
 
-
-/**
- * Obtém todas as agendas que o usuário possui acesso (próprias e compartilhadas)
- * 
- * @param int $userId ID do usuário
- * @param string $search Termo de pesquisa (opcional)
- * @return array Lista de agendas
- */
-public function getAllAccessibleByUser($userId, $search = null) {
-    try {
-        // Verificar se o usuário existe
-        if (!$userId) {
+    /**
+     * Obtém todas as agendas que o usuário possui acesso (próprias e compartilhadas)
+     * 
+     * @param int $userId ID do usuário
+     * @param string $search Termo de pesquisa (opcional)
+     * @return array Lista de agendas
+     */
+    public function getAllAccessibleByUser($userId, $search = null) {
+        try {
+            // Verificar se o usuário existe
+            if (!$userId) {
+                return [];
+            }
+            
+            // Buscar as agendas do usuário e compartilhadas
+            $query = "
+                SELECT 
+                    a.*,
+                    u.name as owner_name,
+                    CASE WHEN a.user_id = :owner_id THEN 1 ELSE 0 END as is_owner,
+                    s.can_edit
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
+                WHERE 
+                    a.user_id = :owned_user_id
+                    OR s.user_id = :accessed_user_id
+                    OR a.is_public = 1
+            ";
+            
+            // Adicionar filtro de pesquisa se especificado
+            if ($search) {
+                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+            }
+            
+            $query .= " ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':owner_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':owned_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':accessed_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':sort_user_id', $userId, PDO::PARAM_INT);
+            
+            if ($search) {
+                $searchParam = "%{$search}%";
+                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
             return [];
         }
-        
-        // Buscar as agendas do usuário e compartilhadas
-        $query = "
-            SELECT 
-                a.*,
-                u.name as owner_name,
-                CASE WHEN a.user_id = :user_id THEN 1 ELSE 0 END as is_owner,
-                s.can_edit
-            FROM agendas a
-            JOIN users u ON a.user_id = u.id
-            LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :user_id2
-            WHERE 
-                a.user_id = :user_id3
-                OR s.user_id = :user_id4
-                OR a.is_public = 1
-        ";
-        
-        // Adicionar filtro de pesquisa se especificado
-        if ($search) {
-            $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+    }
+    
+    /**
+     * Verifica se um usuário tem acesso à agenda
+     * 
+     * @param int $agendaId ID da agenda
+     * @param int $userId ID do usuário
+     * @return bool Se o usuário tem acesso
+     */
+    public function checkUserAccess($agendaId, $userId) {
+        try {
+            // Verificar se o usuário é o dono da agenda
+            if ($this->belongsToUser($agendaId, $userId)) {
+                return true;
+            }
+            
+            // Verificar se a agenda é pública
+            $agenda = $this->getById($agendaId);
+            if ($agenda && $agenda['is_public']) {
+                return true;
+            }
+            
+            // Verificar se a agenda foi compartilhada com o usuário
+            $query = "SELECT COUNT(*) FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return (int)$stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Erro ao verificar acesso do usuário à agenda: ' . $e->getMessage());
+            return false;
         }
-        
-        $query .= " ORDER BY CASE WHEN a.user_id = :user_id5 THEN 0 ELSE 1 END, a.title";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id3', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id4', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id5', $userId, PDO::PARAM_INT);
-        
-        if ($search) {
-            $searchParam = "%{$search}%";
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+    }
+    
+    /**
+     * Verifica se um usuário pode editar uma agenda
+     * 
+     * @param int $agendaId ID da agenda
+     * @param int $userId ID do usuário
+     * @return bool Se o usuário pode editar
+     */
+    public function canUserEdit($agendaId, $userId) {
+        try {
+            // Verificar se o usuário é o dono da agenda
+            if ($this->belongsToUser($agendaId, $userId)) {
+                return true;
+            }
+            
+            // Verificar se a agenda foi compartilhada com o usuário com permissão de edição
+            $query = "SELECT can_edit FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $result = $stmt->fetch();
+            
+            return $result && $result['can_edit'];
+        } catch (PDOException $e) {
+            error_log('Erro ao verificar permissão de edição do usuário na agenda: ' . $e->getMessage());
+            return false;
         }
-        
-        $stmt->execute();
-        return $stmt->fetchAll();
-    } catch (PDOException $e) {
-        error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
-        return [];
+    }
+    
+    /**
+     * Atualiza o hash público de uma agenda
+     * 
+     * @param int $id ID da agenda
+     * @param string $hash Novo hash
+     * @return bool Resultado da operação
+     */
+    public function updatePublicHash($id, $hash) {
+        try {
+            $query = "UPDATE agendas SET public_hash = :hash WHERE id = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':hash', $hash, PDO::PARAM_STR);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log('Erro ao atualizar hash público: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Obtém uma agenda pelo hash público
+     * 
+     * @param string $hash Hash público da agenda
+     * @return array|bool Dados da agenda ou false se não encontrada
+     */
+    public function getByPublicHash($hash) {
+        try {
+            $query = "SELECT * FROM agendas WHERE public_hash = :hash LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':hash', $hash, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar agenda por hash: ' . $e->getMessage());
+            return false;
+        }
     }
 }
-/**
- * Verifica se um usuário tem acesso à agenda
- * 
- * @param int $agendaId ID da agenda
- * @param int $userId ID do usuário
- * @return bool Se o usuário tem acesso
- */
-public function checkUserAccess($agendaId, $userId) {
-    try {
-        // Verificar se o usuário é o dono da agenda
-        if ($this->belongsToUser($agendaId, $userId)) {
-            return true;
-        }
-        
-        // Verificar se a agenda é pública
-        $agenda = $this->getById($agendaId);
-        if ($agenda && $agenda['is_public']) {
-            return true;
-        }
-        
-        // Verificar se a agenda foi compartilhada com o usuário
-        $query = "SELECT COUNT(*) FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return (int)$stmt->fetchColumn() > 0;
-    } catch (PDOException $e) {
-        error_log('Erro ao verificar acesso do usuário à agenda: ' . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Verifica se um usuário pode editar uma agenda
- * 
- * @param int $agendaId ID da agenda
- * @param int $userId ID do usuário
- * @return bool Se o usuário pode editar
- */
-public function canUserEdit($agendaId, $userId) {
-    try {
-        // Verificar se o usuário é o dono da agenda
-        if ($this->belongsToUser($agendaId, $userId)) {
-            return true;
-        }
-        
-        // Verificar se a agenda foi compartilhada com o usuário com permissão de edição
-        $query = "SELECT can_edit FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id LIMIT 1";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $result = $stmt->fetch();
-        
-        return $result && $result['can_edit'];
-    } catch (PDOException $e) {
-        error_log('Erro ao verificar permissão de edição do usuário na agenda: ' . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Atualiza o hash público de uma agenda
- * 
- * @param int $id ID da agenda
- * @param string $hash Novo hash
- * @return bool Resultado da operação
- */
-public function updatePublicHash($id, $hash) {
-    try {
-        $query = "UPDATE agendas SET public_hash = :hash WHERE id = :id";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':hash', $hash, PDO::PARAM_STR);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        error_log('Erro ao atualizar hash público: ' . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Obtém uma agenda pelo hash público
- * 
- * @param string $hash Hash público da agenda
- * @return array|bool Dados da agenda ou false se não encontrada
- */
-
-
-
-public function getByPublicHash($hash) {
-    try {
-        $query = "SELECT * FROM agendas WHERE public_hash = :hash LIMIT 1";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':hash', $hash, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        return $stmt->fetch();
-    } catch (PDOException $e) {
-        error_log('Erro ao buscar agenda por hash: ' . $e->getMessage());
-        return false;
-    }
-}
-
-}   

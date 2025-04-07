@@ -2,7 +2,7 @@
 require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 
-class ShareController {
+class ShareController extends BaseController {
     private $agendaModel;
     private $shareModel;
     private $userModel;
@@ -23,15 +23,6 @@ class ShareController {
         $this->checkAuth();
     }
     
-    private function checkAuth() {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['flash_message'] = 'Você precisa estar logado para acessar essa página';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/login');
-            exit;
-        }
-    }
-    
     public function index() {
         // Obter o ID da agenda da URL
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
@@ -44,7 +35,7 @@ class ShareController {
         }
         
         // Verificar se o usuário é o dono da agenda
-        if (!$this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id'])) {
+        if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para gerenciar compartilhamentos desta agenda';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/public/agendas');
@@ -94,7 +85,7 @@ class ShareController {
         }
         
         // Verificar se o usuário é o dono da agenda
-        if (!$this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id'])) {
+        if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para compartilhar esta agenda';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/public/agendas');
@@ -157,7 +148,7 @@ class ShareController {
         }
         
         // Verificar se o usuário é o dono da agenda
-        if (!$this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id'])) {
+        if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para gerenciar compartilhamentos desta agenda';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/public/agendas');
@@ -203,7 +194,7 @@ class ShareController {
         }
         
         // Verificar se o usuário é o dono da agenda
-        if (!$this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id'])) {
+        if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para gerenciar compartilhamentos desta agenda';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/public/agendas');
@@ -259,7 +250,7 @@ class ShareController {
         }
         
         // Verificar se o usuário é o dono da agenda
-        if (!$this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id'])) {
+        if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para alterar a visibilidade desta agenda';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/public/agendas');

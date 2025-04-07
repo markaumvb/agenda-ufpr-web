@@ -95,7 +95,7 @@ class CompromissoController {
         );
         
         // Preparar dados para a view
-        $calendarData = $this->prepareCalendarData($month, $year, $compromissos);
+        $calendarData = $this->calendarService->prepareCalendarData($month, $year, $compromissos);
         
         // Obter todos os compromissos da agenda para a lista
         $allCompromissos = $this->compromissoModel->getAllByAgenda($agendaId);

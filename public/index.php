@@ -4,27 +4,19 @@ require_once __DIR__ . '/../app/config/constants.php';
 
 // Função para carregar classes automaticamente
 spl_autoload_register(function ($className) {
-    // Converter namespace para caminho de arquivo
-    $classFile = __DIR__ . '/../app/' . str_replace('\\', '/', $className) . '.php';
-    
-    // Verificar caminhos alternativos para classes sem namespace
-    $paths = [
-        __DIR__ . '/../app/controllers/' . $className . '.php',
-        __DIR__ . '/../app/models/' . $className . '.php',
-        __DIR__ . '/../app/services/' . $className . '.php',
-        __DIR__ . '/../app/helpers/' . $className . '.php'
+    // Lista de diretórios para buscar classes
+    $directories = [
+        __DIR__ . '/../app/controllers/',
+        __DIR__ . '/../app/models/',
+        __DIR__ . '/../app/services/',
+        __DIR__ . '/../app/helpers/'
     ];
     
-    // Tentar carregar a classe
-    if (file_exists($classFile)) {
-        require_once $classFile;
-        return true;
-    }
-    
-    // Verificar caminhos alternativos
-    foreach ($paths as $path) {
-        if (file_exists($path)) {
-            require_once $path;
+    // Verificar se o arquivo existe em algum dos diretórios
+    foreach ($directories as $directory) {
+        $file = $directory . $className . '.php';
+        if (file_exists($file)) {
+            require_once $file;
             return true;
         }
     }
@@ -165,6 +157,13 @@ $routes = [
         'action' => 'checkConflict',
         'method' => 'GET'
     ],
+    '/compromissos/cancel-future' => [
+        'controller' => 'CompromissoController',
+        'action' => 'cancelFuture',
+        'method' => 'POST'
+    ],
+    
+    // Rotas de compartilhamento
     '/shares' => [
         'controller' => 'ShareController',
         'action' => 'index',
@@ -194,15 +193,10 @@ $routes = [
         'controller' => 'ShareController',
         'action' => 'generatePublicUrl',
         'method' => 'POST'
-    ],
-    '/compromissos/cancel-future' => [
-    'controller' => 'CompromissoController',
-    'action' => 'cancelFuture',
-    'method' => 'POST'
-]
+    ]
 ];
 
-
+// Verificar se a rota corresponde a um padrão de agenda pública
 if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uri, $matches)) {
     $hash = $matches[1];
     require_once __DIR__ . '/../app/controllers/PublicController.php';
