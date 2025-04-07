@@ -11,7 +11,7 @@ echo "</pre>";
 
 echo "<h2>Constantes Definidas</h2>";
 echo "<pre>";
-require_once __DIR__ . '/../app/config/constants.php';
+require_once __DIR__ . '/app/config/constants.php';
 echo "BASE_URL: " . (defined('BASE_URL') ? BASE_URL : 'Não definido') . "\n";
 echo "PUBLIC_URL: " . (defined('PUBLIC_URL') ? PUBLIC_URL : 'Não definido') . "\n";
 echo "APP_NAME: " . (defined('APP_NAME') ? APP_NAME : 'Não definido') . "\n";
@@ -23,10 +23,10 @@ spl_autoload_register(function ($className) {
     echo "Tentando carregar: $className\n";
     
     $directories = [
-        __DIR__ . '/../app/controllers/',
-        __DIR__ . '/../app/models/',
-        __DIR__ . '/../app/services/',
-        __DIR__ . '/../app/helpers/'
+        __DIR__ . '/app/controllers/',
+        __DIR__ . '/app/models/',
+        __DIR__ . '/app/services/',
+        __DIR__ . '/app/helpers/'
     ];
     
     foreach ($directories as $directory) {
@@ -66,8 +66,8 @@ $testRoutes = [
 
 foreach ($testRoutes as $route) {
     echo "Testando rota: $route\n";
-    $pattern = '/\/agenda_ufpr\/public\/?(.*)$/';
-    $testUrl = "/agenda_ufpr/public" . $route;
+    $pattern = '/\/agenda_ufpr\/?(.*)$/';
+    $testUrl = "/agenda_ufpr" . $route;
     preg_match($pattern, $testUrl, $matches);
     $uri = isset($matches[1]) ? '/' . $matches[1] : '/';
     echo "URL: $testUrl -> URI: $uri\n";
@@ -75,5 +75,5 @@ foreach ($testRoutes as $route) {
 echo "</pre>";
 
 echo "<h2>Links de Teste</h2>";
-echo "<a href='" . BASE_URL . "/public/login'>Página de Login</a><br>";
-echo "<a href='" . BASE_URL . "/public/agendas'>Página de Agendas</a><br>";
+echo "<a href='" . BASE_URL . "/login'>Página de Login</a><br>";
+echo "<a href='" . BASE_URL . "/agendas'>Página de Agendas</a><br>";
