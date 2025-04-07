@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /agenda_ufpr/public
+    
+    # Prevenir loops de redirecionamento interno
+    RewriteCond %{THE_REQUEST} /public/public/
+    RewriteRule ^public/(.*)$ /$1 [R=301,L]
+    
+    # Não reescrever para arquivos e diretórios reais
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Enviar todas as outras requisições para index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Impedir listagem de diretórios
+Options -Indexes
