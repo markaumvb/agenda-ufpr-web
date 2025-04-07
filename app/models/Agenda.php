@@ -1,9 +1,12 @@
 <?php
+// app/models/Agenda.php
 
 class Agenda {
     private $db;
     
-
+    /**
+     * Construtor
+     */
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
@@ -38,6 +41,84 @@ class Agenda {
                 $searchParam = "%{$search}%";
                 $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
             }
+            
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar agendas: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Conta o número total de agendas de um usuário
+     * 
+     * @param int $userId ID do usuário
+     * @param string $search Termo de busca opcional
+     * @return int Total de agendas
+     */
+    public function countAllByUser($userId, $search = null) {
+        try {
+            $query = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
+            $params = ['user_id' => $userId];
+            
+            if ($search) {
+                $query .= " AND (title LIKE :search OR description LIKE :search)";
+                $params['search'] = "%{$search}%";
+            }
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
+            
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('Erro ao contar agendas: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Retorna agendas com paginação
+     * 
+     * @param int $userId ID do usuário
+     * @param int $offset Início da paginação
+     * @param int $limit Limite de registros
+     * @param string $search Termo de busca opcional
+     * @return array Lista de agendas
+     */
+    public function getAllByUserPaginated($userId, $offset = 0, $limit = 10, $search = null) {
+        try {
+            $query = "
+                SELECT a.*, 
+                       (SELECT COUNT(*) FROM compromissos c WHERE c.agenda_id = a.id) as total_compromissos
+                FROM agendas a
+                WHERE a.user_id = :user_id
+            ";
+            
+            $params = ['user_id' => $userId];
+            
+            // Adiciona filtro de pesquisa se especificado
+            if ($search) {
+                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+                $params['search'] = "%{$search}%";
+            }
+            
+            $query .= " ORDER BY a.title LIMIT :offset, :limit";
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                if ($key !== 'offset' && $key !== 'limit') {
+                    $stmt->bindValue(':' . $key, $value);
+                }
+            }
+            
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             
             $stmt->execute();
             return $stmt->fetchAll();
@@ -97,9 +178,29 @@ class Agenda {
      */
     public function create($data) {
         try {
+            // Verificar se já existe uma agenda com o mesmo título para o usuário
+            $existsQuery = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id AND title = :title";
+            $existsStmt = $this->db->prepare($existsQuery);
+            $existsStmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
+            $existsStmt->bindParam(':title', $data['title'], PDO::PARAM_STR);
+            $existsStmt->execute();
+            
+            if ((int)$existsStmt->fetchColumn() > 0) {
+                // Já existe uma agenda com esse título
+                // Pode modificar para permitir nomes duplicados ou retornar erro
+                // Neste caso, vamos modificar o título adicionando um sufixo
+                $data['title'] = $data['title'] . ' (' . date('d/m/Y H:i') . ')';
+            }
+            
+            // Gerar hash público para agendas públicas
+            $publicHash = '';
+            if ($data['is_public']) {
+                $publicHash = md5(uniqid(rand(), true));
+            }
+            
             $query = "
-                INSERT INTO agendas (user_id, title, description, is_public, color, created_at)
-                VALUES (:user_id, :title, :description, :is_public, :color, NOW())
+                INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash)
+                VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash)
             ";
             
             $stmt = $this->db->prepare($query);
@@ -108,6 +209,7 @@ class Agenda {
             $stmt->bindParam(':description', $data['description'], PDO::PARAM_STR);
             $stmt->bindParam(':is_public', $data['is_public'], PDO::PARAM_INT);
             $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
+            $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
             
             if ($stmt->execute()) {
                 return $this->db->lastInsertId();
@@ -129,12 +231,25 @@ class Agenda {
      */
     public function update($id, $data) {
         try {
+            // Obter a agenda atual
+            $currentAgenda = $this->getById($id);
+            if (!$currentAgenda) {
+                return false;
+            }
+            
+            // Se estiver mudando de privada para pública, gerar hash público
+            $publicHash = $currentAgenda['public_hash'];
+            if ($data['is_public'] && empty($publicHash)) {
+                $publicHash = md5(uniqid(rand(), true));
+            }
+            
             $query = "
                 UPDATE agendas
                 SET title = :title,
                     description = :description,
                     is_public = :is_public,
                     color = :color,
+                    public_hash = :public_hash,
                     updated_at = NOW()
                 WHERE id = :id
             ";
@@ -144,6 +259,7 @@ class Agenda {
             $stmt->bindParam(':description', $data['description'], PDO::PARAM_STR);
             $stmt->bindParam(':is_public', $data['is_public'], PDO::PARAM_INT);
             $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
+            $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             
             return $stmt->execute();
@@ -177,13 +293,38 @@ class Agenda {
                 return false;
             }
             
+            // Iniciar transação para garantir consistência
+            $this->db->beginTransaction();
+            
+            // Excluir compartilhamentos
+            $query = "DELETE FROM agenda_shares WHERE agenda_id = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            // Excluir compromissos
+            $query = "DELETE FROM compromissos WHERE agenda_id = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
             // Excluir a agenda
             $query = "DELETE FROM agendas WHERE id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $result = $stmt->execute();
             
-            return $stmt->execute();
+            if ($result) {
+                $this->db->commit();
+                return true;
+            } else {
+                $this->db->rollBack();
+                return false;
+            }
         } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             error_log('Erro ao excluir agenda: ' . $e->getMessage());
             return false;
         }
@@ -298,7 +439,7 @@ class Agenda {
                 $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
             }
             
-            $query .= " ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
+            $query .= " GROUP BY a.id ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
             
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':owner_id', $userId, PDO::PARAM_INT);
@@ -311,6 +452,127 @@ class Agenda {
                 $searchParam = "%{$search}%";
                 $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
             }
+            
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Conta o total de agendas que o usuário pode acessar
+     * 
+     * @param int $userId ID do usuário
+     * @param string $search Termo de busca opcional
+     * @return int Total de agendas acessíveis
+     */
+    public function countAllAccessibleByUser($userId, $search = null) {
+        try {
+            // Verificar se o usuário existe
+            if (!$userId) {
+                return 0;
+            }
+            
+            // Buscar as agendas do usuário e compartilhadas
+            $query = "
+                SELECT COUNT(DISTINCT a.id)
+                FROM agendas a
+                LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
+                WHERE 
+                    a.user_id = :owned_user_id
+                    OR s.user_id = :accessed_user_id
+                    OR a.is_public = 1
+            ";
+            
+            $params = [
+                'shared_user_id' => $userId,
+                'owned_user_id' => $userId,
+                'accessed_user_id' => $userId
+            ];
+            
+            // Adicionar filtro de pesquisa se especificado
+            if ($search) {
+                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+                $params['search'] = "%{$search}%";
+            }
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
+            
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('Erro ao contar agendas acessíveis: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Obtém agendas acessíveis pelo usuário com paginação
+     * 
+     * @param int $userId ID do usuário
+     * @param int $offset Início da paginação
+     * @param int $limit Limite de registros
+     * @param string $search Termo de busca opcional
+     * @return array Lista de agendas
+     */
+    public function getAllAccessibleByUserPaginated($userId, $offset = 0, $limit = 10, $search = null) {
+        try {
+            // Verificar se o usuário existe
+            if (!$userId) {
+                return [];
+            }
+            
+            // Buscar as agendas do usuário e compartilhadas
+            $query = "
+                SELECT 
+                    a.*,
+                    u.name as owner_name,
+                    CASE WHEN a.user_id = :owner_id THEN 1 ELSE 0 END as is_owner,
+                    s.can_edit
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
+                WHERE 
+                    a.user_id = :owned_user_id
+                    OR s.user_id = :accessed_user_id
+                    OR a.is_public = 1
+            ";
+            
+            $params = [
+                'owner_id' => $userId,
+                'shared_user_id' => $userId,
+                'owned_user_id' => $userId,
+                'accessed_user_id' => $userId
+            ];
+            
+            // Adicionar filtro de pesquisa se especificado
+            if ($search) {
+                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+                $params['search'] = "%{$search}%";
+            }
+            
+            $query .= " GROUP BY a.id ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
+            $params['sort_user_id'] = $userId;
+            
+            // Adicionar paginação
+            $query .= " LIMIT :offset, :limit";
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                if ($key !== 'offset' && $key !== 'limit') {
+                    $stmt->bindValue(':' . $key, $value);
+                }
+            }
+            
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             
             $stmt->execute();
             return $stmt->fetchAll();

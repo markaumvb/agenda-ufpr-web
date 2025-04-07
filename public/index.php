@@ -2,6 +2,15 @@
 // Carregar configurações e constantes
 require_once __DIR__ . '/../app/config/constants.php';
 
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Debug info
+echo "<pre>DEBUG: Request URI: " . $_SERVER['REQUEST_URI'] . "</pre>";
+echo "<pre>DEBUG: BASE_URL: " . (defined('BASE_URL') ? BASE_URL : 'Not defined') . "</pre>";
+echo "<pre>DEBUG: PHP Version: " . phpversion() . "</pre>";
 // Função para carregar classes automaticamente
 spl_autoload_register(function ($className) {
     // Lista de diretórios para buscar classes
