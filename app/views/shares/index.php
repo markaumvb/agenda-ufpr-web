@@ -41,7 +41,7 @@
                 <div class="public-url-container mt-3">
                     <p>URL Pública:</p>
                     <div class="input-group">
-                        <input type="text" value="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>" class="form-control" id="publicUrl" readonly>
+                        <input type="text" value="<?= BASE_URL ?>/public-agenda/<?= $agenda['public_hash'] ?>" class="form-control" id="publicUrl" readonly>
                         <button class="btn btn-primary" onclick="copyToClipboard('publicUrl')">Copiar</button>
                     </div>
                     <small class="form-text">Esta URL pode ser compartilhada com qualquer pessoa para visualização da agenda.</small>

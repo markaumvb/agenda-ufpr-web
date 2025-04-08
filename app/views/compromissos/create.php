@@ -5,10 +5,10 @@
 <div class="form-container">
     <div class="form-header">
         <h1>Novo Compromisso</h1>
-        <a href="<?= BASE_URL ?>/public/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-link">Voltar</a>
+        <a href="<?= BASE_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-link">Voltar</a>
     </div>
     
-    <form action="<?= BASE_URL ?>/public/compromissos/save" method="post">
+    <form action="<?= BASE_URL ?>/compromissos/save" method="post">
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
         
         <div class="form-group">
@@ -134,7 +134,7 @@
         
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar</button>
-            <a href="<?= BASE_URL ?>/public/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-secondary">Cancelar</a>
+            <a href="<?= BASE_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-secondary">Cancelar</a>
         </div>
     </form>
 </div>

@@ -5,10 +5,10 @@
 <div class="form-container">
     <div class="form-header">
         <h1>Nova Agenda</h1>
-        <a href="<?= BASE_URL ?>/public/agendas" class="btn btn-link">Voltar</a>
+        <a href="<?= BASE_URL ?>/agendas" class="btn btn-link">Voltar</a>
     </div>
     
-    <form action="<?= BASE_URL ?>/public/agendas/save" method="post">
+    <form action="<?= BASE_URL ?>/agendas/save" method="post">
         <div class="form-group">
             <label for="title">Título *</label>
             <input type="text" id="title" name="title" required class="form-control">
@@ -36,7 +36,7 @@
         
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar</button>
-            <a href="<?= BASE_URL ?>/public/agendas" class="btn btn-secondary">Cancelar</a>
+            <a href="<?= BASE_URL ?>/agendas" class="btn btn-secondary">Cancelar</a>
         </div>
     </form>
 </div>

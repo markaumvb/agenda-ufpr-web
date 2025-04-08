@@ -168,7 +168,7 @@ AgendaUFPR.notifications = {
       const more = document.createElement("li");
       more.className = "notification-footer";
       more.innerHTML = `
-              <a href="${AgendaUFPR.config.baseUrl}/public/notifications">
+              <a href="${AgendaUFPR.config.baseUrl}/notifications">
                   Ver todas (${notifications.length})
               </a>
           `;

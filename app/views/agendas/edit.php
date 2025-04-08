@@ -5,10 +5,10 @@
 <div class="form-container">
     <div class="form-header">
         <h1>Editar Agenda</h1>
-        <a href="<?= BASE_URL ?>/public/agendas" class="btn btn-link">Voltar</a>
+        <a href="<?= BASE_URL ?>/agendas" class="btn btn-link">Voltar</a>
     </div>
     
-    <form action="<?= BASE_URL ?>/public/agendas/update" method="post">
+    <form action="<?= BASE_URL ?>/agendas/update" method="post">
         <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
         
         <div class="form-group">
@@ -41,7 +41,7 @@
         
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-            <a href="<?= BASE_URL ?>/public/agendas" class="btn btn-secondary">Cancelar</a>
+            <a href="<?= BASE_URL ?>/agendas" class="btn btn-secondary">Cancelar</a>
         </div>
     </form>
 </div>

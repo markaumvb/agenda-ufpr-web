@@ -33,13 +33,13 @@
     <div class="calendar-header">
         <h2 class="calendar-title" data-month="<?= $calendarData['month'] ?>" data-year="<?= $calendarData['year'] ?>" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
         <div class="calendar-navigation">
-            <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
+            <a href="<?= BASE_URL ?>/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
                 &laquo; Mês Anterior
             </a>
-            <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>" class="btn btn-outline">
+            <a href="<?= BASE_URL ?>/public-agenda/<?= $agenda['public_hash'] ?>" class="btn btn-outline">
                 Mês Atual
             </a>
-            <a href="<?= BASE_URL ?>/public/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['nextMonth'] ?>&year=<?= $calendarData['nextYear'] ?>" class="btn btn-outline">
+            <a href="<?= BASE_URL ?>/public-agenda/<?= $agenda['public_hash'] ?>?month=<?= $calendarData['nextMonth'] ?>&year=<?= $calendarData['nextYear'] ?>" class="btn btn-outline">
                 Próximo Mês &raquo;
             </a>
         </div>

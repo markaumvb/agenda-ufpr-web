@@ -129,7 +129,7 @@ function showDayEvents(dayElement, date, agendaId) {
                   : ""
               }
               <div class="event-card-actions">
-                  <a href="${BASE_URL}/public/compromissos/edit?id=${id}" class="btn btn-sm btn-secondary">
+                  <a href="${BASE_URL}/compromissos/edit?id=${id}" class="btn btn-sm btn-secondary">
                       <i class="icon-edit"></i> Editar
                   </a>
               </div>
@@ -147,7 +147,7 @@ function showDayEvents(dayElement, date, agendaId) {
     const addButton = document.createElement("div");
     addButton.className = "add-event-button mt-3";
     addButton.innerHTML = `
-          <a href="${BASE_URL}/public/compromissos/new?agenda_id=${agendaId}&date=${date}" class="btn btn-primary">
+          <a href="${BASE_URL}/compromissos/new?agenda_id=${agendaId}&date=${date}" class="btn btn-primary">
               <i class="fas fa-plus"></i> Novo Compromisso neste dia
           </a>
       `;

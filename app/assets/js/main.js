@@ -273,7 +273,7 @@ const AgendaUFPR = {
             <div class="event-card-actions">
               <a href="${
                 AgendaUFPR.config.baseUrl
-              }/public/compromissos/edit?id=${id}" class="btn btn-sm btn-secondary">
+              }/compromissos/edit?id=${id}" class="btn btn-sm btn-secondary">
                 <i class="icon-edit"></i> Editar
               </a>
             </div>
@@ -293,7 +293,7 @@ const AgendaUFPR = {
         const addButton = document.createElement("div");
         addButton.className = "add-event-button mt-3";
         addButton.innerHTML = `
-          <a href="${AgendaUFPR.config.baseUrl}/public/compromissos/new?agenda_id=${agendaId}&date=${date}" class="btn btn-primary">
+          <a href="${AgendaUFPR.config.baseUrl}/compromissos/new?agenda_id=${agendaId}&date=${date}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Novo Compromisso neste dia
           </a>
         `;
