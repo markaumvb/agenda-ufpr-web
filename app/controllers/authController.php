@@ -105,7 +105,7 @@ class AuthController {
             $_SESSION['flash_message'] = 'Login realizado com sucesso! Bem-vindo(a), ' . $user['name'] . '.';
             $_SESSION['flash_type'] = 'success';
             
-            header('Location: ' . BASE_URL . '/public');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
                 
         } catch (Exception $e) {
@@ -233,7 +233,7 @@ class AuthController {
             $_SESSION['flash_message'] = 'Cadastro realizado com sucesso! Bem-vindo(a) ao Sistema de Agendamento UFPR.';
             $_SESSION['flash_type'] = 'success';
             
-            header('Location: ' . BASE_URL . '/public');
+            header('Location: ' . BASE_URL );
             exit;
             
         } catch (AppException $e) {

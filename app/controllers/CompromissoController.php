@@ -107,135 +107,7 @@ class CompromissoController extends BaseController {
         require_once __DIR__ . '/../views/shared/footer.php';
     }
     
-    /**
-     * Prepara os dados para o calendário
-     * 
-     * @param int $month Mês (1-12)
-     * @param int $year Ano
-     * @param array $compromissos Lista de compromissos
-     * @return array Dados para o calendário
-     */
-    private function prepareCalendarData($month, $year, $compromissos) {
-        // Primeiro dia do mês
-        $firstDay = new DateTime("$year-$month-01");
-        
-        // Último dia do mês
-        $lastDay = new DateTime("$year-$month-" . $firstDay->format('t'));
-        
-        // Dia da semana do primeiro dia (0 = Domingo, 6 = Sábado)
-        $firstDayOfWeek = $firstDay->format('w');
-        
-        // Total de dias no mês
-        $totalDays = $lastDay->format('j');
-        
-        // Preparar array de semanas e dias
-        $weeks = [];
-        $day = 1;
-        $currentWeek = 0;
-        
-        // Inicializar a primeira semana com dias vazios
-        $weeks[$currentWeek] = array_fill(0, 7, ['day' => null, 'compromissos' => []]);
-        
-        // Preencher com os dias do mês anterior se necessário
-        for ($i = 0; $i < $firstDayOfWeek; $i++) {
-            $weeks[$currentWeek][$i] = ['day' => null, 'compromissos' => []];
-        }
-        
-        // Preencher os dias do mês
-        for ($i = $firstDayOfWeek; $i < 7; $i++) {
-            if ($day <= $totalDays) {
-                $dateStr = sprintf("%04d-%02d-%02d", $year, $month, $day);
-                $weeks[$currentWeek][$i] = ['day' => $day, 'compromissos' => []];
-                $day++;
-            }
-        }
-        
-        // Continuar com as próximas semanas
-        while ($day <= $totalDays) {
-            $currentWeek++;
-            $weeks[$currentWeek] = array_fill(0, 7, ['day' => null, 'compromissos' => []]);
-            
-            for ($i = 0; $i < 7; $i++) {
-                if ($day <= $totalDays) {
-                    $dateStr = sprintf("%04d-%02d-%02d", $year, $month, $day);
-                    $weeks[$currentWeek][$i] = ['day' => $day, 'compromissos' => []];
-                    $day++;
-                }
-            }
-        }
-        
-        // Adicionar compromissos ao calendário
-        foreach ($compromissos as $compromisso) {
-            $startDate = new DateTime($compromisso['start_datetime']);
-            $endDate = new DateTime($compromisso['end_datetime']);
-            
-            // Verificar se é o mês atual
-            if ($startDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) &&
-                $endDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
-                continue;
-            }
-            
-            // Se o compromisso começar antes do mês atual, ajustar para o primeiro dia
-            if ($startDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
-                $startDate = new DateTime("$year-$month-01");
-            }
-            
-            // Se o compromisso terminar depois do mês atual, ajustar para o último dia
-            if ($endDate->format('Y-m') != "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
-                $endDate = $lastDay;
-            }
-            
-            // Percorrer todos os dias do compromisso
-            $currentDate = clone $startDate;
-            while ($currentDate <= $endDate) {
-                if ($currentDate->format('Y-m') == "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT)) {
-                    $day = $currentDate->format('j');
-                    
-                    // Encontrar a semana e dia correspondente
-                    foreach ($weeks as $weekIndex => $week) {
-                        foreach ($week as $dayIndex => $dayData) {
-                            if ($dayData['day'] == $day) {
-                                $weeks[$weekIndex][$dayIndex]['compromissos'][] = $compromisso;
-                            }
-                        }
-                    }
-                }
-                $currentDate->modify('+1 day');
-            }
-        }
-        
-        // Mapeamento dos nomes dos meses para português (opcional)
-        $monthNames = [
-            1 => 'Janeiro',
-            2 => 'Fevereiro',
-            3 => 'Março',
-            4 => 'Abril',
-            5 => 'Maio',
-            6 => 'Junho',
-            7 => 'Julho',
-            8 => 'Agosto',
-            9 => 'Setembro',
-            10 => 'Outubro',
-            11 => 'Novembro',
-            12 => 'Dezembro'
-        ];
-        
-        // Retornar dados para o calendário
-        return [
-            'month' => $month,
-            'year' => $year,
-            'weeks' => $weeks,
-            'monthName' => $monthNames[$month] ?? $firstDay->format('F'),
-            'previousMonth' => $month == 1 ? 12 : $month - 1,
-            'previousYear' => $month == 1 ? $year - 1 : $year,
-            'nextMonth' => $month == 12 ? 1 : $month + 1,
-            'nextYear' => $month == 12 ? $year + 1 : $year
-        ];
-    }
-    
-    /**
-     * Exibe o formulário para criar um novo compromisso
-     */
+
     public function create() {
         // Obter o ID da agenda da URL
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
@@ -313,13 +185,13 @@ class CompromissoController extends BaseController {
         
         // Obter dados do formulário
         $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
-        $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
-        $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
-        $startDatetime = filter_input(INPUT_POST, 'start_datetime', FILTER_SANITIZE_STRING);
-        $endDatetime = filter_input(INPUT_POST, 'end_datetime', FILTER_SANITIZE_STRING);
-        $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_STRING);
-        $repeatType = filter_input(INPUT_POST, 'repeat_type', FILTER_SANITIZE_STRING);
-        $repeatUntil = filter_input(INPUT_POST, 'repeat_until', FILTER_SANITIZE_STRING);
+        $title = htmlspecialchars(filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW) ?? '');
+        $description = htmlspecialchars(filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW) ?? '');
+        $startDatetime = htmlspecialchars(filter_input(INPUT_POST, 'start_datetime', FILTER_UNSAFE_RAW) ?? '');
+        $endDatetime = htmlspecialchars(filter_input(INPUT_POST, 'end_datetime', FILTER_UNSAFE_RAW) ?? '');
+        $location = htmlspecialchars(filter_input(INPUT_POST, 'location', FILTER_UNSAFE_RAW) ?? '');
+        $repeatType = htmlspecialchars(filter_input(INPUT_POST, 'repeat_type', FILTER_UNSAFE_RAW) ?? '');
+        $repeatUntil = htmlspecialchars(filter_input(INPUT_POST, 'repeat_until', FILTER_UNSAFE_RAW) ?? '');
         $repeatDays = isset($_POST['repeat_days']) ? implode(',', $_POST['repeat_days']) : null;
         $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING) ?: 'pendente';
         
@@ -501,7 +373,7 @@ class CompromissoController extends BaseController {
         $repeatType = filter_input(INPUT_POST, 'repeat_type', FILTER_SANITIZE_STRING);
         $repeatUntil = filter_input(INPUT_POST, 'repeat_until', FILTER_SANITIZE_STRING);
         $repeatDays = isset($_POST['repeat_days']) ? implode(',', $_POST['repeat_days']) : null;
-        $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
+        $status = htmlspecialchars(filter_input(INPUT_POST, 'status', FILTER_UNSAFE_RAW) ?? '') ?: 'pendente';
         $updateFutureOccurrences = isset($_POST['update_future']) ? true : false;
         
         // Validar dados obrigatórios

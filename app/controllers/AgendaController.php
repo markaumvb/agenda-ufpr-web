@@ -18,6 +18,7 @@ class AgendaController extends BaseController {
     public function index() {
         $userId = $_SESSION['user_id'];
         $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+
         
         // Buscar todas as agendas acessíveis pelo usuário
         $agendas = $this->agendaModel->getAllAccessibleByUser($userId, $search);
@@ -67,8 +68,8 @@ class AgendaController extends BaseController {
         }
         
         // Obter os dados do formulário
-        $title = filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW);
-        $description = filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW);
+        $title = htmlspecialchars(filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW) ?? '');
+        $description = htmlspecialchars(filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW) ?? '');
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
         $color = filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?: '#3788d8';
         
@@ -174,7 +175,7 @@ class AgendaController extends BaseController {
         $title = filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW);
         $description = filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW);
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
-        $color = filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?: '#3788d8';
+        $color = htmlspecialchars(filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?? '') ?: '#3788d8';
         
         // Validar os dados
         if (empty($title)) {

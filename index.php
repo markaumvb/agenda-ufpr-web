@@ -45,6 +45,10 @@ if ($uri !== '/' && substr($uri, -1) === '/') {
 
 // Rota padrão
 if ($uri === '/' || $uri === '/index.php' || $uri === '') {
+    // Debug - Verificar qual rota está sendo acessada
+    error_log("URI original: " . $_SERVER['REQUEST_URI']);
+    error_log("URI processada: " . $uri);
+    
     require_once __DIR__ . '/app/views/shared/header.php';
     require_once __DIR__ . '/app/views/home.php';
     require_once __DIR__ . '/app/views/shared/footer.php';
