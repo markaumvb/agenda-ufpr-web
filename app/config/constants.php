@@ -24,7 +24,7 @@ define('RADIUS_PORT', 1812);
 
 // Em ambiente de desenvolvimento, podemos simular o RADIUS
 if (ENVIRONMENT === 'development') {
-    define('SIMULATE_RADIUS', true);
+    define('SIMULATE_RADIUS', false);
 }
 
 // Configurações de segurança
