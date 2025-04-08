@@ -1,0 +1,5 @@
+{
+  "require": {
+    "dapphp/radius": "^2.0"
+  }
+}
