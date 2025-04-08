@@ -846,4 +846,21 @@
 .filter-group .calendar-clear-btn {
   white-space: nowrap;
 }
+
+.calendar-day.selected-day {
+  background-color: #daeeff !important;
+  outline: 2px solid #004a8f;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 8px rgba(0, 74, 143, 0.3);
+}
+
+.calendar-day:not(.empty-day) {
+  cursor: pointer;
+}
+
+/* Efeito de hover para indicar interatividade */
+.calendar-day:not(.empty-day):hover {
+  background-color: #e6f0fd;
+}
 }
