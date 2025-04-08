@@ -171,7 +171,7 @@
                 $endDate = new DateTime($compromisso['end_datetime']);
                 ?>
                 
-                <div class="event-card event-status-<?= $compromisso['status'] ?>" data-status="<?= $compromisso['status'] ?>" data-month="<?= $startDate->format('n') ?>" data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
+                <div class="event-card event-status-<?= $compromisso['status'] ?>" data-status="<?= $compromisso['status'] ?>" data-month="<?= $startDate->format('n') ?>" data-date="<?= $startDate->format('Y-m-d') ?>" data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
                     <div class="event-header">
                         <h3 class="event-title"><?= htmlspecialchars($compromisso['title']) ?></h3>
                         <div class="event-status">
@@ -304,3 +304,4 @@
 
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/index.js"></script>
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/calendar.js"></script>
+<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/day-filter.js"></script>
