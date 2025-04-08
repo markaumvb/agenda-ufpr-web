@@ -1,4 +1,3 @@
-// app/services/CalendarService.php
 <?php
 class CalendarService {
     /**

@@ -1,27 +1,23 @@
 <?php
-// Arquivo: app/controllers/PublicController.php
 
-/**
- * Controlador para visualização pública de agendas
- */
 class PublicController {
     private $agendaModel;
     private $compromissoModel;
     private $userModel;
     
-    /**
-     * Construtor
-     */
+
     public function __construct() {
         // Carregar os modelos necessários
         require_once __DIR__ . '/../models/Database.php';
         require_once __DIR__ . '/../models/Agenda.php';
         require_once __DIR__ . '/../models/Compromisso.php';
         require_once __DIR__ . '/../models/User.php';
+        require_once __DIR__ . '/../services/CalendarService.php';
         
         $this->agendaModel = new Agenda();
         $this->compromissoModel = new Compromisso();
         $this->userModel = new User();
+        $this->calendarService = new CalendarService();
     }
     
     /**

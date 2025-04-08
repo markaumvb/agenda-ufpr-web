@@ -418,57 +418,60 @@ class Agenda {
                 return [];
             }
             
-            // Buscar as agendas do usuário e compartilhadas
+            // Consulta modificada para ser mais direta
             $query = "
-                SELECT 
+                (SELECT 
                     a.*,
                     u.name as owner_name,
-                    CASE WHEN a.user_id = :owner_id THEN 1 ELSE 0 END as is_owner,
+                    1 as is_owner,
+                    NULL as can_edit
+                 FROM agendas a
+                 JOIN users u ON a.user_id = u.id
+                 WHERE a.user_id = :user_id)
+                
+                 UNION
+                
+                (SELECT 
+                    a.*,
+                    u.name as owner_name,
+                    0 as is_owner,
                     s.can_edit
-                FROM agendas a
-                JOIN users u ON a.user_id = u.id
-                LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
-                WHERE 
-                    a.user_id = :owned_user_id 
-                    OR s.user_id = :accessed_user_id
-                    OR a.is_public = 1
+                 FROM agendas a
+                 JOIN users u ON a.user_id = u.id
+                 JOIN agenda_shares s ON a.id = s.agenda_id
+                 WHERE s.user_id = :shared_user_id)
+                
+                 UNION
+                
+                (SELECT 
+                    a.*,
+                    u.name as owner_name,
+                    0 as is_owner,
+                    0 as can_edit
+                 FROM agendas a
+                 JOIN users u ON a.user_id = u.id
+                 WHERE a.is_public = 1 AND a.user_id != :public_user_id)
             ";
-            
-            $params = [
-                'owner_id' => $userId,
-                'shared_user_id' => $userId,
-                'owned_user_id' => $userId,
-                'accessed_user_id' => $userId
-            ];
             
             // Adicionar filtro de pesquisa se especificado
             if ($search) {
-                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
-                $params['search'] = "%{$search}%";
+                $query = "SELECT * FROM ($query) as result WHERE (title LIKE :search OR description LIKE :search)";
             }
             
-            $query .= " GROUP BY a.id ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
-            $params['sort_user_id'] = $userId;
+            $query .= " ORDER BY is_owner DESC, title ASC";
             
             $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':public_user_id', $userId, PDO::PARAM_INT);
             
-            foreach ($params as $key => $value) {
-                if (is_int($value)) {
-                    $stmt->bindValue(':' . $key, $value, PDO::PARAM_INT);
-                } else {
-                    $stmt->bindValue(':' . $key, $value, PDO::PARAM_STR);
-                }
+            if ($search) {
+                $searchParam = "%{$search}%";
+                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
             }
             
             $stmt->execute();
-            $result = $stmt->fetchAll();
-            
-            // Debug - remover após testes
-            // error_log('SQL: ' . $query);
-            // error_log('Params: ' . print_r($params, true));
-            // error_log('Result count: ' . count($result));
-            
-            return $result;
+            return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
             return [];

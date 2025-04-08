@@ -135,8 +135,9 @@
   background-color: #ddd;
 }
 
-.has-events {
+.has-events 
   background-color: #f0f8ff;
+  position: relative;
 }
 
 .day-events {
@@ -408,7 +409,7 @@
     transform: translateX(-50%);
     width: 6px;
     height: 6px;
-    background-color: #004a8f; /* Azul UFPR */
+    background-color: #004a8f; 
     border-radius: 50%;
   }
 
@@ -557,6 +558,8 @@
   .selected-day {
     background-color: #daeeff !important;
     outline: 2px solid #004a8f;
+    position: relative;
+    z-index: 1;
   }
 
   /* Painel para exibir eventos do dia */
@@ -567,6 +570,7 @@
     margin-top: 1.5rem;
     margin-bottom: 2rem;
     overflow: hidden;
+    display: none; /* Inicialmente oculto */
   }
 
   .day-events-header {
@@ -577,7 +581,7 @@
     justify-content: space-between;
     align-items: center;
   }
-
+  
   .day-events-header h3 {
     margin: 0;
     font-size: 1.2rem;
@@ -589,13 +593,14 @@
     color: #fff;
     font-size: 1.5rem;
     cursor: pointer;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
   }
+  
+  .day-events-list {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
 
   .day-events-close:hover {
     background-color: rgba(255, 255, 255, 0.2);

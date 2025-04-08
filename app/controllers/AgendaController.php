@@ -1,4 +1,4 @@
-    <?php
+<?php
 require_once __DIR__ . '/BaseController.php';
 class AgendaController extends BaseController {
     private $agendaModel;

@@ -1,4 +1,4 @@
-// app/controllers/BaseController.php
+
 <?php
 class BaseController {
     /**

@@ -167,7 +167,7 @@ class AuthController {
             $data = [
                 'username' => $username,
                 'name' => filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING),
-                'email' => filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)
+                'email' => $username . '@mail.ufpr.br' // Gera o email com base no username
             ];
             
             // Guardar dados do formulário em caso de erro
@@ -176,7 +176,6 @@ class AuthController {
             // Validar os campos
             $rules = [
                 'name' => 'required|min:3|max:100',
-                'email' => 'required|email'
             ];
             
             $validator = new Validator($data, $rules);
@@ -189,14 +188,6 @@ class AuthController {
                 exit;
             }
             
-            // Validação adicional para domínio de e-mail (opcional)
-            if (strpos($data['email'], '@ufpr.br') === false && strpos($data['email'], '@mail.ufpr.br') === false) {
-                $_SESSION['validation_errors'] = ['email' => 'Recomendamos usar seu e-mail institucional @ufpr.br'];
-                $_SESSION['error_fields'] = ['email' => 'Recomendamos usar seu e-mail institucional @ufpr.br'];
-                
-                // Esta é apenas uma recomendação, não um erro fatal
-                // Poderia ser uma validação obrigatória se necessário
-            }
             
             // Verificar se e-mail já está em uso
             $existingUser = $this->userModel->findByEmail($data['email']);

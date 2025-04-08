@@ -40,19 +40,7 @@
                 <div class="field-error"><?= $_SESSION['error_fields']['name'] ?></div>
             <?php endif; ?>
         </div>
-        
-        <div class="form-group">
-            <label for="email">E-mail:</label>
-            <input type="email" id="email" name="email" required 
-                   value="<?= htmlspecialchars($_SESSION['form_data']['email'] ?? '') ?>"
-                   placeholder="Seu email institucional @ufpr.br"
-                   class="form-control <?= isset($_SESSION['error_fields']['email']) ? 'is-invalid' : '' ?>">
-            <?php if (isset($_SESSION['error_fields']['email'])): ?>
-                <div class="field-error"><?= $_SESSION['error_fields']['email'] ?></div>
-            <?php endif; ?>
-            <small class="form-text">Preferencialmente seu e-mail institucional - será usado para notificações do sistema</small>
-        </div>
-        
+                
         <div class="form-group form-actions">
             <button type="submit" class="btn btn-primary">Concluir Cadastro</button>
         </div>
