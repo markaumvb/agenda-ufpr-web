@@ -108,10 +108,12 @@
 </div>
 
 <!-- Container para exibir os compromissos do dia selecionado -->
-<div id="day-events-container" class="day-events-container" style="display: none;">
-    <div class="day-events-header">
-        <h3 id="day-events-title">Compromissos do dia</h3>
-        <button class="day-events-close">&times;</button>
+    <div id="day-events-container" class="day-events-container">
+        <div class="day-events-header">
+            <h3 id="day-events-title">Compromissos do dia</h3>
+            <button class="day-events-close">&times;</button>
+        </div>
+        <div id="day-events-list" class="day-events-list"></div>
     </div>
     <div id="day-events-list" class="day-events-list"></div>
 </div>
