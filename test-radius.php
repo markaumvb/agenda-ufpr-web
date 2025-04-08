@@ -1,5 +1,5 @@
 <?php
-// test-radius.php (remova após o teste)
+// test-radius.php (versão corrigida)
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/app/config/constants.php';
 
@@ -20,9 +20,12 @@ echo "<form method='post'>
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $radius = new \Dapphp\Radius\Radius();
+        // Não use setPort() - use a porta padrão ou configure no construtor
         $radius->setServer('200.17.209.10')
-               ->setSecret('rapadura')
-               ->setPort(1812);
+               ->setSecret('rapadura');
+        
+        // Opcionalmente, você pode configurar a porta assim:
+        // $radius->server = '200.17.209.10:1812';  // hostname:porta
         
         $result = $radius->accessRequest($_POST['username'], $_POST['password']);
         
