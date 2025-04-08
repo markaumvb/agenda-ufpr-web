@@ -1,10 +1,4 @@
 <?php
-// Arquivo: app/config/constants.php
-
-/**
- * Constantes e configurações gerais da aplicação
- */
-
 // Ambiente (development ou production)
 define('ENVIRONMENT', 'development');
 
@@ -24,7 +18,7 @@ define('MAIL_PASSWORD', 'senha_do_email');
 define('MAIL_FROM_NAME', 'Sistema de Agendamento UFPR');
 
 // Configurações RADIUS (autenticação)
-define('RADIUS_SERVER', 'radius.ufpr.br');
+define('RADIUS_SERVER', '200.17.209.10');
 define('RADIUS_SECRET', 'rapadura');
 define('RADIUS_PORT', 1812);
 
