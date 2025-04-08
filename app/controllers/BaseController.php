@@ -8,7 +8,7 @@ class BaseController {
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você precisa estar logado para acessar essa página';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/login');
+            header('Location: ' . BASE_URL . '/login');
             exit;
         }
     }

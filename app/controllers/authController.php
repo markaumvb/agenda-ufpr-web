@@ -46,12 +46,9 @@ class AuthController {
         }
     }
     
-    /**
-     * Processa o login do usuário
-     */
     public function login() {
         try {
-            // Verifica se é uma requisição POST
+            // Verificar se é uma requisição POST
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new ValidationException(
                     'Método de requisição inválido', 
@@ -61,43 +58,35 @@ class AuthController {
             }
             
             // Obter dados do formulário
-            $data = [
-                'username' => filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING),
-                'password' => $_POST['password'] ?? '' // Não sanitizar a senha
-            ];
+            $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
+            $password = $_POST['password'] ?? ''; // Não sanitizar a senha
             
-            // Validar os campos
-            $rules = [
-                'username' => 'required|min:3',
-                'password' => 'required'
-            ];
-            
-            $validator = new Validator($data, $rules);
-            
-            if (!$validator->validate()) {
-                $_SESSION['validation_errors'] = $validator->getFirstErrors();
-                $_SESSION['error_fields'] = $validator->getFirstErrors();
-                
-                header('Location: ' . BASE_URL . '/public/login');
+            // Validação básica
+            if (empty($username) || empty($password)) {
+                $_SESSION['flash_message'] = 'Usuário e senha são obrigatórios';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/login');
                 exit;
             }
             
-            // Tenta autenticar no RADIUS
-            $authenticated = $this->radiusService->authenticate($data['username'], $data['password']);
+            // Tentar autenticar via RADIUS
+            $radiusService = new RadiusService();
+            $authenticated = $radiusService->authenticate($username, $password);
             
             if (!$authenticated) {
-                throw new AuthException(
-                    'Falha na autenticação RADIUS', 
-                    'Credenciais inválidas. Por favor, verifique seu usuário e senha.'
-                );
+                $_SESSION['flash_message'] = 'Credenciais inválidas. Por favor, verifique seu usuário e senha.';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/login');
+                exit;
             }
             
-            // Verifica se o usuário já existe no sistema
-            $user = $this->userModel->findByUsername($data['username']);
+            // A partir daqui a autenticação foi bem sucedida
+            // Verificar se o usuário já existe no sistema
+            $user = $this->userModel->findByUsername($username);
             
             if (!$user) {
                 // Primeiro acesso do usuário - redirecionar para completar cadastro
-                $_SESSION['temp_username'] = $data['username'];
+                $_SESSION['temp_username'] = $username;
                 $_SESSION['flash_message'] = 'Primeiro acesso detectado. Por favor, complete seu cadastro.';
                 $_SESSION['flash_type'] = 'success';
                 
@@ -118,11 +107,16 @@ class AuthController {
             
             header('Location: ' . BASE_URL . '/public');
             exit;
-            
-        } catch (AppException $e) {
-            ExceptionHandler::handle($e);
+                
         } catch (Exception $e) {
-            ExceptionHandler::handle($e);
+            // Log do erro
+            error_log('Erro na autenticação: ' . $e->getMessage());
+            
+            // Mensagem amigável para o usuário
+            $_SESSION['flash_message'] = 'Erro na autenticação. Por favor, tente novamente.';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/login');
+            exit;
         }
     }
     
@@ -133,7 +127,7 @@ class AuthController {
         try {
             // Verifica se há um usuário temporário (autenticado no RADIUS mas não cadastrado no sistema)
             if (!isset($_SESSION['temp_username'])) {
-                header('Location: ' . BASE_URL . '/public/login');
+                header('Location: ' . BASE_URL . '/login');
                 exit;
             }
             
@@ -163,7 +157,7 @@ class AuthController {
             
             // Verifica se há um usuário temporário
             if (!isset($_SESSION['temp_username'])) {
-                header('Location: ' . BASE_URL . '/public/login');
+                header('Location: ' . BASE_URL . '/login');
                 exit;
             }
             
