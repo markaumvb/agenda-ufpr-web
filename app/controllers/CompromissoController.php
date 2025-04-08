@@ -3,7 +3,7 @@ require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../services/CalendarService.php';
 require_once __DIR__ . '/../services/AuthorizationService.php';
 
-class CompromissoController {
+class CompromissoController extends BaseController {
     private $compromissoModel;
     private $agendaModel;
     private $calendarService;
@@ -22,18 +22,6 @@ class CompromissoController {
         
         // Verificar se o usuário está logado
         $this->checkAuth();
-    }
-    
-    /**
-     * Verifica se o usuário está autenticado
-     */
-    private function checkAuth() {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['flash_message'] = 'Você precisa estar logado para acessar essa página';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/login');
-            exit;
-        }
     }
     
 

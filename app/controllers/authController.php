@@ -58,7 +58,7 @@ class AuthController {
             }
             
             // Obter dados do formulário
-            $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
+            $username = htmlspecialchars(filter_input(INPUT_POST, 'username', FILTER_UNSAFE_RAW) ?? '');
             $password = $_POST['password'] ?? ''; // Não sanitizar a senha
             
             // Validação básica

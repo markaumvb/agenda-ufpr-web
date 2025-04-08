@@ -49,3 +49,8 @@ if (ENVIRONMENT === 'production') {
     ini_set('session.cookie_secure', 1);
 }
 session_start();
+
+if (ENVIRONMENT === 'production') {
+    ini_set('display_errors', 0);
+    error_reporting(0);
+}

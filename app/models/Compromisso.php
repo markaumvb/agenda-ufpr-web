@@ -739,6 +739,7 @@ class Compromisso {
      */
     public function hasTimeConflict($agendaId, $startDatetime, $endDatetime, $excludeId = null) {
         try {
+            // Melhorar a lógica de detecção de conflitos
             $query = "
                 SELECT COUNT(*) FROM compromissos 
                 WHERE agenda_id = :agenda_id
@@ -748,28 +749,29 @@ class Compromisso {
                 )
             ";
             
+            $params = [
+                ':agenda_id' => $agendaId,
+                ':start_datetime' => $startDatetime,
+                ':end_datetime' => $endDatetime
+            ];
+            
             // Se fornecido um ID para exclusão, adiciona à query
             if ($excludeId !== null) {
                 $query .= " AND id != :exclude_id";
+                $params[':exclude_id'] = $excludeId;
                 
                 // Também excluir do mesmo grupo se for um evento recorrente
                 $compromisso = $this->getById($excludeId);
                 if ($compromisso && !empty($compromisso['group_id'])) {
                     $query .= " AND (group_id IS NULL OR group_id != :group_id)";
+                    $params[':group_id'] = $compromisso['group_id'];
                 }
             }
             
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
-            $stmt->bindParam(':start_datetime', $startDatetime, PDO::PARAM_STR);
-            $stmt->bindParam(':end_datetime', $endDatetime, PDO::PARAM_STR);
             
-            if ($excludeId !== null) {
-                $stmt->bindParam(':exclude_id', $excludeId, PDO::PARAM_INT);
-                
-                if (isset($compromisso) && !empty($compromisso['group_id'])) {
-                    $stmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
-                }
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
             }
             
             $stmt->execute();

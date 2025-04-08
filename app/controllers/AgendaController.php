@@ -1,6 +1,6 @@
-<?php
+    <?php
 require_once __DIR__ . '/BaseController.php';
-class AgendaController {
+class AgendaController extends BaseController {
     private $agendaModel;
     
 
@@ -14,24 +14,10 @@ class AgendaController {
         $this->checkAuth();
     }
     
-    /**
-     * Verifica se o usuário está autenticado
-     */
-    private function checkAuth() {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['flash_message'] = 'Você precisa estar logado para acessar essa página';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/login');
-            exit;
-        }
-    }
-    
-    /**
-     * Exibe a lista de agendas do usuário
-     */
+
     public function index() {
         $userId = $_SESSION['user_id'];
-        $search = isset($_GET['search']) ? filter_input(INPUT_GET, 'search', FILTER_SANITIZE_STRING) : null;
+        $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
         
         // Buscar todas as agendas acessíveis pelo usuário
         $agendas = $this->agendaModel->getAllAccessibleByUser($userId, $search);
@@ -48,7 +34,7 @@ class AgendaController {
             ];
             
             // Verificar se a agenda pode ser excluída (apenas para agendas próprias)
-            if ($agenda['is_owner']) {
+            if ($agenda['is_owner'] ?? false) {
                 $agenda['can_be_deleted'] = $this->agendaModel->canBeDeleted($agenda['id']);
             } else {
                 $agenda['can_be_deleted'] = false;
@@ -81,12 +67,12 @@ class AgendaController {
         }
         
         // Obter os dados do formulário
-        $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
-        $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
+        $title = filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW);
+        $description = filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW);
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
-        $color = filter_input(INPUT_POST, 'color', FILTER_SANITIZE_STRING) ?: '#3788d8';
+        $color = filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?: '#3788d8';
         
-        // Validar os dados
+        // Validar os dados     
         if (empty($title)) {
             $_SESSION['flash_message'] = 'O título da agenda é obrigatório';
             $_SESSION['flash_type'] = 'danger';
@@ -185,10 +171,10 @@ class AgendaController {
         }
         
         // Obter os dados do formulário
-        $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
-        $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
+        $title = filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW);
+        $description = filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW);
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
-        $color = filter_input(INPUT_POST, 'color', FILTER_SANITIZE_STRING) ?: '#3788d8';
+        $color = filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?: '#3788d8';
         
         // Validar os dados
         if (empty($title)) {

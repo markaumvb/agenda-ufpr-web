@@ -429,32 +429,46 @@ class Agenda {
                 JOIN users u ON a.user_id = u.id
                 LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
                 WHERE 
-                    a.user_id = :owned_user_id
+                    a.user_id = :owned_user_id 
                     OR s.user_id = :accessed_user_id
                     OR a.is_public = 1
             ";
             
+            $params = [
+                'owner_id' => $userId,
+                'shared_user_id' => $userId,
+                'owned_user_id' => $userId,
+                'accessed_user_id' => $userId
+            ];
+            
             // Adicionar filtro de pesquisa se especificado
             if ($search) {
                 $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+                $params['search'] = "%{$search}%";
             }
             
             $query .= " GROUP BY a.id ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
+            $params['sort_user_id'] = $userId;
             
             $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':owner_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':owned_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':accessed_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':sort_user_id', $userId, PDO::PARAM_INT);
             
-            if ($search) {
-                $searchParam = "%{$search}%";
-                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            foreach ($params as $key => $value) {
+                if (is_int($value)) {
+                    $stmt->bindValue(':' . $key, $value, PDO::PARAM_INT);
+                } else {
+                    $stmt->bindValue(':' . $key, $value, PDO::PARAM_STR);
+                }
             }
             
             $stmt->execute();
-            return $stmt->fetchAll();
+            $result = $stmt->fetchAll();
+            
+            // Debug - remover após testes
+            // error_log('SQL: ' . $query);
+            // error_log('Params: ' . print_r($params, true));
+            // error_log('Result count: ' . count($result));
+            
+            return $result;
         } catch (PDOException $e) {
             error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
             return [];
