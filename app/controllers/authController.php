@@ -34,7 +34,7 @@ class AuthController {
         try {
             // Verifica se usuário já está logado
             if (isset($_SESSION['user_id'])) {
-                header('Location: ' . BASE_URL . '/public');
+                header('Location: ' . BASE_URL  );
                 exit;
             }
             
@@ -90,7 +90,7 @@ class AuthController {
                 $_SESSION['flash_message'] = 'Primeiro acesso detectado. Por favor, complete seu cadastro.';
                 $_SESSION['flash_type'] = 'success';
                 
-                header('Location: ' . BASE_URL . '/public/register');
+                header('Location: ' . BASE_URL . '/register');
                 exit;
             }
             

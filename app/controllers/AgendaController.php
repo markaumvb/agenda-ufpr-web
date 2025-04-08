@@ -76,7 +76,7 @@ class AgendaController {
     public function store() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         

@@ -27,7 +27,6 @@ class User {
         }
     }
     
-
 public function updateLastLogin($id) {
     try {
         // Verificar se a coluna last_login existe na tabela
@@ -192,4 +191,24 @@ public function isRegistrationComplete($id) {
             return false;
         }
     }
+
+    /**
+ * Busca um usuário pelo nome de usuário
+ * 
+ * @param string $username Nome de usuário
+ * @return array|false Dados do usuário ou false se não encontrado
+ */
+public function findByUsername($username) {
+    try {
+        $query = "SELECT * FROM users WHERE username = :username LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar usuário por nome de usuário: ' . $e->getMessage());
+        return false;
+    }
+}
 }

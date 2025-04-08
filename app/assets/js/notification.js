@@ -125,9 +125,9 @@ AgendaUFPR.notifications = {
       // Criar link para o compromisso ou agenda, se disponível
       let targetUrl = "#";
       if (notification.compromisso_id) {
-        targetUrl = `${AgendaUFPR.config.baseUrl}/public/compromissos/view?id=${notification.compromisso_id}`;
+        targetUrl = `${AgendaUFPR.config.baseUrl}/compromissos/view?id=${notification.compromisso_id}`;
       } else if (notification.agenda_id) {
-        targetUrl = `${AgendaUFPR.config.baseUrl}/public/compromissos?agenda_id=${notification.agenda_id}`;
+        targetUrl = `${AgendaUFPR.config.baseUrl}/compromissos?agenda_id=${notification.agenda_id}`;
       }
 
       item.innerHTML = `
