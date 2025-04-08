@@ -1,7 +1,7 @@
 <?php
 // Carregar configurações e constantes
 require_once __DIR__ . '/app/config/constants.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 // Função para carregar classes automaticamente
 spl_autoload_register(function ($className) {
