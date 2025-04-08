@@ -30,7 +30,7 @@ class ShareController extends BaseController {
         if (!$agendaId) {
             $_SESSION['flash_message'] = 'Agenda não especificada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -38,7 +38,7 @@ class ShareController extends BaseController {
         if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para gerenciar compartilhamentos desta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -48,7 +48,7 @@ class ShareController extends BaseController {
         if (!$agenda) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -67,7 +67,7 @@ class ShareController extends BaseController {
     public function add() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -80,7 +80,7 @@ class ShareController extends BaseController {
         if (!$agendaId || !$username) {
             $_SESSION['flash_message'] = 'Dados inválidos';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -88,7 +88,7 @@ class ShareController extends BaseController {
         if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para compartilhar esta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -98,7 +98,7 @@ class ShareController extends BaseController {
         if (!$user) {
             $_SESSION['flash_message'] = 'Usuário não encontrado';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -106,7 +106,7 @@ class ShareController extends BaseController {
         if ($user['id'] == $_SESSION['user_id']) {
             $_SESSION['flash_message'] = 'Você não pode compartilhar a agenda com você mesmo';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -121,7 +121,7 @@ class ShareController extends BaseController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+        header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
     
@@ -131,7 +131,7 @@ class ShareController extends BaseController {
     public function remove() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -143,7 +143,7 @@ class ShareController extends BaseController {
         if (!$agendaId || !$userId) {
             $_SESSION['flash_message'] = 'Dados inválidos';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -151,7 +151,7 @@ class ShareController extends BaseController {
         if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para gerenciar compartilhamentos desta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -166,7 +166,7 @@ class ShareController extends BaseController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+        header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
     
@@ -176,7 +176,7 @@ class ShareController extends BaseController {
     public function updatePermission() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -189,7 +189,7 @@ class ShareController extends BaseController {
         if (!$agendaId || !$userId) {
             $_SESSION['flash_message'] = 'Dados inválidos';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -197,7 +197,7 @@ class ShareController extends BaseController {
         if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para gerenciar compartilhamentos desta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -212,7 +212,7 @@ class ShareController extends BaseController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+        header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
     
@@ -235,7 +235,7 @@ class ShareController extends BaseController {
     public function generatePublicUrl() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -245,7 +245,7 @@ class ShareController extends BaseController {
         if (!$agendaId) {
             $_SESSION['flash_message'] = 'Agenda não especificada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -253,7 +253,7 @@ class ShareController extends BaseController {
         if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para alterar a visibilidade desta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -263,7 +263,7 @@ class ShareController extends BaseController {
         if (!$agenda) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -302,7 +302,7 @@ class ShareController extends BaseController {
         }
         
         // Redirecionar para a página de compartilhamentos
-        header('Location: ' . BASE_URL . '/public/shares?agenda_id=' . $agendaId);
+        header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
 }

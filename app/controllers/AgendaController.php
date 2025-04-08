@@ -90,7 +90,7 @@ class AgendaController {
         if (empty($title)) {
             $_SESSION['flash_message'] = 'O título da agenda é obrigatório';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas/new');
+            header('Location: ' . BASE_URL . '/agendas/new');
             exit;
         }
         
@@ -109,11 +109,11 @@ class AgendaController {
         if ($result) {
             $_SESSION['flash_message'] = 'Agenda criada com sucesso';
             $_SESSION['flash_type'] = 'success';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
         } else {
             $_SESSION['flash_message'] = 'Erro ao criar agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas/new');
+            header('Location: ' . BASE_URL . '/agendas/new');
         }
         
         exit;
@@ -128,7 +128,7 @@ class AgendaController {
         if (!$id) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -136,7 +136,7 @@ class AgendaController {
         if (!$this->agendaModel->belongsToUser($id, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para editar esta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -146,7 +146,7 @@ class AgendaController {
         if (!$agenda) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -162,7 +162,7 @@ class AgendaController {
     public function update() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -172,7 +172,7 @@ class AgendaController {
         if (!$id) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -180,7 +180,7 @@ class AgendaController {
         if (!$this->agendaModel->belongsToUser($id, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para editar esta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -194,7 +194,7 @@ class AgendaController {
         if (empty($title)) {
             $_SESSION['flash_message'] = 'O título da agenda é obrigatório';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas/edit?id=' . $id);
+            header('Location: ' . BASE_URL . '/agendas/edit?id=' . $id);
             exit;
         }
         
@@ -217,7 +217,7 @@ class AgendaController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/agendas');
+        header('Location: ' . BASE_URL . '/agendas');
         exit;
     }
     
@@ -227,7 +227,7 @@ class AgendaController {
     public function delete() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -237,7 +237,7 @@ class AgendaController {
         if (!$id) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -245,7 +245,7 @@ class AgendaController {
         if (!$this->agendaModel->belongsToUser($id, $_SESSION['user_id'])) {
             $_SESSION['flash_message'] = 'Você não tem permissão para excluir esta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -253,7 +253,7 @@ class AgendaController {
         if (!$this->agendaModel->canBeDeleted($id)) {
             $_SESSION['flash_message'] = 'Esta agenda não pode ser excluída pois possui compromissos pendentes ou aguardando aprovação';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -268,7 +268,7 @@ class AgendaController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/agendas');
+        header('Location: ' . BASE_URL . '/agendas');
         exit;
     }
 }

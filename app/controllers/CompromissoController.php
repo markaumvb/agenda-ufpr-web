@@ -45,7 +45,7 @@ class CompromissoController {
         if (!$agendaId) {
             $_SESSION['flash_message'] = 'Agenda não especificada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -55,7 +55,7 @@ class CompromissoController {
         if (!$agenda) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -71,7 +71,7 @@ class CompromissoController {
         if (!$canAccess) {
             $_SESSION['flash_message'] = 'Você não tem permissão para acessar esta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -256,7 +256,7 @@ class CompromissoController {
         if (!$agendaId) {
             $_SESSION['flash_message'] = 'Agenda não especificada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -266,7 +266,7 @@ class CompromissoController {
         if (!$agenda) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -283,7 +283,7 @@ class CompromissoController {
         if (!$canEdit) {
             $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -319,7 +319,7 @@ class CompromissoController {
     public function store() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -339,7 +339,7 @@ class CompromissoController {
         if (!$agendaId || !$title || !$startDatetime || !$endDatetime) {
             $_SESSION['flash_message'] = 'Todos os campos obrigatórios devem ser preenchidos';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos/new?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/compromissos/new?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -349,7 +349,7 @@ class CompromissoController {
         if (!$agenda) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -366,7 +366,7 @@ class CompromissoController {
         if (!$canEdit) {
             $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -374,7 +374,7 @@ class CompromissoController {
         if ($repeatType != 'none' && empty($repeatUntil)) {
             $_SESSION['flash_message'] = 'Para eventos recorrentes, é necessário definir uma data final';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos/new?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/compromissos/new?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -382,7 +382,7 @@ class CompromissoController {
         if ($repeatType == 'specific_days' && empty($repeatDays)) {
             $_SESSION['flash_message'] = 'Selecione pelo menos um dia da semana para a recorrência';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos/new?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/compromissos/new?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -390,7 +390,7 @@ class CompromissoController {
         if ($this->compromissoModel->hasTimeConflict($agendaId, $startDatetime, $endDatetime)) {
             $_SESSION['flash_message'] = 'Existe um conflito de horário com outro compromisso';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos/new?agenda_id=' . $agendaId);
+            header('Location: ' . BASE_URL . '/compromissos/new?agenda_id=' . $agendaId);
             exit;
         }
         
@@ -425,7 +425,7 @@ class CompromissoController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $agendaId);
+        header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
         exit;
     }
     
@@ -439,7 +439,7 @@ class CompromissoController {
         if (!$id) {
             $_SESSION['flash_message'] = 'Compromisso não especificado';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -449,7 +449,7 @@ class CompromissoController {
         if (!$compromisso) {
             $_SESSION['flash_message'] = 'Compromisso não encontrado';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -469,7 +469,7 @@ class CompromissoController {
         if (!$canEdit) {
             $_SESSION['flash_message'] = 'Você não tem permissão para editar este compromisso';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
             exit;
         }
         
@@ -499,7 +499,7 @@ class CompromissoController {
     public function update() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -520,7 +520,7 @@ class CompromissoController {
         if (!$id || !$title || !$startDatetime || !$endDatetime) {
             $_SESSION['flash_message'] = 'Todos os campos obrigatórios devem ser preenchidos';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos/edit?id=' . $id);
+            header('Location: ' . BASE_URL . '/compromissos/edit?id=' . $id);
             exit;
         }
         
@@ -530,7 +530,7 @@ class CompromissoController {
         if (!$compromisso) {
             $_SESSION['flash_message'] = 'Compromisso não encontrado';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -550,7 +550,7 @@ class CompromissoController {
         if (!$canEdit) {
             $_SESSION['flash_message'] = 'Você não tem permissão para editar este compromisso';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
             exit;
         }
         
@@ -558,7 +558,7 @@ class CompromissoController {
         if ($this->compromissoModel->hasTimeConflict($compromisso['agenda_id'], $startDatetime, $endDatetime, $id)) {
             $_SESSION['flash_message'] = 'Existe um conflito de horário com outro compromisso';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/compromissos/edit?id=' . $id);
+            header('Location: ' . BASE_URL . '/compromissos/edit?id=' . $id);
             exit;
         }
         
@@ -586,7 +586,7 @@ class CompromissoController {
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+        header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
         exit;
     }
     
@@ -596,7 +596,7 @@ class CompromissoController {
     public function delete() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -607,7 +607,7 @@ class CompromissoController {
         if (!$id) {
             $_SESSION['flash_message'] = 'Compromisso não especificado';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/public/agendas');
+            header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
         
@@ -617,7 +617,7 @@ $compromisso = $this->compromissoModel->getById($id);
 if (!$compromisso) {
     $_SESSION['flash_message'] = 'Compromisso não encontrado';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -637,7 +637,7 @@ if (!$isOwner) {
 if (!$canEdit) {
     $_SESSION['flash_message'] = 'Você não tem permissão para excluir este compromisso';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
     exit;
 }
 
@@ -652,7 +652,7 @@ if ($result) {
     $_SESSION['flash_type'] = 'danger';
 }
 
-header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
 exit;
 }
 
@@ -662,7 +662,7 @@ exit;
 public function cancelFuture() {
 // Verificar se é uma requisição POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -672,7 +672,7 @@ $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 if (!$id) {
     $_SESSION['flash_message'] = 'Compromisso não especificado';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -682,7 +682,7 @@ $compromisso = $this->compromissoModel->getById($id);
 if (!$compromisso) {
     $_SESSION['flash_message'] = 'Compromisso não encontrado';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -690,7 +690,7 @@ if (!$compromisso) {
 if (empty($compromisso['group_id'])) {
     $_SESSION['flash_message'] = 'Este não é um compromisso recorrente';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
     exit;
 }
 
@@ -710,7 +710,7 @@ if (!$isOwner) {
 if (!$canEdit) {
     $_SESSION['flash_message'] = 'Você não tem permissão para modificar este compromisso';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
     exit;
 }
 
@@ -725,7 +725,7 @@ if ($result) {
     $_SESSION['flash_type'] = 'danger';
 }
 
-header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
 exit;
 }
 
@@ -735,7 +735,7 @@ exit;
 public function changeStatus() {
 // Verificar se é uma requisição POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -746,7 +746,7 @@ $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
 if (!$id || !$status) {
     $_SESSION['flash_message'] = 'Parâmetros inválidos';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -756,7 +756,7 @@ $compromisso = $this->compromissoModel->getById($id);
 if (!$compromisso) {
     $_SESSION['flash_message'] = 'Compromisso não encontrado';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/agendas');
+    header('Location: ' . BASE_URL . '/agendas');
     exit;
 }
 
@@ -776,7 +776,7 @@ if (!$isOwner) {
 if (!$canEdit) {
     $_SESSION['flash_message'] = 'Você não tem permissão para modificar este compromisso';
     $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+    header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
     exit;
 }
 
@@ -803,7 +803,7 @@ if ($result) {
     $_SESSION['flash_type'] = 'danger';
 }
 
-header('Location: ' . BASE_URL . '/public/compromissos?agenda_id=' . $compromisso['agenda_id']);
+header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
 exit;
 }
 

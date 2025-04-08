@@ -45,18 +45,6 @@ function checkTimeConflict() {
       );
       return;
     }
-
-    // Em um ambiente de produção, aqui poderia ser feita uma verificação AJAX
-    // para confirmar se o novo horário conflita com outros compromissos
-    /*
-    fetch(`${BASE_URL}/public/compromissos/check-conflict?agenda_id=${agendaId}&start=${encodeURIComponent(startDatetime)}&end=${encodeURIComponent(endDatetime)}&id=${compromissoId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.conflict) {
-          alert('Existe um conflito de horário com outro compromisso!');
-        }
-      });
-    */
   }
 }
 

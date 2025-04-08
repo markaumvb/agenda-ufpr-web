@@ -185,7 +185,7 @@ class AuthController {
                 $_SESSION['validation_errors'] = $validator->getFirstErrors();
                 $_SESSION['error_fields'] = $validator->getFirstErrors();
                 
-                header('Location: ' . BASE_URL . '/public/register');
+                header('Location: ' . BASE_URL . '/register');
                 exit;
             }
             
