@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Adicionar evento de clique para cada dia do calendário
+  // Configurar cliques no calendário
   setupCalendarDayClicks();
-  setupCloseButton();
+
+  // Destacar dia atual
   highlightToday();
 
-  showTodayEvents();
+  // Adicionar botão para limpar filtros
+  addClearFiltersButton();
 });
 
 /**
@@ -20,31 +22,35 @@ function setupCalendarDayClicks() {
       const date = this.dataset.date;
       if (!date) return;
 
-      // Remover seleção anterior
+      // Verificar se o dia já está selecionado
+      const isSelected = this.classList.contains("selected-day");
+
+      // Remover seleção de todos os dias
       document.querySelectorAll(".calendar-day").forEach((d) => {
         d.classList.remove("selected-day");
       });
 
-      // Adicionar classe de seleção ao dia clicado
-      this.classList.add("selected-day");
+      // Se o dia já estava selecionado, limpar o filtro
+      if (isSelected) {
+        window.selectedDate = null;
+      } else {
+        // Caso contrário, selecionar o dia e aplicar o filtro
+        this.classList.add("selected-day");
+        window.selectedDate = date;
+      }
 
-      const agendaId = document.querySelector(".calendar-container").dataset
-        .agendaId;
-      showDayEvents(this, date, agendaId);
+      // Aplicar filtros (função do index.js)
+      if (typeof window.applyFilters === "function") {
+        window.applyFilters();
+
+        // Rolar para a lista de compromissos
+        const eventsList = document.querySelector(".events-list-container");
+        if (eventsList) {
+          eventsList.scrollIntoView({ behavior: "smooth" });
+        }
+      }
     });
   });
-}
-
-/**
- * Configura o botão de fechar o painel de compromissos
- */
-function setupCloseButton() {
-  const closeButton = document.querySelector(".day-events-close");
-  if (closeButton) {
-    closeButton.addEventListener("click", function () {
-      hideDayEvents();
-    });
-  }
 }
 
 /**
@@ -62,121 +68,25 @@ function highlightToday() {
 }
 
 /**
- * Exibe os compromissos de um dia específico
+ * Adiciona botão para limpar filtros na área de filtros
  */
-function showDayEvents(dayElement, date, agendaId) {
-  // Formatar a data para exibição
-  const dateObj = new Date(date + "T00:00:00");
-  const formattedDate = dateObj.toLocaleDateString("pt-BR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+function addClearFiltersButton() {
+  const filtersContainer = document.querySelector(".events-filters");
 
-  // Atualizar o título
-  document.getElementById("day-events-title").textContent =
-    "Compromissos de " + formattedDate;
+  if (filtersContainer && !document.querySelector(".calendar-clear-btn")) {
+    const clearBtn = document.createElement("div");
+    clearBtn.className = "filter-group";
+    clearBtn.innerHTML = `<button class="btn btn-secondary calendar-clear-btn">Limpar Todos os Filtros</button>`;
 
-  // Buscar compromissos do dia
-  const dayEvents = dayElement.querySelectorAll(".event");
+    filtersContainer.appendChild(clearBtn);
 
-  const eventsList = document.getElementById("day-events-list");
-  eventsList.innerHTML = "";
-
-  if (dayEvents.length === 0) {
-    eventsList.innerHTML =
-      '<p class="no-events">Não há compromissos para este dia.</p>';
-  } else {
-    // Para cada evento, criar um card
-    dayEvents.forEach((event) => {
-      const id = event.dataset.id;
-      const title =
-        event.dataset.title || event.querySelector(".event-title").textContent;
-      const description = event.dataset.description || "";
-      const start = new Date(
-        event.dataset.start || event.querySelector(".event-time").textContent
-      );
-      const end = new Date(event.dataset.end || "");
-      const status =
-        event.dataset.status || event.className.match(/event-status-(\w+)/)[1];
-
-      const card = document.createElement("div");
-      card.className = `event-card event-status-${status}`;
-
-      // Formatar horário
-      const formattedTime = `${start.toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}${
-        end
-          ? " - " +
-            end.toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : ""
-      }`;
-
-      card.innerHTML = `
-              <div class="event-card-header">
-                  <h4>${title}</h4>
-                  <span class="event-time">${formattedTime}</span>
-              </div>
-              ${
-                description
-                  ? `<div class="event-description">${description}</div>`
-                  : ""
-              }
-              <div class="event-card-actions">
-                  <a href="${BASE_URL}/compromissos/edit?id=${id}" class="btn btn-sm btn-secondary">
-                      <i class="icon-edit"></i> Editar
-                  </a>
-              </div>
-          `;
-
-      eventsList.appendChild(card);
-    });
+    // Adicionar evento de clique
+    clearBtn
+      .querySelector(".calendar-clear-btn")
+      .addEventListener("click", function () {
+        if (typeof window.clearFilters === "function") {
+          window.clearFilters();
+        }
+      });
   }
-
-  // Adicionar botão para criar novo compromisso
-  const canEdit =
-    document.querySelector(".header-actions a.btn-primary") !== null;
-
-  if (canEdit && agendaId) {
-    const addButton = document.createElement("div");
-    addButton.className = "add-event-button mt-3";
-    addButton.innerHTML = `
-          <a href="${BASE_URL}/compromissos/new?agenda_id=${agendaId}&date=${date}" class="btn btn-primary">
-              <i class="fas fa-plus"></i> Novo Compromisso neste dia
-          </a>
-      `;
-
-    eventsList.appendChild(addButton);
-  }
-
-  // Exibir o container
-  const eventsContainer = document.getElementById("day-events-container");
-  eventsContainer.style.display = "block";
-
-  // Adicionar classe ativa no dia selecionado
-  document.querySelectorAll(".calendar-day").forEach((day) => {
-    day.classList.remove("selected-day");
-  });
-  dayElement.classList.add("selected-day");
-
-  // Rolar para o container de eventos
-  eventsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-/**
- * Oculta o painel de compromissos
- */
-function hideDayEvents() {
-  document.getElementById("day-events-container").style.display = "none";
-
-  // Remover classe ativa do dia selecionado
-  document.querySelectorAll(".calendar-day").forEach((day) => {
-    day.classList.remove("selected-day");
-  });
 }

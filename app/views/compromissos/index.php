@@ -107,15 +107,6 @@
     </div>
 </div>
 
-<!-- Container para exibir os compromissos do dia selecionado -->
-<div id="day-events-container" class="day-events-container" style="display: none;">
-    <div class="day-events-header">
-        <h3 id="day-events-title">Compromissos do dia</h3>
-        <button class="day-events-close">&times;</button>
-    </div>
-    <div id="day-events-list" class="day-events-list"></div>
-</div>
-
 <!-- Lista de Compromissos -->
 <div class="events-list-container">
     <h2 class="section-title">Compromissos</h2>
@@ -169,7 +160,11 @@
                 $endDate = new DateTime($compromisso['end_datetime']);
                 ?>
                 
-                <div class="event-card event-status-<?= $compromisso['status'] ?>" data-status="<?= $compromisso['status'] ?>" data-month="<?= $startDate->format('n') ?>" data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
+                <div class="event-card event-status-<?= $compromisso['status'] ?>" 
+     data-status="<?= $compromisso['status'] ?>" 
+     data-month="<?= $startDate->format('n') ?>" 
+     data-date="<?= $startDate->format('Y-m-d') ?>"
+     data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
                     <div class="event-header">
                         <h3 class="event-title"><?= htmlspecialchars($compromisso['title']) ?></h3>
                         <div class="event-status">
@@ -302,3 +297,4 @@
 
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/index.js"></script>
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/calendar.js"></script>
+<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/day-filter.js"></script>
