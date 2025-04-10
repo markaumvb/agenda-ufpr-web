@@ -7,7 +7,7 @@
     </div>
 </div>
 
-<?php if (empty($agendasWithCompromissos) && empty($compromissos)): ?>
+<?php if (empty($compromissos)): ?>
     <div class="empty-state">
         <p>Você não possui compromissos em nenhuma agenda.</p>
         <a href="<?= BASE_URL ?>/agendas" class="btn btn-primary">Ir para Minhas Agendas</a>
@@ -82,8 +82,10 @@
                             break;
                         }
                     }
+                    // Adicionar classe para linhas zebradas
+                    $rowClass = $index % 2 == 0 ? 'even-row' : 'odd-row';
                 ?>
-                    <tr class="compromisso-row <?= $compromisso['status'] === 'cancelado' ? 'status-cancelled' : '' ?>" 
+                    <tr class="compromisso-row <?= $rowClass ?> <?= $compromisso['status'] === 'cancelado' ? 'status-cancelled' : '' ?>" 
                         data-status="<?= $compromisso['status'] ?>"
                         data-agenda="<?= $compromisso['agenda_id'] ?>" 
                         data-date="<?= $startDate->format('Y-m-d') ?>"
@@ -143,7 +145,7 @@
                                         Ver Detalhes
                                     </a>
                                     
-                                    <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && $agendaInfo['is_owner']): ?>
+                                    <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
                                         <a href="#" class="dropdown-item approve-btn" data-id="<?= $compromisso['id'] ?>">
                                             Aprovar
                                         </a>
@@ -152,21 +154,21 @@
                                         </a>
                                     <?php else: ?>
                                         <?php if ($compromisso['status'] !== 'cancelado' && 
-                                              ($agendaInfo && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id'])): ?>
+                                              (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id'])): ?>
                                             <a href="#" class="dropdown-item cancel-btn" data-id="<?= $compromisso['id'] ?>">
                                                 Cancelar
                                             </a>
                                         <?php endif; ?>
                                         
                                         <?php if ($compromisso['status'] !== 'cancelado' && 
-                                              ($agendaInfo && ($agendaInfo['is_owner'] || $agendaInfo['can_edit']) || 
+                                              (isset($agendaInfo['is_owner']) && ($agendaInfo['is_owner'] || isset($agendaInfo['can_edit']) && $agendaInfo['can_edit']) || 
                                                $compromisso['created_by'] == $_SESSION['user_id'])): ?>
                                             <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="dropdown-item">
                                                 Editar
                                             </a>
                                         <?php endif; ?>
                                         
-                                        <?php if ($agendaInfo && $agendaInfo['is_owner']): ?>
+                                        <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
                                             <a href="#" class="dropdown-item delete-btn" data-id="<?= $compromisso['id'] ?>">
                                                 Excluir
                                             </a>
@@ -179,7 +181,7 @@
                     
                     <!-- Linha para descrição (expandida ao clicar) -->
                     <?php if (!empty($compromisso['description'])): ?>
-                    <tr class="description-row" id="desc-<?= $compromisso['id'] ?>" style="display: none;">
+                    <tr class="description-row <?= $rowClass ?>" id="desc-<?= $compromisso['id'] ?>" style="display: none;">
                         <td colspan="7" class="description-cell">
                             <div class="description-content">
                                 <strong>Descrição:</strong>
@@ -194,6 +196,7 @@
     </div>
     
     <!-- Paginação -->
+    <?php if (isset($startRecord)): ?>
     <div class="pagination-container">
         <div class="pagination-info">
             Exibindo <?= $startRecord ?> a <?= $endRecord ?> de <?= $totalRecords ?> compromissos
@@ -225,6 +228,7 @@
             <?php endif; ?>
         </div>
     </div>
+    <?php endif; ?>
     
     <!-- Formulários para ações via POST -->
     <form id="cancelForm" action="<?= BASE_URL ?>/meuscompromissos/cancel" method="post" style="display: none;">
@@ -248,5 +252,6 @@
         <p>Nenhum compromisso corresponde aos filtros selecionados.</p>
         <button id="reset-filters" class="btn btn-primary">Limpar Filtros</button>
     </div>
-    <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/meus-compromissos.js"></script>
 <?php endif; ?>
+
+<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/meus-compromissos.js"></script>

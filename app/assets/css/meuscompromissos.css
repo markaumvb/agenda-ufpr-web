@@ -360,4 +360,46 @@
     flex-wrap: wrap;
     justify-content: center;
   }
+
+  /* Estilos para linhas zebradas */
+  .data-grid tbody tr.even-row {
+    background-color: #f8f9fa;
+  }
+
+  .data-grid tbody tr.odd-row {
+    background-color: #ffffff;
+  }
+
+  /* Hover em linhas da tabela */
+  .data-grid tbody tr:hover {
+    background-color: #e9f0f7 !important;
+  }
+
+  /* Melhorar espaçamento e aparência */
+  .data-grid td,
+  .data-grid th {
+    padding: 0.75rem;
+    vertical-align: middle;
+  }
+
+  /* Estrutura mais forte para o container da tabela */
+  .data-grid-container {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  /* Melhorar o container de filtros */
+  .filter-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
 }
