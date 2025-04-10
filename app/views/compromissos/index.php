@@ -23,91 +23,22 @@
     </div>
 </div>
 
-<!-- Calendário -->
-<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>">
-    <div class="calendar-header">
-        <h2 class="calendar-title" data-month="<?= $calendarData['month'] ?>" data-year="<?= $calendarData['year'] ?>"><?= ucfirst($calendarData['monthName']) ?> <?= $calendarData['year'] ?></h2>
-        <div class="calendar-navigation">
-            <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>&month=<?= $calendarData['previousMonth'] ?>&year=<?= $calendarData['previousYear'] ?>" class="btn btn-outline">
-                &laquo; Mês Anterior
-            </a>
-            <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>" class="btn btn-outline">
-                Mês Atual
-            </a>
-            <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>&month=<?= $calendarData['nextMonth'] ?>&year=<?= $calendarData['nextYear'] ?>" class="btn btn-outline">
-                Próximo Mês &raquo;
-            </a>
-        </div>
-    </div>
-    
-    <div class="calendar">
-        <div class="calendar-weekdays">
-            <div class="weekday">Dom</div>
-            <div class="weekday">Seg</div>
-            <div class="weekday">Ter</div>
-            <div class="weekday">Qua</div>
-            <div class="weekday">Qui</div>
-            <div class="weekday">Sex</div>
-            <div class="weekday">Sáb</div>
-        </div>
-        
-        <?php foreach ($calendarData['weeks'] as $week): ?>
-            <div class="calendar-week">
-                <?php foreach ($week as $dayIndex => $dayData): ?>
-                    <?php if ($dayData['day'] === null): ?>
-                        <div class="calendar-day empty-day"></div>
-                    <?php else: ?>
-                        <?php 
-                        // Determinar se o dia tem eventos
-                        $hasEvents = !empty($dayData['compromissos']);
-                        $isToday = date('Y-m-d') == sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
-                        $currentDate = sprintf('%04d-%02d-%02d', $calendarData['year'], $calendarData['month'], $dayData['day']);
-                        ?>
-                        <div class="calendar-day <?= $hasEvents ? 'has-events' : '' ?> <?= $isToday ? 'today' : '' ?>" 
-                             data-date="<?= $currentDate ?>">
-                            <div class="day-header">
-                                <span class="day-number"><?= $dayData['day'] ?></span>
-                            </div>
-                            
-                            <?php if ($hasEvents): ?>
-                                <div class="day-events">
-                                    <?php 
-                                    // Limitar a exibição para os 3 primeiros eventos
-                                    $displayEvents = array_slice($dayData['compromissos'], 0, 3);
-                                    foreach ($displayEvents as $compromisso): 
-                                    ?>
-                                        <div class="event event-status-<?= $compromisso['status'] ?>"
-                                             data-id="<?= $compromisso['id'] ?>"
-                                             data-title="<?= htmlspecialchars($compromisso['title']) ?>"
-                                             data-description="<?= htmlspecialchars($compromisso['description']) ?>"
-                                             data-start="<?= $compromisso['start_datetime'] ?>"
-                                             data-end="<?= $compromisso['end_datetime'] ?>"
-                                             data-status="<?= $compromisso['status'] ?>">
-                                            <span class="event-time">
-                                                <?= (new DateTime($compromisso['start_datetime']))->format('H:i') ?>
-                                            </span>
-                                            <span class="event-title">
-                                                <?= htmlspecialchars(mb_strimwidth($compromisso['title'], 0, 20, '...')) ?>
-                                            </span>
-                                        </div>
-                                    <?php endforeach; ?>
-                                    
-                                    <?php if (count($dayData['compromissos']) > 3): ?>
-                                        <div class="more-events">
-                                            +<?= count($dayData['compromissos']) - 3 ?> mais
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        <?php endforeach; ?>
+<!-- Opções de visualização do calendário -->
+<div class="view-options">
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline view-option" data-view="dayGridMonth">Mês</button>
+        <button type="button" class="btn btn-outline view-option" data-view="timeGridWeek">Semana</button>
+        <button type="button" class="btn btn-outline view-option" data-view="timeGridDay">Dia</button>
+        <button type="button" class="btn btn-outline view-option" data-view="listWeek">Lista</button>
     </div>
 </div>
 
-<!-- Lista de Compromissos -->
+<!-- FullCalendar Container -->
+<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>">
+    <div id="calendar"></div>
+</div>
+
+<!-- Lista de Compromissos Filtrados -->
 <div class="events-list-container">
     <h2 class="section-title">Compromissos</h2>
     
@@ -151,6 +82,9 @@
             <div class="filter-group">
                 <input type="text" id="filter-search" placeholder="Buscar compromissos..." class="filter-input">
             </div>
+            <div class="filter-group">
+                <button id="clear-filters" class="btn btn-secondary">Limpar Filtros</button>
+            </div>
         </div>
         
         <div class="events-list">
@@ -161,10 +95,11 @@
                 ?>
                 
                 <div class="event-card event-status-<?= $compromisso['status'] ?>" 
-     data-status="<?= $compromisso['status'] ?>" 
-     data-month="<?= $startDate->format('n') ?>" 
-     data-date="<?= $startDate->format('Y-m-d') ?>"
-     data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
+                     data-status="<?= $compromisso['status'] ?>" 
+                     data-month="<?= $startDate->format('n') ?>" 
+                     data-date="<?= $startDate->format('Y-m-d') ?>"
+                     data-id="<?= $compromisso['id'] ?>"
+                     data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
                     <div class="event-header">
                         <h3 class="event-title"><?= htmlspecialchars($compromisso['title']) ?></h3>
                         <div class="event-status">
@@ -295,6 +230,16 @@
     <?php endif; ?>
 </div>
 
+<!-- Modal para detalhe de eventos -->
+<div id="event-modal" class="event-modal">
+    <div class="event-modal-content">
+        <span class="event-modal-close">&times;</span>
+        <div id="event-modal-body"></div>
+    </div>
+</div>
+
+<!-- Incluir o novo JavaScript do calendário -->
+<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/fullcalendar.js"></script>
+
+<!-- Scripts originais para compatibilidade com filtros existentes -->
 <script src="<?= PUBLIC_URL ?>/assets/js/compromissos/index.js"></script>
-<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/calendar.js"></script>
-<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/day-filter.js"></script>

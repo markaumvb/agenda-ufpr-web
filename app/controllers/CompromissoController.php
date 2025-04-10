@@ -449,6 +449,105 @@ class CompromissoController extends BaseController {
         header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
         exit;
     }
+
+    public function updateDate() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+            exit;
+        }
+        
+        // Obter dados do formulário
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $startDatetime = filter_input(INPUT_POST, 'start', FILTER_SANITIZE_STRING);
+        $endDatetime = filter_input(INPUT_POST, 'end', FILTER_SANITIZE_STRING);
+        
+        // Validar dados
+        if (!$id || !$startDatetime) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Parâmetros inválidos']);
+            exit;
+        }
+        
+        // Buscar o compromisso atual
+        $compromisso = $this->compromissoModel->getById($id);
+        
+        if (!$compromisso) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Compromisso não encontrado']);
+            exit;
+        }
+        
+        // Verificar se o usuário pode editar
+        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+        $canEdit = $isOwner;
+        
+        if (!$isOwner) {
+            require_once __DIR__ . '/../models/AgendaShare.php';
+            $shareModel = new AgendaShare();
+            $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
+        }
+        
+        if (!$canEdit) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Sem permissão para editar']);
+            exit;
+        }
+        
+        // Se não foi fornecido um horário de término, calcular com base na duração original
+        if (!$endDatetime) {
+            $start = new DateTime($compromisso['start_datetime']);
+            $end = new DateTime($compromisso['end_datetime']);
+            $duration = $start->diff($end);
+            
+            $newStart = new DateTime($startDatetime);
+            $newEnd = clone $newStart;
+            $newEnd->add($duration);
+            
+            $endDatetime = $newEnd->format('Y-m-d\TH:i:s');
+        }
+        
+        // Verificar conflito de horário
+        if ($this->compromissoModel->hasTimeConflict($compromisso['agenda_id'], $startDatetime, $endDatetime, $id)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Conflito de horário com outro compromisso']);
+            exit;
+        }
+        
+        // Preparar dados para atualização
+        $data = [
+            'title' => $compromisso['title'],
+            'description' => $compromisso['description'],
+            'start_datetime' => $startDatetime,
+            'end_datetime' => $endDatetime,
+            'location' => $compromisso['location'],
+            'status' => $compromisso['status'],
+            'repeat_type' => $compromisso['repeat_type'],
+            'repeat_until' => $compromisso['repeat_until'],
+            'repeat_days' => $compromisso['repeat_days']
+        ];
+        
+        // Atualizar apenas este evento (não as recorrências futuras)
+        $result = $this->compromissoModel->update($id, $data, false);
+        
+        // Retornar resposta
+        header('Content-Type: application/json');
+        
+        if ($result) {
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Compromisso atualizado com sucesso'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Erro ao atualizar compromisso'
+            ]);
+        }
+        exit;
+    }
     
     /**
      * Exclui um compromisso

@@ -229,6 +229,11 @@ $routes = [
         'action' => 'markAllNotificationsRead',
         'method' => 'POST'
     ],
+    '/compromissos/update-date' => [
+    'controller' => 'CompromissoController',
+    'action' => 'updateDate',
+    'method' => 'POST'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública
