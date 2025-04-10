@@ -1,10 +1,5 @@
 <?php
-// Arquivo: app/controllers/AuthController.php
 
-/**
- * Controlador para autenticação e registro de usuários
- * Versão aprimorada com tratamento de exceções e validação
- */
 class AuthController {
     private $radiusService;
     private $userModel;
@@ -59,7 +54,7 @@ class AuthController {
             
             // Obter dados do formulário
             $username = htmlspecialchars(filter_input(INPUT_POST, 'username', FILTER_UNSAFE_RAW) ?? '');
-            $password = $_POST['password'] ?? ''; // Não sanitizar a senha
+            $password = $_POST['password'] ?? ''; 
             
             // Validação básica
             if (empty($username) || empty($password)) {
@@ -87,7 +82,7 @@ class AuthController {
             if (!$user) {
                 // Primeiro acesso do usuário - redirecionar para completar cadastro
                 $_SESSION['temp_username'] = $username;
-                $_SESSION['flash_message'] = 'Primeiro acesso detectado. Por favor, complete seu cadastro.';
+                $_SESSION['flash_message'] = 'Primeiro acesso. Por favor, complete seu cadastro.';
                 $_SESSION['flash_type'] = 'success';
                 
                 header('Location: ' . BASE_URL . '/register');
@@ -146,7 +141,7 @@ class AuthController {
      */
     public function register() {
         try {
-            // Verifica se é uma requisição POST
+            // Verificar se é uma requisição POST
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new ValidationException(
                     'Método de requisição inválido', 
@@ -155,7 +150,7 @@ class AuthController {
                 );
             }
             
-            // Verifica se há um usuário temporário
+            // Verificar se há um usuário temporário
             if (!isset($_SESSION['temp_username'])) {
                 header('Location: ' . BASE_URL . '/login');
                 exit;
@@ -176,6 +171,7 @@ class AuthController {
             // Validar os campos
             $rules = [
                 'name' => 'required|min:3|max:100',
+                // Removida a validação de email
             ];
             
             $validator = new Validator($data, $rules);
@@ -188,21 +184,16 @@ class AuthController {
                 exit;
             }
             
-            
-            // Verificar se e-mail já está em uso
-            $existingUser = $this->userModel->findByEmail($data['email']);
-            if ($existingUser) {
-                throw new ValidationException(
-                    'E-mail já em uso', 
-                    ['email' => 'Este e-mail já está em uso por outro usuário.'],
-                    'Este e-mail já está em uso por outro usuário.'
-                );
-            }
+            // Verificação do email institucional não é mais necessária
+            // Removido o bloco de validação de email institucional
             
             // Cadastra o usuário
             $result = $this->userModel->create($data);
             
             if (!$result) {
+                // Adicione um log para depuração
+                error_log('Falha ao criar usuário: ' . json_encode($data));
+                
                 throw new DatabaseException(
                     'Erro ao cadastrar usuário', 
                     'Erro ao cadastrar usuário. Por favor, tente novamente mais tarde.'
@@ -230,6 +221,7 @@ class AuthController {
         } catch (AppException $e) {
             ExceptionHandler::handle($e);
         } catch (Exception $e) {
+            error_log('Erro no registro: ' . $e->getMessage());
             ExceptionHandler::handle($e);
         }
     }

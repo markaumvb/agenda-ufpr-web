@@ -88,11 +88,11 @@ public function isRegistrationComplete($id) {
                       VALUES (:username, :name, :email, NOW())";
             
             $stmt = $this->db->prepare($query);
-            return $stmt->execute([
-                'username' => $data['username'],
-                'name' => $data['name'],
-                'email' => $data['email']
-            ]);
+            $stmt->bindParam(':username', $data['username'], PDO::PARAM_STR);
+            $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
+            $stmt->bindParam(':email', $data['email'], PDO::PARAM_STR);
+            
+            return $stmt->execute();
         } catch (PDOException $e) {
             error_log('Erro ao criar usuário: ' . $e->getMessage());
             return false;
