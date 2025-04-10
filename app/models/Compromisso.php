@@ -1,12 +1,8 @@
 <?php
-// app/models/Compromisso.php
 
 class Compromisso {
     private $db;
     
-    /**
-     * Construtor
-     */
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
@@ -208,18 +204,20 @@ class Compromisso {
         try {
             // Verificar se é um evento recorrente
             $isRecurring = $data['repeat_type'] !== 'none';
-            
+
+            $createdBy = isset($data['created_by']) ? $data['created_by'] : (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null);
+
             // Se não for recorrente, usar o método padrão de criação
             if (!$isRecurring) {
                 $query = "
                     INSERT INTO compromissos (
                         agenda_id, title, description, start_datetime, end_datetime, 
                         location, repeat_type, repeat_until, repeat_days, status,
-                        created_at
+                        created_at, created_by
                     ) VALUES (
                         :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                         :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                        NOW()
+                        NOW(), :created_by
                     )
                 ";
                 
@@ -234,6 +232,7 @@ class Compromisso {
                 $stmt->bindParam(':repeat_until', $data['repeat_until'], PDO::PARAM_STR);
                 $stmt->bindParam(':repeat_days', $data['repeat_days'], PDO::PARAM_STR);
                 $stmt->bindParam(':status', $data['status'], PDO::PARAM_STR);
+                $stmt->bindParam(':created_by', $createdBy, PDO::PARAM_INT);
                 
                 if ($stmt->execute()) {
                     $newId = $this->db->lastInsertId();
@@ -252,17 +251,21 @@ class Compromisso {
             
             // Gerar ID de grupo para eventos recorrentes
             $groupId = $this->generateUUID();
+
+            //quem criou o evento
+            $createdBy = isset($data['created_by']) ? $data['created_by'] : (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null);
+
             
             // Inserir o evento principal
             $query = "
                 INSERT INTO compromissos (
                     agenda_id, title, description, start_datetime, end_datetime, 
                     location, repeat_type, repeat_until, repeat_days, status,
-                    created_at, group_id, is_recurring
+                    created_at, group_id, is_recurring, created_by
                 ) VALUES (
                     :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                     :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                    NOW(), :group_id, 1
+                    NOW(), :group_id, 1, :created_by
                 )
             ";
             
@@ -278,6 +281,7 @@ class Compromisso {
             $stmt->bindParam(':repeat_days', $data['repeat_days'], PDO::PARAM_STR);
             $stmt->bindParam(':status', $data['status'], PDO::PARAM_STR);
             $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
+            $stmt->bindParam(':created_by', $createdBy, PDO::PARAM_INT);
             
             if (!$stmt->execute()) {
                 $this->db->rollBack();
@@ -304,11 +308,11 @@ class Compromisso {
                     INSERT INTO compromissos (
                         agenda_id, title, description, start_datetime, end_datetime, 
                         location, repeat_type, repeat_until, repeat_days, status,
-                        created_at, group_id, is_recurring, parent_id
+                        created_at, group_id, is_recurring, parent_id, created_by
                     ) VALUES (
                         :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                         :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                        NOW(), :group_id, 1, :parent_id
+                        NOW(), :group_id, 1, :parent_id, :created_by
                     )
                 ";
                 
@@ -325,6 +329,7 @@ class Compromisso {
                 $stmt->bindParam(':status', $data['status'], PDO::PARAM_STR);
                 $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
                 $stmt->bindParam(':parent_id', $parentId, PDO::PARAM_INT);
+                $stmt->bindParam(':created_by', $createdBy, PDO::PARAM_INT);
                 
                 if (!$stmt->execute()) {
                     $this->db->rollBack();

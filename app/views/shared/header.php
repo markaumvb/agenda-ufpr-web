@@ -43,6 +43,11 @@
     if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/shares.css">';
     }
+
+     // Carregar CSS para a página de Meus Compromissos
+     if (strpos($currentUri, '/meuscompromissos') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/meuscompromissos.css">';
+    }
     
     // Carregar CSS para formulários (criar nova agenda, editar compromisso, etc.)
    // Verificar se é uma página de formulário e incluir o CSS de formulários
@@ -66,6 +71,7 @@
                 <li><a href="<?= PUBLIC_URL ?>/">Início</a></li>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li><a href="<?= PUBLIC_URL ?>/agendas">Minhas Agendas</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/meuscompromissos">Meus Compromissos</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/shares/shared">Agendas Compartilhadas</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/logout">Sair</a></li>
                     <?php else: ?>

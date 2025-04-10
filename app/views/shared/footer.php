@@ -1,16 +1,12 @@
-<?php
-// Arquivo: agenda_ufpr/app/views/shared/footer.php
-?>
     </main>
     
     <footer>
         <div class="container">
-            <p>&copy; <?= date('Y') ?> - <?= APP_NAME ?> v<?= APP_VERSION ?></p>
+            <p><?= date('Y') ?> - <?= APP_NAME ?> v<?= APP_VERSION ?></p>
         </div>
     </footer>
     
     <style>
-        /* Estilos do rodapé */
         footer {
             background-color: #004a8f;
             color: #fff;

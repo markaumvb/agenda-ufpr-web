@@ -9,7 +9,7 @@
         <?php else: ?>
             <div class="cta-buttons">
                 <a href="<?= BASE_URL ?>/agendas" class="btn btn-primary">Minhas Agendas</a>
-                <a href="<?= BASE_URL ?>/mycompromissos" class="btn btn-secondary">Meus Compromissos</a>
+                <a href="<?= BASE_URL ?>/meuscompromissos" class="btn btn-secondary">Meus Compromissos</a>
                 </div>
         <?php endif; ?>
     </div>

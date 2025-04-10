@@ -234,6 +234,32 @@ $routes = [
     'action' => 'updateDate',
     'method' => 'POST'
 ],
+
+'/meuscompromissos' => [
+    'controller' => 'MeusCompromissosController',
+    'action' => 'index',
+    'method' => 'GET'
+],
+'/meuscompromissos/cancel' => [
+    'controller' => 'MeusCompromissosController',
+    'action' => 'cancelCompromisso',
+    'method' => 'POST'
+],
+'/meuscompromissos/edit' => [
+    'controller' => 'MeusCompromissosController',
+    'action' => 'editCompromisso',
+    'method' => 'POST'
+],
+'/meuscompromissos/approve' => [
+    'controller' => 'MeusCompromissosController',
+    'action' => 'approveCompromisso',
+    'method' => 'POST'
+],
+'/meuscompromissos/reject' => [
+    'controller' => 'MeusCompromissosController',
+    'action' => 'rejectCompromisso',
+    'method' => 'POST'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública

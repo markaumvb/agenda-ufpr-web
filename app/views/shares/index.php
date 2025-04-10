@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/shares/index.php
-?>
-
 <div class="page-header">
     <div class="header-container">
         <h1>Compartilhar Agenda</h1>

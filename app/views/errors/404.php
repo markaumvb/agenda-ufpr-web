@@ -1,7 +1,3 @@
-<?php
-// Arquivo: agenda_ufpr/app/views/errors/404.php
-?>
-
 <div style="text-align: center; padding: 50px 20px;">
     <h1 style="font-size: 72px; margin-bottom: 20px; color: #004a8f;">404</h1>
     <h2>Página Não Encontrada</h2>
