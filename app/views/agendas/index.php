@@ -7,7 +7,6 @@
         <h1>Minhas Agendas</h1>
         <div class="header-actions">
             <a href="<?= PUBLIC_URL ?>/agendas/new" class="btn btn-primary">Nova Agenda</a>
-            <a href="<?= PUBLIC_URL ?>/shares/shared" class="btn btn-secondary">Agendas Compartilhadas Comigo</a>
         </div>
     </div>
     

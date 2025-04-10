@@ -21,7 +21,7 @@
         <div class="form-group">
             <label for="username">Usuário UFPR:</label>
             <input type="text" id="username" name="username" required 
-                   autocomplete="username" placeholder="Seu login da UFPR"
+                   autocomplete="username" placeholder="email@ufpr.br"
                    class="form-control <?= isset($_SESSION['error_fields']['username']) ? 'is-invalid' : '' ?>">
             <?php if (isset($_SESSION['error_fields']['username'])): ?>
                 <div class="field-error"><?= $_SESSION['error_fields']['username'] ?></div>
