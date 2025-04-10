@@ -1,3 +1,6 @@
+/* Estilo para a página de Meus Compromissos */
+
+/* Cabeçalho e ações */
 .page-header {
   margin-bottom: 2rem;
 }
@@ -44,88 +47,70 @@
   min-width: 250px;
 }
 
-/* Seção de agenda */
-.agenda-section {
+/* Data Grid */
+.data-grid-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  overflow: hidden;
 }
 
-.agenda-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #eee;
-  background-color: #f8f9fa;
-}
-
-.agenda-title {
-  margin: 0;
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.agenda-title .badge {
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.badge-primary {
-  background-color: #e6f0fb;
-  color: #004a8f;
-}
-
-.badge-secondary {
-  background-color: #e9ecef;
-  color: #6c757d;
-}
-
-.badge-success {
-  background-color: #e6f4ea;
-  color: #28a745;
-}
-
-.agenda-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* Tabela de compromissos */
-.table-responsive {
-  overflow-x: auto;
-  padding: 0 1rem;
-}
-
-.compromissos-table {
+.data-grid {
   width: 100%;
   border-collapse: collapse;
-  margin: 1rem 0;
+  min-width: 1000px; /* Garante que a tabela não fica muito estreita */
 }
 
-.compromissos-table th {
+.data-grid thead {
   background-color: #f5f5f5;
+}
+
+.data-grid th {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 2px solid #ddd;
   font-weight: 600;
-  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f5f5f5;
 }
 
-.compromissos-table td {
+.data-grid td {
   padding: 0.75rem;
   border-bottom: 1px solid #eee;
   vertical-align: middle;
 }
 
+/* Colunas da tabela */
+.col-agenda {
+  width: 15%;
+}
+
+.col-title {
+  width: 25%;
+}
+
+.col-date,
+.col-time {
+  width: 12%;
+}
+
+.col-location {
+  width: 15%;
+}
+
+.col-status {
+  width: 13%;
+}
+
+.col-actions {
+  width: 8%;
+  text-align: center;
+}
+
+/* Estilo para linhas de compromissos */
 .compromisso-row {
   cursor: pointer;
   transition: background-color 0.2s;
@@ -139,19 +124,38 @@
   background-color: #f0f0f0;
 }
 
-.text-cancelled {
+.compromisso-row.status-cancelled .text-cancelled {
   text-decoration: line-through;
   color: #6c757d;
 }
 
-/* Badge para status */
+/* Etiquetas de Agenda */
+.agenda-tag {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+/* Badges */
 .badge {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  display: inline-block;
+}
+
+.badge-sm {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  margin-left: 0.5rem;
 }
 
 .badge-pendente {
@@ -175,20 +179,14 @@
 }
 
 .badge-info {
-  background-color: #e1f0ff;
-  color: #0d6efd;
-  font-size: 0.7rem;
-  margin-left: 0.5rem;
+  background-color: #e1f5fe;
+  color: #0288d1;
 }
 
-/* Linha expandida para descrição */
-.description-row {
-  display: none;
-}
-
+/* Linha de descrição expandida */
 .description-cell {
   background-color: #f8f9fa;
-  padding: 1rem 1.5rem;
+  padding: 1rem 2rem;
   border-bottom: 1px solid #ddd;
 }
 
@@ -197,74 +195,140 @@
   overflow: auto;
 }
 
-/* Ações */
-.actions-column {
-  white-space: nowrap;
-  width: 1%;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.25rem;
-  flex-wrap: wrap;
-}
-
-.action-form {
+/* Dropdown de ações */
+.dropdown {
+  position: relative;
   display: inline-block;
 }
 
-/* Estado vazio */
-.empty-state {
-  text-align: center;
-  padding: 2rem;
+.dropdown-toggle::after {
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  content: "";
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 0.9rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 1.5rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  text-decoration: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  color: #16181b;
+  text-decoration: none;
   background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 
-.empty-state p {
-  margin-bottom: 1rem;
+/* Paginação */
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
 }
 
+.pagination-info {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.pagination-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0.125rem;
+  border-radius: 4px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.9rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  transition: all 0.2s ease;
+}
+
+.pagination-link:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.pagination-link.current {
+  background-color: #004a8f;
+  border-color: #004a8f;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Estado vazio e sem resultados */
+.empty-state,
 .no-results {
   text-align: center;
   padding: 2rem;
   background-color: #f8f9fa;
   border-radius: 8px;
   margin-top: 1rem;
-  display: none;
+  margin-bottom: 1rem;
 }
 
-/* Botões específicos */
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  border-radius: 0.2rem;
+.empty-state p,
+.no-results p {
+  margin-bottom: 1rem;
 }
 
-.btn-outline {
-  background-color: transparent;
-  border: 1px solid #ddd;
-  color: #333;
-}
-
-.btn-outline:hover {
-  background-color: #f8f9fa;
-  border-color: #ccc;
-}
-
-/* Responsividade */
-@media (max-width: 992px) {
-  .agenda-header {
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .header-container {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-  }
-
-  .agenda-actions {
-    width: 100%;
-    justify-content: flex-start;
   }
 
   .filter-container {
@@ -276,21 +340,24 @@
     width: 100%;
   }
 
-  .filter-input {
+  .filter-input,
+  .filter-select {
     width: 100%;
     min-width: auto;
   }
-}
 
-@media (max-width: 768px) {
-  .compromissos-table th:nth-child(3),
-  .compromissos-table td:nth-child(3),
-  .compromissos-table th:nth-child(4),
-  .compromissos-table td:nth-child(4) {
-    display: none;
+  .data-grid-container {
+    margin-left: -15px;
+    margin-right: -15px;
+    border-radius: 0;
   }
 
-  .action-buttons {
-    flex-direction: column;
+  .pagination-container {
+    align-items: stretch;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
