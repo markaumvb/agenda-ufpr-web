@@ -328,3 +328,4 @@
         }
     });
 </script>
+<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/tabela.js"></script>
