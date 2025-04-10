@@ -231,7 +231,7 @@
 </div>
 
 <!-- Modal para detalhe de eventos -->
-<div id="event-modal" class="event-modal">
+<div id="event-modal" class="event-modal" style="display: none;">
     <div class="event-modal-content">
         <span class="event-modal-close">&times;</span>
         <div id="event-modal-body"></div>

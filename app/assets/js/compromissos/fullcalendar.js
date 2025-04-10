@@ -1,6 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Obter o elemento do calendário
+  const calendarEl = document.getElementById("calendar");
+  if (!calendarEl) {
+    console.error("Elemento do calendário não encontrado!");
+    return;
+  }
+
   // Obter o ID da agenda
-  const agendaId = document.querySelector(".calendar-container").dataset
+  const agendaId = document.querySelector(".calendar-container")?.dataset
     .agendaId;
   const canEdit =
     document.querySelector(".header-actions a.btn-primary") !== null;
@@ -77,6 +84,102 @@ document.addEventListener("DOMContentLoaded", function () {
 
     events.push(event);
   });
+
+  // Função para atualizar a data de um evento
+  function updateEventDate(eventId, startDate, endDate) {
+    // Formatar as datas
+    const start = startDate ? startDate.toISOString() : "";
+    const end = endDate ? endDate.toISOString() : "";
+
+    // Criar FormData
+    const formData = new FormData();
+    formData.append("id", eventId);
+    formData.append("start", start);
+    formData.append("end", end);
+
+    // Enviar requisição
+    fetch(`${baseUrl}/compromissos/update-date`, {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          console.log("Evento atualizado com sucesso");
+        } else {
+          console.error("Erro ao atualizar evento:", data.message);
+          alert("Erro ao atualizar o compromisso: " + data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Erro na requisição:", error);
+        alert("Erro ao comunicar com o servidor");
+      });
+  }
+
+  // Função para filtragem do calendário
+  function setupFilters(calendar, allEvents) {
+    // Obter elementos de filtro
+    const filterStatus = document.getElementById("filter-status");
+    const filterMonth = document.getElementById("filter-month");
+    const filterSearch = document.getElementById("filter-search");
+    const clearFilterBtn = document.getElementById("clear-filters");
+
+    if (!filterStatus && !filterMonth && !filterSearch) return;
+
+    // Aplicar filtros
+    function applyFilters() {
+      const statusValue = filterStatus ? filterStatus.value : "all";
+      const monthValue = filterMonth ? filterMonth.value : "all";
+      const searchValue = filterSearch ? filterSearch.value.toLowerCase() : "";
+
+      // Filtrar os eventos
+      const filteredEvents = allEvents.filter((event) => {
+        // Status
+        const statusMatch =
+          statusValue === "all" || event.extendedProps.status === statusValue;
+
+        // Mês
+        const eventDate = new Date(event.start);
+        const eventMonth = (eventDate.getMonth() + 1).toString();
+        const monthMatch = monthValue === "all" || eventMonth === monthValue;
+
+        // Texto
+        const searchableText = (
+          event.title +
+          " " +
+          (event.extendedProps.description || "") +
+          " " +
+          (event.extendedProps.location || "")
+        ).toLowerCase();
+        const searchMatch =
+          !searchValue || searchableText.includes(searchValue);
+
+        return statusMatch && monthMatch && searchMatch;
+      });
+
+      // Atualizar eventos no calendário
+      calendar.removeAllEvents();
+      calendar.addEventSource(filteredEvents);
+    }
+
+    // Adicionar listeners
+    if (filterStatus) filterStatus.addEventListener("change", applyFilters);
+    if (filterMonth) filterMonth.addEventListener("change", applyFilters);
+    if (filterSearch) filterSearch.addEventListener("input", applyFilters);
+
+    // Configurar botão de limpar
+    if (clearFilterBtn) {
+      clearFilterBtn.addEventListener("click", function () {
+        if (filterStatus) filterStatus.value = "all";
+        if (filterMonth) filterMonth.value = "all";
+        if (filterSearch) filterSearch.value = "";
+
+        calendar.removeAllEvents();
+        calendar.addEventSource(allEvents);
+      });
+    }
+  }
 
   // Inicializar o FullCalendar
   const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -163,9 +266,12 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Ativar o primeiro botão (visualização de mês) por padrão
-  document
-    .querySelector('.view-option[data-view="dayGridMonth"]')
-    .classList.add("active");
+  const defaultViewButton = document.querySelector(
+    '.view-option[data-view="dayGridMonth"]'
+  );
+  if (defaultViewButton) {
+    defaultViewButton.classList.add("active");
+  }
 
   // Configurar filtros para atualizar o calendário
   setupFilters(calendar, events);
@@ -174,42 +280,45 @@ document.addEventListener("DOMContentLoaded", function () {
   function showEventDetails(event) {
     // Obter ID do evento
     const eventId = event.id;
-    
+
     // Buscar o card correspondente
-    const eventCard = document.querySelector(`.event-card[data-id="${eventId}"]`);
-    
+    const eventCard = document.querySelector(
+      `.event-card[data-id="${eventId}"]`
+    );
+
     if (!eventCard) return;
-    
+
     // Abrir modal com detalhes
     const modal = document.getElementById("event-modal");
     if (modal) {
       // Garantir que o modal esteja escondido inicialmente
       modal.style.display = "none";
       const modalBody = document.getElementById("event-modal-body");
-      
+
       // Limpar conteúdo anterior
       modalBody.innerHTML = "";
-      
+
       // Clonar o conteúdo do card para o modal
       const eventDetails = eventCard.cloneNode(true);
       modalBody.appendChild(eventDetails);
-      
+
       // Exibir modal
       modal.style.display = "block";
-      
+
       // Configurar botão de fechar
       const closeBtn = document.querySelector(".event-modal-close");
       if (closeBtn) {
-        closeBtn.onclick = function() {
+        closeBtn.onclick = function () {
           modal.style.display = "none";
         };
       }
-      
+
       // Fechar quando clicar fora do modal
-      window.onclick = function(event) {
+      window.onclick = function (event) {
         if (event.target == modal) {
           modal.style.display = "none";
         }
       };
     }
   }
+});
