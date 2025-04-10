@@ -1,4 +1,4 @@
-// app/services/AuthorizationService.php
+
 <?php
 class AuthorizationService {
     private $agendaModel;

@@ -1,13 +1,27 @@
-/**
- * Script para gerenciar o FullCalendar no sistema de agendas
- * arquivo: app/assets/js/compromissos/fullcalendar.js
- */
-
 document.addEventListener("DOMContentLoaded", function () {
-  // Obter o container do calendário
+  console.log("Tentando inicializar o calendário");
   const calendarEl = document.getElementById("calendar");
 
-  if (!calendarEl) return;
+  if (!calendarEl) {
+    console.error("Elemento #calendar não encontrado");
+    return;
+  }
+
+  console.log("Elemento calendario encontrado:", calendarEl);
+
+  try {
+    // Inicialização básica para teste
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      locale: "pt-br",
+      initialView: "dayGridMonth",
+      height: "auto",
+    });
+
+    calendar.render();
+    console.log("Calendário renderizado com sucesso");
+  } catch (error) {
+    console.error("Erro ao inicializar o calendário:", error);
+  }
 
   // Obter o ID da agenda
   const agendaId = document.querySelector(".calendar-container").dataset
@@ -194,6 +208,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Abrir modal com detalhes
     const modal = document.getElementById("event-modal");
+    if (modal) {
+      // Garantir que o modal esteja escondido inicialmente
+      modal.style.display = "none";
     const modalBody = document.getElementById("event-modal-body");
 
     // Clonar o conteúdo do card para o modal
@@ -224,12 +241,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Configurar botão de fechar
     const closeBtn = document.querySelector(".event-modal-close");
-    closeBtn.onclick = function () {
-      modal.style.display = "none";
-    };
+    if (closeBtn) {
+      closeBtn.onclick = function() {
+        modal.style.display = "none";
+      };
+    }
 
     // Fechar quando clicar fora do modal
-    window.onclick = function (event) {
+    window.onclick = function(event) {
       if (event.target == modal) {
         modal.style.display = "none";
       }
