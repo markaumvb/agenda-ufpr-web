@@ -14,6 +14,7 @@
   gap: 0.5rem;
 }
 
+/* Filtros */
 .filter-container {
   background-color: #f8f9fa;
   padding: 1rem;
@@ -43,38 +44,54 @@
   min-width: 250px;
 }
 
-/* Estilo para cada seção de agenda */
+/* Seção de agenda */
 .agenda-section {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
-  padding: 1.5rem;
-  position: relative;
-  border-left: 4px solid;
+  overflow: hidden;
 }
 
 .agenda-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #eee;
+  background-color: #f8f9fa;
 }
 
 .agenda-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .agenda-title .badge {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-primary {
+  background-color: #e6f0fb;
+  color: #004a8f;
+}
+
+.badge-secondary {
+  background-color: #e9ecef;
+  color: #6c757d;
+}
+
+.badge-success {
+  background-color: #e6f4ea;
+  color: #28a745;
 }
 
 .agenda-actions {
@@ -82,62 +99,59 @@
   gap: 0.5rem;
 }
 
-/* Lista de compromissos */
-.compromissos-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* Tabela de compromissos */
+.table-responsive {
+  overflow-x: auto;
+  padding: 0 1rem;
 }
 
-/* Cards de compromissos */
-.event-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  background-color: #fff;
+.compromissos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
 }
 
-.event-card.event-status-pendente {
-  border-left: 4px solid #ffc107;
+.compromissos-table th {
+  background-color: #f5f5f5;
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+  font-weight: 600;
+  color: #333;
 }
 
-.event-card.event-status-realizado {
-  border-left: 4px solid #28a745;
+.compromissos-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
 }
 
-.event-card.event-status-cancelado {
-  border-left: 4px solid #dc3545;
+.compromisso-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.event-card.event-status-aguardando_aprovacao {
-  border-left: 4px solid #17a2b8;
+.compromisso-row:hover {
+  background-color: #f8f9fa;
 }
 
-.event-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+.compromisso-row.expanded {
+  background-color: #f0f0f0;
 }
 
-.event-title {
-  margin: 0;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.event-card.event-status-cancelado .event-title {
+.text-cancelled {
   text-decoration: line-through;
+  color: #6c757d;
 }
 
-.event-status .badge {
+/* Badge para status */
+.badge {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
+  display: inline-block;
 }
 
 .badge-pendente {
@@ -160,45 +174,43 @@
   color: #17a2b8;
 }
 
-.event-details {
+.badge-info {
+  background-color: #e1f0ff;
+  color: #0d6efd;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+}
+
+/* Linha expandida para descrição */
+.description-row {
+  display: none;
+}
+
+.description-cell {
+  background-color: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.description-content {
+  max-width: 100%;
+  overflow: auto;
+}
+
+/* Ações */
+.actions-column {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.action-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.event-datetime {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.event-location,
-.event-recurrence {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.event-description {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid #eee;
-}
-
-.event-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid #eee;
+  gap: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .action-form {
-  display: inline;
+  display: inline-block;
 }
 
 /* Estado vazio */
@@ -224,14 +236,26 @@
   display: none;
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-  .header-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
+/* Botões específicos */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
 
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.btn-outline:hover {
+  background-color: #f8f9fa;
+  border-color: #ccc;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
   .agenda-header {
     flex-direction: column;
     align-items: flex-start;
@@ -240,7 +264,7 @@
 
   .agenda-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .filter-container {
@@ -256,119 +280,17 @@
     width: 100%;
     min-width: auto;
   }
+}
 
-  .event-datetime {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .event-actions {
-    flex-wrap: wrap;
-  }
-
-  compromissos-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-  }
-
-  .compromissos-table th {
-    background-color: #f5f5f5;
-    padding: 10px;
-    text-align: left;
-    border-bottom: 2px solid #ddd;
-    position: sticky;
-    top: 0;
-    font-weight: 600;
-  }
-
-  .compromissos-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid #eee;
-    vertical-align: middle;
-  }
-
-  .compromisso-row {
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .compromisso-row:hover {
-    background-color: #f8f9fa;
-  }
-
-  .compromisso-row.expanded {
-    background-color: #f0f0f0;
-  }
-
-  .text-cancelled {
-    text-decoration: line-through;
-    color: #6c757d;
-  }
-
-  .description-cell {
-    background-color: #f8f9fa;
-    padding: 15px 20px;
-    border-bottom: 1px solid #ddd;
-  }
-
-  .description-content {
-    max-width: 100%;
-    overflow: auto;
-  }
-
-  .actions-column {
-    white-space: nowrap;
-    width: 1%;
+@media (max-width: 768px) {
+  .compromissos-table th:nth-child(3),
+  .compromissos-table td:nth-child(3),
+  .compromissos-table th:nth-child(4),
+  .compromissos-table td:nth-child(4) {
+    display: none;
   }
 
   .action-buttons {
-    display: flex;
-    gap: 5px;
-  }
-
-  .action-form {
-    display: inline-block;
-    margin-right: 5px;
-  }
-
-  /* Responsividade para tabelas em dispositivos móveis */
-  @media (max-width: 768px) {
-    .compromissos-table {
-      display: block;
-      overflow-x: auto;
-    }
-
-    .compromissos-table th:nth-child(3),
-    .compromissos-table td:nth-child(3),
-    .compromissos-table th:nth-child(4),
-    .compromissos-table td:nth-child(4) {
-      display: none; /* Esconde algumas colunas em telas menores */
-    }
-
-    .action-buttons {
-      flex-direction: column;
-    }
-  }
-
-  /* Estilo para mostrar que tem descrição disponível */
-  .compromisso-row.has-description .compromisso-title::after {
-    content: " ▼";
-    font-size: 10px;
-    color: #6c757d;
-    vertical-align: middle;
-  }
-
-  .compromisso-row.expanded.has-description .compromisso-title::after {
-    content: " ▲";
-  }
-
-  /* Melhoria na mensagem de sem resultados */
-  .no-results {
-    text-align: center;
-    padding: 2rem;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    margin-top: 1rem;
+    flex-direction: column;
   }
 }

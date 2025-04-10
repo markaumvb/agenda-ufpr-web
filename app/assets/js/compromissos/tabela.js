@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
         e.target.tagName === "BUTTON" ||
         e.target.tagName === "A" ||
         e.target.closest("button") ||
-        e.target.closest("a")
+        e.target.closest("a") ||
+        e.target.closest(".badge")
       ) {
         return;
       }
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const id = this.dataset.id;
       const descRow = document.getElementById("desc-" + id);
       if (descRow) {
-        if (descRow.style.display === "none") {
+        if (getComputedStyle(descRow).display === "none") {
           descRow.style.display = "table-row";
           this.classList.add("expanded");
         } else {
@@ -41,8 +42,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   function applyFilters() {
-    const statusFilter = filterStatus.value;
-    const searchFilter = filterSearch.value.toLowerCase().trim();
+    const statusFilter = filterStatus ? filterStatus.value : "all";
+    const searchFilter = filterSearch
+      ? filterSearch.value.toLowerCase().trim()
+      : "";
 
     // Para controlar visibilidade das seções de agenda
     const agendaSections = document.querySelectorAll(".agenda-section");
@@ -99,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // Mostrar mensagem se nenhuma agenda estiver visível
+    // Mostrar mensagem se nenhum compromisso estiver visível
     const noResults = document.querySelector(".no-results");
     if (noResults) {
       if (visibleCount === 0) {
@@ -133,4 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (resetFilters) {
     resetFilters.addEventListener("click", clearAllFilters);
   }
+
+  // Iniciar com todos os filtros limpos
+  clearAllFilters();
 });
