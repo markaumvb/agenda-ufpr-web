@@ -1,3 +1,8 @@
+<?php
+// Arquivo: app/views/meuscompromissos/index.php - SUBSTITUIR TODO O CONTEÚDO
+
+// Manter o header e os filtros da página
+?>
 <div class="page-header">
     <div class="header-container">
         <h1>Meus Compromissos</h1>
@@ -33,7 +38,7 @@
         <button id="clear-filters" class="btn btn-secondary btn-sm">Limpar Filtros</button>
     </div>
 
-    <!-- Lista de agendas com compromissos -->
+    <!-- Lista de agendas com compromissos em formato tabela -->
     <?php foreach ($agendasWithCompromissos as $agenda): ?>
         <div class="agenda-section" style="border-left: 4px solid <?= $agenda['color'] ?>">
             <div class="agenda-header">
@@ -63,205 +68,172 @@
                 </div>
             </div>
             
-            <!-- Compromissos da agenda -->
-            <div class="compromissos-list">
-                <?php foreach ($agenda['compromissos'] as $compromisso): 
-                    $startDate = new DateTime($compromisso['start_datetime']);
-                    $endDate = new DateTime($compromisso['end_datetime']);
-                ?>
-                    <div class="event-card event-status-<?= $compromisso['status'] ?>" 
-                         data-status="<?= $compromisso['status'] ?>"
-                         data-id="<?= $compromisso['id'] ?>"
-                         data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
-                        
-                        <div class="event-header">
-                            <h3 class="event-title">
-                                <?= htmlspecialchars($compromisso['title']) ?>
+            <!-- Tabela de compromissos -->
+            <div class="table-responsive">
+                <table class="table compromissos-table">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Data</th>
+                            <th>Horário</th>
+                            <th>Local</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($agenda['compromissos'] as $compromisso): 
+                            $startDate = new DateTime($compromisso['start_datetime']);
+                            $endDate = new DateTime($compromisso['end_datetime']);
+                        ?>
+                            <tr class="compromisso-row" 
+                                data-status="<?= $compromisso['status'] ?>"
+                                data-id="<?= $compromisso['id'] ?>"
+                                data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
                                 
-                                <?php if (isset($compromisso['created_by_current_user']) && $compromisso['created_by_current_user']): ?>
-                                    <span class="badge badge-info">Criado por você</span>
-                                <?php endif; ?>
-                            </h3>
-                            
-                            <div class="event-status">
-                                <span class="badge badge-<?= $compromisso['status'] ?>">
-                                    <?php
-                                    $statusLabels = [
-                                        'pendente' => 'Pendente',
-                                        'realizado' => 'Realizado',
-                                        'cancelado' => 'Cancelado',
-                                        'aguardando_aprovacao' => 'Aguardando Aprovação'
-                                    ];
-                                    echo $statusLabels[$compromisso['status']] ?? $compromisso['status'];
-                                    ?>
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <div class="event-details">
-                            <div class="event-datetime">
-                                <div class="event-date">
-                                    <i class="icon-calendar"></i>
+                                <td class="compromisso-title <?= $compromisso['status'] === 'cancelado' ? 'text-cancelled' : '' ?>">
+                                    <?= htmlspecialchars($compromisso['title']) ?>
+                                    <?php if (isset($compromisso['created_by_current_user']) && $compromisso['created_by_current_user']): ?>
+                                        <span class="badge badge-info">Criado por você</span>
+                                    <?php endif; ?>
+                                </td>
+                                
+                                <td>
                                     <?php if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')): ?>
                                         <?= $startDate->format('d/m/Y') ?>
                                     <?php else: ?>
                                         <?= $startDate->format('d/m/Y') ?> até <?= $endDate->format('d/m/Y') ?>
                                     <?php endif; ?>
-                                </div>
-                                <div class="event-time">
-                                    <i class="icon-clock"></i>
+                                </td>
+                                
+                                <td>
                                     <?= $startDate->format('H:i') ?> às <?= $endDate->format('H:i') ?>
-                                </div>
-                            </div>
+                                </td>
+                                
+                                <td>
+                                    <?= htmlspecialchars($compromisso['location'] ?: '-') ?>
+                                </td>
+                                
+                                <td>
+                                    <span class="badge badge-<?= $compromisso['status'] ?>">
+                                        <?php
+                                        $statusLabels = [
+                                            'pendente' => 'Pendente',
+                                            'realizado' => 'Realizado',
+                                            'cancelado' => 'Cancelado',
+                                            'aguardando_aprovacao' => 'Aguardando Aprovação'
+                                        ];
+                                        echo $statusLabels[$compromisso['status']] ?? $compromisso['status'];
+                                        ?>
+                                    </span>
+                                </td>
+                                
+                                <td class="actions-column">
+                                    <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agenda['is_owner']): ?>
+                                        <!-- Opções de aprovação/rejeição (apenas para o dono da agenda) -->
+                                        <form action="<?= BASE_URL ?>/meuscompromissos/approve" method="post" class="action-form">
+                                            <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Aprovar compromisso">
+                                                Aprovar
+                                            </button>
+                                        </form>
+                                        
+                                        <form action="<?= BASE_URL ?>/meuscompromissos/reject" method="post" class="action-form">
+                                            <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Rejeitar compromisso">
+                                                Rejeitar
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <!-- Opções regulares para compromissos -->
+                                        <div class="btn-group action-buttons">
+                                            <?php if ($compromisso['status'] !== 'cancelado' && 
+                                                   ($agenda['is_owner'] || isset($compromisso['created_by_current_user']) && $compromisso['created_by_current_user'])): ?>
+                                                <form action="<?= BASE_URL ?>/meuscompromissos/cancel" method="post" class="action-form">
+                                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                                    <button type="submit" class="btn btn-sm btn-warning" title="Cancelar compromisso">
+                                                        Cancelar
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                            
+                                            <?php if ($compromisso['status'] !== 'cancelado' && 
+                                                   ($agenda['is_owner'] || $agenda['can_edit'] || 
+                                                    (isset($compromisso['created_by_current_user']) && $compromisso['created_by_current_user']))): ?>
+                                                <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-secondary" title="Editar compromisso">
+                                                    Editar
+                                                </a>
+                                            <?php endif; ?>
+                                            
+                                            <?php if ($agenda['is_owner']): ?>
+                                                <form action="<?= BASE_URL ?>/compromissos/delete" method="post" class="action-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
+                                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
+                                                        Excluir
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
                             
-                            <?php if (!empty($compromisso['location'])): ?>
-                                <div class="event-location">
-                                    <i class="icon-location"></i>
-                                    <?= htmlspecialchars($compromisso['location']) ?>
-                                </div>
-                            <?php endif; ?>
-                            
+                            <!-- Linha para descrição (expandida ao clicar) -->
                             <?php if (!empty($compromisso['description'])): ?>
-                                <div class="event-description">
-                                    <?= nl2br(htmlspecialchars($compromisso['description'])) ?>
-                                </div>
+                            <tr class="description-row" id="desc-<?= $compromisso['id'] ?>" style="display: none;">
+                                <td colspan="6" class="description-cell">
+                                    <div class="description-content">
+                                        <strong>Descrição:</strong>
+                                        <div><?= nl2br(htmlspecialchars($compromisso['description'])) ?></div>
+                                    </div>
+                                </td>
+                            </tr>
                             <?php endif; ?>
-                        </div>
-                        
-                        <div class="event-actions">
-                            <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agenda['is_owner']): ?>
-                                <!-- Opções de aprovação/rejeição (apenas para o dono da agenda) -->
-                                <form action="<?= BASE_URL ?>/meuscompromissos/approve" method="post" class="action-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-success" title="Aprovar compromisso">
-                                        Aprovar
-                                    </button>
-                                </form>
-                                
-                                <form action="<?= BASE_URL ?>/meuscompromissos/reject" method="post" class="action-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Rejeitar compromisso">
-                                        Rejeitar
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <!-- Opções regulares para compromissos -->
-                                <?php if ($compromisso['status'] !== 'cancelado' && 
-                                         ($agenda['is_owner'] || isset($compromisso['created_by_current_user']) && $compromisso['created_by_current_user'])): ?>
-                                    <form action="<?= BASE_URL ?>/meuscompromissos/cancel" method="post" class="action-form">
-                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-warning" title="Cancelar compromisso">
-                                            Cancelar
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                                
-                                <?php if ($compromisso['status'] !== 'cancelado' && 
-                                         ($agenda['is_owner'] || $agenda['can_edit'] || 
-                                          (isset($compromisso['created_by_current_user']) && $compromisso['created_by_current_user']))): ?>
-                                    <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-secondary" title="Editar compromisso">
-                                        Editar
-                                    </a>
-                                <?php endif; ?>
-                                
-                                <?php if ($agenda['is_owner']): ?>
-                                    <form action="<?= BASE_URL ?>/compromissos/delete" method="post" class="action-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
-                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
-                                            Excluir
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     <?php endforeach; ?>
+    
+    <!-- Mensagem para quando nenhum compromisso corresponder aos filtros -->
+    <div class="no-results" style="display: none;">
+        <p>Nenhum compromisso corresponde aos filtros selecionados.</p>
+        <button id="reset-filters" class="btn btn-primary">Limpar Filtros</button>
+    </div>
 <?php endif; ?>
-
-<style>
-    /* Estilos específicos para a página de Meus Compromissos */
-    .filter-container {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-    
-    .agenda-section {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        position: relative;
-    }
-    
-    .agenda-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .agenda-title {
-        margin: 0;
-        font-size: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .agenda-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .compromissos-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .action-form {
-        display: inline;
-    }
-    
-    /* Responsividade */
-    @media (max-width: 768px) {
-        .agenda-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-        
-        .agenda-actions {
-            width: 100%;
-            justify-content: space-between;
-        }
-        
-        .filter-container {
-            flex-direction: column;
-            align-items: stretch;
-        }
-    }
-</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Funcionalidade de filtro
+        // Funcionalidade de filtro para tabelas
         const filterStatus = document.getElementById('filter-status');
         const filterSearch = document.getElementById('filter-search');
         const clearFilters = document.getElementById('clear-filters');
-        const eventCards = document.querySelectorAll('.event-card');
+        const resetFilters = document.getElementById('reset-filters');
+        const compromissoRows = document.querySelectorAll('.compromisso-row');
+        
+        // Toggle para expandir descrição
+        compromissoRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Ignorar clique em botões
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || 
+                    e.target.closest('button') || e.target.closest('a')) {
+                    return;
+                }
+                
+                const id = this.dataset.id;
+                const descRow = document.getElementById('desc-' + id);
+                if (descRow) {
+                    if (descRow.style.display === 'none') {
+                        descRow.style.display = 'table-row';
+                        this.classList.add('expanded');
+                    } else {
+                        descRow.style.display = 'none';
+                        this.classList.remove('expanded');
+                    }
+                }
+            });
+        });
         
         function applyFilters() {
             const statusFilter = filterStatus.value;
@@ -271,10 +243,10 @@
             const agendaSections = document.querySelectorAll('.agenda-section');
             const visibleAgendas = new Set();
             
-            // Aplicar filtros aos cards de eventos
-            eventCards.forEach(card => {
-                const status = card.dataset.status;
-                const searchText = card.dataset.search;
+            // Aplicar filtros às linhas da tabela
+            compromissoRows.forEach(row => {
+                const status = row.dataset.status;
+                const searchText = row.dataset.search;
                 
                 // Verificar status
                 const statusMatch = statusFilter === 'all' || status === statusFilter;
@@ -282,17 +254,32 @@
                 // Verificar texto de busca
                 const searchMatch = !searchFilter || searchText.includes(searchFilter);
                 
-                // Exibir ou ocultar o card
+                // Exibir ou ocultar a linha
                 if (statusMatch && searchMatch) {
-                    card.style.display = 'block';
+                    row.style.display = 'table-row';
                     
-                    // Marcar a agenda como contendo cards visíveis
-                    const agendaSection = card.closest('.agenda-section');
+                    // Marcar a agenda como contendo compromissos visíveis
+                    const agendaSection = row.closest('.agenda-section');
                     if (agendaSection) {
                         visibleAgendas.add(agendaSection);
                     }
+                    
+                    // Esconder a linha de descrição para manter consistência
+                    const id = row.dataset.id;
+                    const descRow = document.getElementById('desc-' + id);
+                    if (descRow) {
+                        descRow.style.display = 'none';
+                        row.classList.remove('expanded');
+                    }
                 } else {
-                    card.style.display = 'none';
+                    row.style.display = 'none';
+                    
+                    // Esconder a linha de descrição também
+                    const id = row.dataset.id;
+                    const descRow = document.getElementById('desc-' + id);
+                    if (descRow) {
+                        descRow.style.display = 'none';
+                    }
                 }
             });
             
@@ -326,21 +313,18 @@
         }
         
         // Botão para limpar filtros
-        if (clearFilters) {
-            clearFilters.addEventListener('click', function() {
-                if (filterStatus) filterStatus.value = 'all';
-                if (filterSearch) filterSearch.value = '';
-                applyFilters();
-            });
+        function clearAllFilters() {
+            if (filterStatus) filterStatus.value = 'all';
+            if (filterSearch) filterSearch.value = '';
+            applyFilters();
         }
         
-        // Inicializar a visibilidade inicial das seções de agenda
-        const agendaSections = document.querySelectorAll('.agenda-section');
-        agendaSections.forEach(section => {
-            const visibleCards = section.querySelectorAll('.event-card[style="display: block"]');
-            if (visibleCards.length === 0 && filterStatus.value !== 'all') {
-                section.style.display = 'none';
-            }
-        });
+        if (clearFilters) {
+            clearFilters.addEventListener('click', clearAllFilters);
+        }
+        
+        if (resetFilters) {
+            resetFilters.addEventListener('click', clearAllFilters);
+        }
     });
 </script>

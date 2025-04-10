@@ -23,9 +23,7 @@ class MeusCompromissosController extends BaseController {
         $this->checkAuth();
     }
     
-    /**
-     * Exibe a página principal com todos os compromissos do usuário agrupados por agenda
-     */
+ 
     public function index() {
         $userId = $_SESSION['user_id'];
         
@@ -34,6 +32,7 @@ class MeusCompromissosController extends BaseController {
         
         // Para cada agenda, buscar os compromissos
         $agendasWithCompromissos = [];
+        $processedCompromissoIds = []; // Rastrear IDs de compromissos para evitar duplicatas
         
         foreach ($agendas as $agenda) {
             // Definir se o usuário é o dono da agenda
@@ -47,20 +46,26 @@ class MeusCompromissosController extends BaseController {
             
             // Buscar compromissos da agenda
             $compromissos = $this->compromissoModel->getAllByAgenda($agenda['id']);
+            $uniqueCompromissos = []; // Array para compromissos únicos desta agenda
             
-            // Filtrar compromissos se necessário (por exemplo, para agendas compartilhadas,
-            // pode mostrar apenas os criados pelo usuário e os pendentes)
-            
-            // Adicionar informações extras a cada compromisso
-            foreach ($compromissos as &$compromisso) {
-                $compromisso['is_owner'] = $isOwner;
-                $compromisso['can_edit'] = $canEdit;
-                $compromisso['created_by_current_user'] = ($compromisso['created_by'] == $userId);
+            // Filtrar compromissos únicos
+            foreach ($compromissos as $compromisso) {
+                // Verificar se este compromisso já foi processado
+                if (!in_array($compromisso['id'], $processedCompromissoIds)) {
+                    $processedCompromissoIds[] = $compromisso['id']; // Marcar como processado
+                    
+                    // Adicionar informações extras
+                    $compromisso['is_owner'] = $isOwner;
+                    $compromisso['can_edit'] = $canEdit;
+                    $compromisso['created_by_current_user'] = ($compromisso['created_by'] == $userId);
+                    
+                    $uniqueCompromissos[] = $compromisso;
+                }
             }
             
             // Adicionar a agenda com seus compromissos ao array
-            if (!empty($compromissos)) {
-                $agenda['compromissos'] = $compromissos;
+            if (!empty($uniqueCompromissos)) {
+                $agenda['compromissos'] = $uniqueCompromissos;
                 $agenda['is_owner'] = $isOwner;
                 $agenda['can_edit'] = $canEdit;
                 $agendasWithCompromissos[] = $agenda;

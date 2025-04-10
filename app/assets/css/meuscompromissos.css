@@ -265,4 +265,110 @@
   .event-actions {
     flex-wrap: wrap;
   }
+
+  compromissos-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
+
+  .compromissos-table th {
+    background-color: #f5f5f5;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+    position: sticky;
+    top: 0;
+    font-weight: 600;
+  }
+
+  .compromissos-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+
+  .compromisso-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .compromisso-row:hover {
+    background-color: #f8f9fa;
+  }
+
+  .compromisso-row.expanded {
+    background-color: #f0f0f0;
+  }
+
+  .text-cancelled {
+    text-decoration: line-through;
+    color: #6c757d;
+  }
+
+  .description-cell {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .description-content {
+    max-width: 100%;
+    overflow: auto;
+  }
+
+  .actions-column {
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 5px;
+  }
+
+  .action-form {
+    display: inline-block;
+    margin-right: 5px;
+  }
+
+  /* Responsividade para tabelas em dispositivos móveis */
+  @media (max-width: 768px) {
+    .compromissos-table {
+      display: block;
+      overflow-x: auto;
+    }
+
+    .compromissos-table th:nth-child(3),
+    .compromissos-table td:nth-child(3),
+    .compromissos-table th:nth-child(4),
+    .compromissos-table td:nth-child(4) {
+      display: none; /* Esconde algumas colunas em telas menores */
+    }
+
+    .action-buttons {
+      flex-direction: column;
+    }
+  }
+
+  /* Estilo para mostrar que tem descrição disponível */
+  .compromisso-row.has-description .compromisso-title::after {
+    content: " ▼";
+    font-size: 10px;
+    color: #6c757d;
+    vertical-align: middle;
+  }
+
+  .compromisso-row.expanded.has-description .compromisso-title::after {
+    content: " ▲";
+  }
+
+  /* Melhoria na mensagem de sem resultados */
+  .no-results {
+    text-align: center;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
 }
