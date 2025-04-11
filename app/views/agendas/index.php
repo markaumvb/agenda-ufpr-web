@@ -11,15 +11,21 @@
     </div>
     
     <div class="search-box">
-        <form action="<?= PUBLIC_URL ?>/agendas" method="get" class="search-form">
-            <input type="text" name="search" placeholder="Pesquisar agendas..." 
-                   value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
-            <button type="submit" class="btn btn-secondary">Buscar</button>
-            <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
-                <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-link">Limpar</a>
-            <?php endif; ?>
-        </form>
-    </div>
+    <form action="<?= PUBLIC_URL ?>/agendas" method="get" class="search-form">
+        <input type="text" name="search" placeholder="Pesquisar agendas..." 
+               value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+        <label class="checkbox-container" style="margin-left: 10px;">
+            <input type="checkbox" name="include_inactive" value="1" 
+                   <?= isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1 ? 'checked' : '' ?>>
+            <span class="checkmark"></span>
+            Incluir agendas desativadas
+        </label>
+        <button type="submit" class="btn btn-secondary">Buscar</button>
+        <?php if ((isset($_GET['search']) && !empty($_GET['search'])) || (isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1)): ?>
+            <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-link">Limpar</a>
+        <?php endif; ?>
+    </form>
+</div>
 </div>
 
 <!-- Listagem de agendas em cards -->
@@ -43,19 +49,23 @@
         $agenda = $agendas[$i];
     ?>
         <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
-            <div class="agenda-card-header">
-                <div class="agenda-visibility">
-                    <?php if ($agenda['is_public']): ?>
-                        <span class="badge badge-success">Pública</span>
-                    <?php else: ?>
-                        <span class="badge badge-secondary">Privada</span>
-                    <?php endif; ?>
-                    
-                    <?php if (isset($agenda['is_owner']) && !$agenda['is_owner']): ?>
-                        <span class="badge badge-info">Compartilhada</span>
-                    <?php endif; ?>
-                </div>
+        <div class="agenda-card-header">
+            <div class="agenda-visibility">
+                <?php if ($agenda['is_public']): ?>
+                    <span class="badge badge-success">Pública</span>
+                <?php else: ?>
+                    <span class="badge badge-secondary">Privada</span>
+                <?php endif; ?>
+                
+                <?php if (!$agenda['is_active']): ?>
+                    <span class="badge badge-danger">Desativada</span>
+                <?php endif; ?>
+                
+                <?php if (isset($agenda['is_owner']) && !$agenda['is_owner']): ?>
+                    <span class="badge badge-info">Compartilhada</span>
+                <?php endif; ?>
             </div>
+        </div>
             
             <!-- Resto do código permanece igual -->
             <div class="agenda-card-body">
@@ -120,6 +130,13 @@
                             <i class="fa-solid fa-trash"></i> Excluir
                         </button>
                         <?php endif; ?>
+                        <form action="<?= PUBLIC_URL ?>/agendas/toggle-active" method="post" style="display: inline;">
+                            <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
+                            <input type="hidden" name="is_active" value="<?= $agenda['is_active'] ? '0' : '1' ?>">
+                            <button type="submit" class="btn btn-sm <?= $agenda['is_active'] ? 'btn-warning' : 'btn-success' ?>">
+                                <?= $agenda['is_active'] ? 'Desativar' : 'Ativar' ?>
+                            </button>
+                        </form>
                         <?php else: ?>
                         <?php if (isset($agenda['can_edit']) && $agenda['can_edit']): ?>
                             <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-primary">Novo Compromisso</a>

@@ -260,6 +260,11 @@ $routes = [
     'action' => 'rejectCompromisso',
     'method' => 'POST'
 ],
+'/agendas/toggle-active' => [
+    'controller' => 'AgendaController',
+    'action' => 'toggleActive',
+    'method' => 'POST'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública

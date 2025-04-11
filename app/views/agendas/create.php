@@ -33,7 +33,16 @@
             </label>
             <small class="form-text">Se marcada, qualquer pessoa poderá visualizar esta agenda, mas apenas você poderá editar os compromissos.</small>
         </div>
-        
+
+        <div class="form-group checkbox-group">
+        <label class="checkbox-container">
+            <input type="checkbox" id="is_active" name="is_active" value="1" checked>
+            <span class="checkmark"></span>
+            Agenda ativa
+        </label>
+        <small class="form-text">Se desmarcada, a agenda ficará desativada e não poderá receber novos compromissos.</small>
+         </div>
+            
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar</button>
             <a href="<?= BASE_URL ?>/agendas" class="btn btn-secondary">Cancelar</a>

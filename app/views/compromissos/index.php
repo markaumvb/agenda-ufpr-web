@@ -3,15 +3,19 @@
 ?>
 
 <div class="page-header">
-    <div class="header-container">
-        <h1><?= htmlspecialchars($agenda['title']) ?></h1>
-        <div class="header-actions">
-            <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
+<div class="header-container">
+    <h1><?= htmlspecialchars($agenda['title']) ?></h1>
+    <div class="header-actions">
+        <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
+            <?php if ($agenda['is_active']): ?>
                 <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>" class="btn btn-primary">Novo Compromisso</a>
+            <?php else: ?>
+                <button class="btn btn-primary" disabled title="Agenda desativada">Novo Compromisso</button>
             <?php endif; ?>
-            <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-secondary">Voltar para Agendas</a>
-        </div>
+        <?php endif; ?>
+        <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-secondary">Voltar para Agendas</a>
     </div>
+</div>
     
     <div class="agenda-meta">
         <span class="badge <?= $agenda['is_public'] ? 'badge-success' : 'badge-secondary' ?>">
@@ -21,6 +25,11 @@
             <span class="agenda-owner">Proprietário: <?= htmlspecialchars($agenda['user_name'] ?? 'Usuário') ?></span>
         <?php endif; ?>
     </div>
+        <?php if (!$agenda['is_active']): ?>
+        <div class="alert alert-warning">
+            <strong>Atenção:</strong> Esta agenda está desativada. Não é possível criar novos compromissos.
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Opções de visualização do calendário -->

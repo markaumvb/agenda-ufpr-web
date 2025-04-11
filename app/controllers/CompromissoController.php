@@ -129,6 +129,13 @@ class CompromissoController extends BaseController {
             header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
+
+        if (!$agenda['is_active']) {
+            $_SESSION['flash_message'] = 'Não é possível criar compromissos em uma agenda desativada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
+            exit;
+        }
         
         // Verificar se o usuário é o dono da agenda ou tem permissão para editar
         $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
@@ -212,6 +219,15 @@ class CompromissoController extends BaseController {
             header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
+
+        // Verificar se a agenda está ativa
+    if (!$agenda['is_active']) {
+        $_SESSION['flash_message'] = 'Não é possível criar compromissos em uma agenda desativada';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
+        exit;
+    }
+    
         
         // Verificar se o usuário é o dono da agenda ou tem permissão para editar
         $isOwner = $agenda['user_id'] == $_SESSION['user_id'];

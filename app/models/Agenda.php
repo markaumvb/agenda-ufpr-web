@@ -18,7 +18,7 @@ class Agenda {
      * @param string $search Termo de pesquisa (opcional)
      * @return array Lista de agendas
      */
-    public function getAllByUser($userId, $search = null) {
+    public function getAllByUser($userId, $search = null, $includeInactive = false) {
         try {
             $query = "
                 SELECT a.*, 
@@ -26,6 +26,11 @@ class Agenda {
                 FROM agendas a
                 WHERE a.user_id = :user_id
             ";
+            
+            // Adicionar filtro de status se necessário
+            if (!$includeInactive) {
+                $query .= " AND a.is_active = 1";
+            }
             
             // Adiciona filtro de pesquisa se especificado
             if ($search) {
@@ -187,8 +192,6 @@ class Agenda {
             
             if ((int)$existsStmt->fetchColumn() > 0) {
                 // Já existe uma agenda com esse título
-                // Pode modificar para permitir nomes duplicados ou retornar erro
-                // Neste caso, vamos modificar o título adicionando um sufixo
                 $data['title'] = $data['title'] . ' (' . date('d/m/Y H:i') . ')';
             }
             
@@ -198,9 +201,12 @@ class Agenda {
                 $publicHash = md5(uniqid(rand(), true));
             }
             
+            // Definir is_active com valor padrão se não for fornecido
+            $isActive = isset($data['is_active']) ? $data['is_active'] : 1;
+            
             $query = "
-                INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash)
-                VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash)
+                INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash, is_active)
+                VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash, :is_active)
             ";
             
             $stmt = $this->db->prepare($query);
@@ -210,6 +216,7 @@ class Agenda {
             $stmt->bindParam(':is_public', $data['is_public'], PDO::PARAM_INT);
             $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
             $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
+            $stmt->bindParam(':is_active', $isActive, PDO::PARAM_INT);
             
             if ($stmt->execute()) {
                 return $this->db->lastInsertId();
@@ -250,6 +257,7 @@ class Agenda {
                     is_public = :is_public,
                     color = :color,
                     public_hash = :public_hash,
+                    is_active = :is_active,
                     updated_at = NOW()
                 WHERE id = :id
             ";
@@ -260,11 +268,27 @@ class Agenda {
             $stmt->bindParam(':is_public', $data['is_public'], PDO::PARAM_INT);
             $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
             $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
+            $stmt->bindParam(':is_active', $data['is_active'], PDO::PARAM_INT);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             
             return $stmt->execute();
         } catch (PDOException $e) {
             error_log('Erro ao atualizar agenda: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /** Ativar ou desativar  a agenda */
+    public function toggleActive($id, $status) {
+        try {
+            $query = "UPDATE agendas SET is_active = :is_active, updated_at = NOW() WHERE id = :id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':is_active', $status, PDO::PARAM_INT);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log('Erro ao alterar status de ativação da agenda: ' . $e->getMessage());
             return false;
         }
     }
@@ -411,99 +435,87 @@ class Agenda {
      * @param string $search Termo de pesquisa (opcional)
      * @return array Lista de agendas
      */
-    public function getAllAccessibleByUser($userId, $search = null) {
+    public function getAllAccessibleByUser($userId, $search = null, $includeInactive = false) {
         try {
             // Verificar se o usuário existe
             if (!$userId) {
                 return [];
             }
             
-            // Primeiro, vamos obter todas as agendas próprias do usuário
+            // Consulta modificada para incluir filtro de status
             $query = "
-                SELECT 
+                (SELECT 
                     a.*,
                     u.name as owner_name,
                     1 as is_owner,
-                    1 as can_edit
-                FROM agendas a
-                JOIN users u ON a.user_id = u.id
-                WHERE a.user_id = :user_id
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-            $ownedAgendas = $stmt->fetchAll();
-            
-            // Armazenar IDs de agendas já processadas
-            $processedAgendaIds = array_map(function($agenda) {
-                return $agenda['id'];
-            }, $ownedAgendas);
-            
-            // Agora, vamos buscar agendas compartilhadas com o usuário
-            $query = "
-                SELECT 
-                    a.*,
-                    u.name as owner_name,
-                    0 as is_owner,
-                    s.can_edit
-                FROM agendas a
-                JOIN users u ON a.user_id = u.id
-                JOIN agenda_shares s ON a.id = s.agenda_id
-                WHERE s.user_id = :user_id
-                ORDER BY a.title
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-            $sharedAgendas = $stmt->fetchAll();
-            
-            // Adicionar apenas agendas compartilhadas que ainda não estão na lista
-            foreach ($sharedAgendas as $agenda) {
-                if (!in_array($agenda['id'], $processedAgendaIds)) {
-                    $ownedAgendas[] = $agenda;
-                    $processedAgendaIds[] = $agenda['id'];
-                }
+                    NULL as can_edit
+                 FROM agendas a
+                 JOIN users u ON a.user_id = u.id
+                 WHERE a.user_id = :user_id";
+                 
+            // Adicionar filtro de status se necessário
+            if (!$includeInactive) {
+                $query .= " AND a.is_active = 1";
             }
             
-            // Por último, vamos buscar agendas públicas que ainda não foram incluídas
-            $query = "
-                SELECT 
-                    a.*,
-                    u.name as owner_name,
-                    0 as is_owner,
-                    0 as can_edit
-                FROM agendas a
-                JOIN users u ON a.user_id = u.id
-                WHERE a.is_public = 1 
-                AND a.user_id != :user_id
-                ORDER BY a.title
-            ";
+            $query .= ")
+                
+             UNION
             
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-            $publicAgendas = $stmt->fetchAll();
-            
-            // Adicionar apenas agendas públicas que ainda não estão na lista
-            foreach ($publicAgendas as $agenda) {
-                if (!in_array($agenda['id'], $processedAgendaIds)) {
-                    $ownedAgendas[] = $agenda;
-                    $processedAgendaIds[] = $agenda['id'];
-                }
+            (SELECT 
+                a.*,
+                u.name as owner_name,
+                0 as is_owner,
+                s.can_edit
+             FROM agendas a
+             JOIN users u ON a.user_id = u.id
+             JOIN agenda_shares s ON a.id = s.agenda_id
+             WHERE s.user_id = :shared_user_id";
+             
+            // Adicionar filtro de status se necessário
+            if (!$includeInactive) {
+                $query .= " AND a.is_active = 1";
             }
             
-            // Aplicar filtro de busca, se fornecido
+            $query .= ")
+            
+             UNION
+            
+            (SELECT 
+                a.*,
+                u.name as owner_name,
+                0 as is_owner,
+                0 as can_edit
+             FROM agendas a
+             JOIN users u ON a.user_id = u.id
+             WHERE a.is_public = 1 AND a.user_id != :public_user_id";
+             
+            // Adicionar filtro de status se necessário
+            if (!$includeInactive) {
+                $query .= " AND a.is_active = 1";
+            }
+            
+            $query .= ")";
+            
+            // Adicionar filtro de pesquisa se especificado
             if ($search) {
-                $ownedAgendas = array_filter($ownedAgendas, function($agenda) use ($search) {
-                    $searchLower = strtolower($search);
-                    return strpos(strtolower($agenda['title']), $searchLower) !== false || 
-                           strpos(strtolower($agenda['description']), $searchLower) !== false;
-                });
+                $query = "SELECT * FROM ($query) as result WHERE (title LIKE :search OR description LIKE :search)";
             }
             
-            return $ownedAgendas;
+            $query .= " ORDER BY is_owner DESC, title ASC";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':public_user_id', $userId, PDO::PARAM_INT);
+            
+            if ($search) {
+                $searchParam = "%{$search}%";
+                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
             return [];

@@ -18,10 +18,10 @@ class AgendaController extends BaseController {
     public function index() {
         $userId = $_SESSION['user_id'];
         $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
-
+        $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1;
         
         // Buscar todas as agendas acessíveis pelo usuário
-        $agendas = $this->agendaModel->getAllAccessibleByUser($userId, $search);
+        $agendas = $this->agendaModel->getAllAccessibleByUser($userId, $search, $includeInactive);
         
         // Para cada agenda, adicionar a contagem de compromissos por status
         foreach ($agendas as &$agenda) {
@@ -71,6 +71,7 @@ class AgendaController extends BaseController {
         $title = htmlspecialchars(filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW) ?? '');
         $description = htmlspecialchars(filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW) ?? '');
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
         $color = filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?: '#3788d8';
         
         // Validar os dados     
@@ -87,6 +88,7 @@ class AgendaController extends BaseController {
             'title' => $title,
             'description' => $description,
             'is_public' => $isPublic,
+            'is_active' => $isActive,
             'color' => $color
         ];
         
@@ -175,6 +177,7 @@ class AgendaController extends BaseController {
         $title = filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW);
         $description = filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW);
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
         $color = htmlspecialchars(filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?? '') ?: '#3788d8';
         
         // Validar os dados
@@ -190,6 +193,7 @@ class AgendaController extends BaseController {
             'title' => $title,
             'description' => $description,
             'is_public' => $isPublic,
+            'is_active' => $isActive,
             'color' => $color
         ];
         
@@ -252,6 +256,47 @@ class AgendaController extends BaseController {
             $_SESSION['flash_type'] = 'success';
         } else {
             $_SESSION['flash_message'] = 'Erro ao excluir agenda';
+            $_SESSION['flash_type'] = 'danger';
+        }
+        
+        header('Location: ' . BASE_URL . '/agendas');
+        exit;
+    }
+
+    public function toggleActive() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/agendas');
+            exit;
+        }
+        
+        // Obter o ID da agenda
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $status = isset($_POST['is_active']) ? 1 : 0;
+        
+        if (!$id) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/agendas');
+            exit;
+        }
+        
+        // Verificar se a agenda pertence ao usuário
+        if (!$this->agendaModel->belongsToUser($id, $_SESSION['user_id'])) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para modificar esta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/agendas');
+            exit;
+        }
+        
+        // Alternar o status
+        $result = $this->agendaModel->toggleActive($id, $status);
+        
+        if ($result) {
+            $_SESSION['flash_message'] = $status ? 'Agenda ativada com sucesso' : 'Agenda desativada com sucesso';
+            $_SESSION['flash_type'] = 'success';
+        } else {
+            $_SESSION['flash_message'] = 'Erro ao alterar status da agenda';
             $_SESSION['flash_type'] = 'danger';
         }
         

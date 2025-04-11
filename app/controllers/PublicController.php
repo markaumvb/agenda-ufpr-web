@@ -34,9 +34,9 @@ class PublicController {
         // Buscar a agenda pelo hash
         $agenda = $this->agendaModel->getByPublicHash($hash);
         
-        if (!$agenda || !$agenda['is_public']) {
+        if (!$agenda || !$agenda['is_public'] || !$agenda['is_active']) {
             header('HTTP/1.1 404 Not Found');
-            echo "Agenda não encontrada ou não é pública";
+            echo "Agenda não encontrada, não é pública ou está desativada";
             exit;
         }
         
