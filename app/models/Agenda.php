@@ -418,60 +418,92 @@ class Agenda {
                 return [];
             }
             
-            // Consulta modificada para ser mais direta
+            // Primeiro, vamos obter todas as agendas próprias do usuário
             $query = "
-                (SELECT 
+                SELECT 
                     a.*,
                     u.name as owner_name,
                     1 as is_owner,
-                    NULL as can_edit
-                 FROM agendas a
-                 JOIN users u ON a.user_id = u.id
-                 WHERE a.user_id = :user_id)
-                
-                 UNION
-                
-                (SELECT 
+                    1 as can_edit
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.user_id = :user_id
+            ";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $ownedAgendas = $stmt->fetchAll();
+            
+            // Armazenar IDs de agendas já processadas
+            $processedAgendaIds = array_map(function($agenda) {
+                return $agenda['id'];
+            }, $ownedAgendas);
+            
+            // Agora, vamos buscar agendas compartilhadas com o usuário
+            $query = "
+                SELECT 
                     a.*,
                     u.name as owner_name,
                     0 as is_owner,
                     s.can_edit
-                 FROM agendas a
-                 JOIN users u ON a.user_id = u.id
-                 JOIN agenda_shares s ON a.id = s.agenda_id
-                 WHERE s.user_id = :shared_user_id)
-                
-                 UNION
-                
-                (SELECT 
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                JOIN agenda_shares s ON a.id = s.agenda_id
+                WHERE s.user_id = :user_id
+                ORDER BY a.title
+            ";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $sharedAgendas = $stmt->fetchAll();
+            
+            // Adicionar apenas agendas compartilhadas que ainda não estão na lista
+            foreach ($sharedAgendas as $agenda) {
+                if (!in_array($agenda['id'], $processedAgendaIds)) {
+                    $ownedAgendas[] = $agenda;
+                    $processedAgendaIds[] = $agenda['id'];
+                }
+            }
+            
+            // Por último, vamos buscar agendas públicas que ainda não foram incluídas
+            $query = "
+                SELECT 
                     a.*,
                     u.name as owner_name,
                     0 as is_owner,
                     0 as can_edit
-                 FROM agendas a
-                 JOIN users u ON a.user_id = u.id
-                 WHERE a.is_public = 1 AND a.user_id != :public_user_id)
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.is_public = 1 
+                AND a.user_id != :user_id
+                ORDER BY a.title
             ";
-            
-            // Adicionar filtro de pesquisa se especificado
-            if ($search) {
-                $query = "SELECT * FROM ($query) as result WHERE (title LIKE :search OR description LIKE :search)";
-            }
-            
-            $query .= " ORDER BY is_owner DESC, title ASC";
             
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':public_user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $publicAgendas = $stmt->fetchAll();
             
-            if ($search) {
-                $searchParam = "%{$search}%";
-                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            // Adicionar apenas agendas públicas que ainda não estão na lista
+            foreach ($publicAgendas as $agenda) {
+                if (!in_array($agenda['id'], $processedAgendaIds)) {
+                    $ownedAgendas[] = $agenda;
+                    $processedAgendaIds[] = $agenda['id'];
+                }
             }
             
-            $stmt->execute();
-            return $stmt->fetchAll();
+            // Aplicar filtro de busca, se fornecido
+            if ($search) {
+                $ownedAgendas = array_filter($ownedAgendas, function($agenda) use ($search) {
+                    $searchLower = strtolower($search);
+                    return strpos(strtolower($agenda['title']), $searchLower) !== false || 
+                           strpos(strtolower($agenda['description']), $searchLower) !== false;
+                });
+            }
+            
+            return $ownedAgendas;
         } catch (PDOException $e) {
             error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
             return [];
