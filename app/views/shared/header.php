@@ -1,6 +1,4 @@
-<?php
-// Arquivo: app/views/shared/header.php
-?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -15,49 +13,47 @@
 
     <title><?= APP_NAME ?></title>
     
-    <!-- CSS Principal -->
-    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/assets/css/style.css">
+    <!-- CSS Principal - Mantenha esses sempre carregados para o layout básico funcionar -->
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/style.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/component.css">
     
     <!-- CSS específicos por módulo -->
     <?php 
     // Identificar a página atual para carregar apenas o CSS necessário
     $currentUri = $_SERVER['REQUEST_URI'];
     
-
     if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/forms.css">';
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/auth/login.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth/login.css">';
     }
     
     // Carregar CSS para agendas
     if (strpos($currentUri, '/agendas') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/agendas.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
     }
     
     // Carregar CSS para compromissos
     if (strpos($currentUri, '/compromissos') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/compromissos.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
     }
     
     // Carregar CSS para compartilhamentos
     if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/shares.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
     }
 
-     // Carregar CSS para a página de Meus Compromissos
-     if (strpos($currentUri, '/meuscompromissos') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/meuscompromissos.css">';
+    // Carregar CSS para a página de Meus Compromissos
+    if (strpos($currentUri, '/meuscompromissos') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/meuscompromissos.css">';
     }
     
     // Carregar CSS para formulários (criar nova agenda, editar compromisso, etc.)
-   // Verificar se é uma página de formulário e incluir o CSS de formulários
-        if (strpos($currentUri, '/new') !== false || 
+    if (strpos($currentUri, '/new') !== false || 
         strpos($currentUri, '/edit') !== false || 
         strpos($currentUri, '/login') !== false || 
         strpos($currentUri, '/register') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/assets/css/forms.css">';
-        }
-
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
+    }
     ?>
 </head>
 <body>

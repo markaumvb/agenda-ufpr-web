@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
     
-    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/assets/css/shares/public.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/shares/public.css">
     <style>
         :root {
             --agenda-color: <?= $agenda['color'] ?? '#004a8f' ?>;

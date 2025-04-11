@@ -130,4 +130,4 @@
     </div>
 </div>
 
-<script src="<?= PUBLIC_URL ?>/assets/js/shares/index.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/shares/index.js"></script>

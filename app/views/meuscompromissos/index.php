@@ -254,4 +254,4 @@
     </div>
 <?php endif; ?>
 
-<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/meus-compromissos.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/meus-compromissos.js"></script>

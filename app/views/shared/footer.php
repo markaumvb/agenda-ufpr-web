@@ -1,4 +1,4 @@
-    </main>
+</main>
     
     <footer>
         <div class="container">
@@ -15,5 +15,8 @@
             margin-top: 2rem;
         }
     </style>
+    
+    <!-- Script principal do site - Observe o caminho corrigido com /app/ -->
+    <script src="<?= PUBLIC_URL ?>/app/assets/js/main.js"></script>
 </body>
 </html>
