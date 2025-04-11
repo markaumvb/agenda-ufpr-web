@@ -442,60 +442,74 @@ class Agenda {
                 return [];
             }
             
-            // Consulta modificada para incluir filtro de status
+            // Primeira parte da consulta: agendas do próprio usuário
             $query = "
-                (SELECT 
+                SELECT 
                     a.*,
                     u.name as owner_name,
                     1 as is_owner,
-                    NULL as can_edit
-                 FROM agendas a
-                 JOIN users u ON a.user_id = u.id
-                 WHERE a.user_id = :user_id";
-                 
-            // Adicionar filtro de status se necessário
-            if (!$includeInactive) {
-                $query .= " AND a.is_active = 1";
-            }
-            
-            $query .= ")
+                    1 as can_edit,
+                    'owner' as access_type
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.user_id = :user_id";
                 
-             UNION
-            
-            (SELECT 
-                a.*,
-                u.name as owner_name,
-                0 as is_owner,
-                s.can_edit
-             FROM agendas a
-             JOIN users u ON a.user_id = u.id
-             JOIN agenda_shares s ON a.id = s.agenda_id
-             WHERE s.user_id = :shared_user_id";
-             
             // Adicionar filtro de status se necessário
             if (!$includeInactive) {
                 $query .= " AND a.is_active = 1";
             }
             
-            $query .= ")
-            
-             UNION
-            
-            (SELECT 
-                a.*,
-                u.name as owner_name,
-                0 as is_owner,
-                0 as can_edit
-             FROM agendas a
-             JOIN users u ON a.user_id = u.id
-             WHERE a.is_public = 1 AND a.user_id != :public_user_id";
-             
+            // Segunda parte: agendas compartilhadas, com tratamento para evitar duplicatas
+            // Usamos uma subconsulta para pegar apenas o compartilhamento de maior privilégio
+            $query .= "
+                UNION
+                
+                SELECT 
+                    a.*,
+                    u.name as owner_name,
+                    0 as is_owner,
+                    s.can_edit,
+                    'shared' as access_type
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                JOIN (
+                    SELECT agenda_id, user_id, MAX(can_edit) as can_edit
+                    FROM agenda_shares
+                    WHERE user_id = :shared_user_id
+                    GROUP BY agenda_id, user_id
+                ) s ON a.id = s.agenda_id
+                WHERE a.user_id != :exclude_user_id";
+                
             // Adicionar filtro de status se necessário
             if (!$includeInactive) {
                 $query .= " AND a.is_active = 1";
             }
             
-            $query .= ")";
+            // Terceira parte: agendas públicas (que não sejam do próprio usuário e não estejam compartilhadas)
+            $query .= "
+                UNION
+                
+                SELECT 
+                    a.*,
+                    u.name as owner_name,
+                    0 as is_owner,
+                    0 as can_edit,
+                    'public' as access_type
+                FROM agendas a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.is_public = 1 
+                AND a.user_id != :public_user_id
+                AND NOT EXISTS (
+                    SELECT 1 
+                    FROM agenda_shares 
+                    WHERE agenda_id = a.id 
+                    AND user_id = :public_shares_user_id
+                )";
+                
+            // Adicionar filtro de status se necessário
+            if (!$includeInactive) {
+                $query .= " AND a.is_active = 1";
+            }
             
             // Adicionar filtro de pesquisa se especificado
             if ($search) {
@@ -507,7 +521,9 @@ class Agenda {
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
             $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':exclude_user_id', $userId, PDO::PARAM_INT);
             $stmt->bindParam(':public_user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':public_shares_user_id', $userId, PDO::PARAM_INT);
             
             if ($search) {
                 $searchParam = "%{$search}%";
