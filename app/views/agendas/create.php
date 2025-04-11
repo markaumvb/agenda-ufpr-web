@@ -49,5 +49,4 @@
         </div>
     </form>
 </div>
-
-<script src="<?= PUBLIC_URL ?>/assets/js/agendas/create.js"></script>
+<script src="<?= PUBLIC_URL ?>/assets/js/agendas/form.js"></script>
