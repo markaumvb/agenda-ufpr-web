@@ -18,5 +18,8 @@
     
     <!-- Script principal do site - Observe o caminho corrigido com /app/ -->
     <script src="<?= PUBLIC_URL ?>/app/assets/js/main.js"></script>
+    <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/approval-modal.js"></script>
+
+
 </body>
 </html>

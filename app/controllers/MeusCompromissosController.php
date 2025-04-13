@@ -306,28 +306,43 @@ class MeusCompromissosController extends BaseController {
     public function approveCompromisso() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+                exit;
+            } else {
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Obter o ID do compromisso
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         
         if (!$id) {
-            $_SESSION['flash_message'] = 'Compromisso não especificado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Compromisso não especificado']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso não especificado';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Buscar o compromisso
         $compromisso = $this->compromissoModel->getById($id);
         
         if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Compromisso não encontrado']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso não encontrado';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Verificar se o usuário é o dono da agenda
@@ -335,18 +350,28 @@ class MeusCompromissosController extends BaseController {
         $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
         
         if (!$isOwner) {
-            $_SESSION['flash_message'] = 'Apenas o dono da agenda pode aprovar compromissos';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Apenas o dono da agenda pode aprovar compromissos']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Apenas o dono da agenda pode aprovar compromissos';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Verificar se o compromisso está realmente aguardando aprovação
         if ($compromisso['status'] != 'aguardando_aprovacao') {
-            $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
-            $_SESSION['flash_type'] = 'warning';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Este compromisso não está aguardando aprovação']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
+                $_SESSION['flash_type'] = 'warning';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Preparar dados para atualizar o status
@@ -366,22 +391,40 @@ class MeusCompromissosController extends BaseController {
         $result = $this->compromissoModel->update($id, $data);
         
         if ($result) {
-            $_SESSION['flash_message'] = 'Compromisso aprovado com sucesso';
-            $_SESSION['flash_type'] = 'success';
+            // Criar notificação para o criador do compromisso
+            if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                $this->createApprovalNotification($compromisso['created_by'], $id, 'approved');
+            }
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => true, 'message' => 'Compromisso aprovado com sucesso']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso aprovado com sucesso';
+                $_SESSION['flash_type'] = 'success';
+            }
         } else {
-            $_SESSION['flash_message'] = 'Erro ao aprovar compromisso';
-            $_SESSION['flash_type'] = 'danger';
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Erro ao aprovar compromisso']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Erro ao aprovar compromisso';
+                $_SESSION['flash_type'] = 'danger';
+            }
         }
         
-        // Preservar filtros da URL ao redirecionar
-        $redirectUrl = BASE_URL . '/meuscompromissos';
-        $queryParams = $this->getQueryParamsString();
-        if ($queryParams) {
-            $redirectUrl .= '?' . $queryParams;
+        // Redirecionar apenas para requisições não-AJAX
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+            // Preservar filtros da URL ao redirecionar
+            $redirectUrl = BASE_URL . '/meuscompromissos';
+            $queryParams = $this->getQueryParamsString();
+            if ($queryParams) {
+                $redirectUrl .= '?' . $queryParams;
+            }
+            
+            header('Location: ' . $redirectUrl);
+            exit;
         }
-        
-        header('Location: ' . $redirectUrl);
-        exit;
     }
     
     /**
@@ -390,28 +433,43 @@ class MeusCompromissosController extends BaseController {
     public function rejectCompromisso() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Método não permitido']);
+                exit;
+            } else {
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Obter o ID do compromisso
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         
         if (!$id) {
-            $_SESSION['flash_message'] = 'Compromisso não especificado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Compromisso não especificado']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso não especificado';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Buscar o compromisso
         $compromisso = $this->compromissoModel->getById($id);
         
         if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Compromisso não encontrado']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso não encontrado';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Verificar se o usuário é o dono da agenda
@@ -419,18 +477,28 @@ class MeusCompromissosController extends BaseController {
         $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
         
         if (!$isOwner) {
-            $_SESSION['flash_message'] = 'Apenas o dono da agenda pode rejeitar compromissos';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Apenas o dono da agenda pode rejeitar compromissos']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Apenas o dono da agenda pode rejeitar compromissos';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Verificar se o compromisso está realmente aguardando aprovação
         if ($compromisso['status'] != 'aguardando_aprovacao') {
-            $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
-            $_SESSION['flash_type'] = 'warning';
-            header('Location: ' . BASE_URL . '/meuscompromissos');
-            exit;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Este compromisso não está aguardando aprovação']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
+                $_SESSION['flash_type'] = 'warning';
+                header('Location: ' . BASE_URL . '/meuscompromissos');
+                exit;
+            }
         }
         
         // Preparar dados para atualizar o status (cancelando o compromisso)
@@ -450,22 +518,40 @@ class MeusCompromissosController extends BaseController {
         $result = $this->compromissoModel->update($id, $data);
         
         if ($result) {
-            $_SESSION['flash_message'] = 'Compromisso rejeitado e cancelado';
-            $_SESSION['flash_type'] = 'success';
+            // Criar notificação para o criador do compromisso
+            if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                $this->createApprovalNotification($compromisso['created_by'], $id, 'rejected');
+            }
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => true, 'message' => 'Compromisso rejeitado e cancelado']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso rejeitado e cancelado';
+                $_SESSION['flash_type'] = 'success';
+            }
         } else {
-            $_SESSION['flash_message'] = 'Erro ao rejeitar compromisso';
-            $_SESSION['flash_type'] = 'danger';
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['success' => false, 'message' => 'Erro ao rejeitar compromisso']);
+                exit;
+            } else {
+                $_SESSION['flash_message'] = 'Erro ao rejeitar compromisso';
+                $_SESSION['flash_type'] = 'danger';
+            }
         }
         
-        // Preservar filtros da URL ao redirecionar
-        $redirectUrl = BASE_URL . '/meuscompromissos';
-        $queryParams = $this->getQueryParamsString();
-        if ($queryParams) {
-            $redirectUrl .= '?' . $queryParams;
+        // Redirecionar apenas para requisições não-AJAX
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+            // Preservar filtros da URL ao redirecionar
+            $redirectUrl = BASE_URL . '/meuscompromissos';
+            $queryParams = $this->getQueryParamsString();
+            if ($queryParams) {
+                $redirectUrl .= '?' . $queryParams;
+            }
+            
+            header('Location: ' . $redirectUrl);
+            exit;
         }
-        
-        header('Location: ' . $redirectUrl);
-        exit;
     }
     
     /**
@@ -497,5 +583,39 @@ class MeusCompromissosController extends BaseController {
         }
         
         return http_build_query($params);
+    }
+
+    private function createApprovalNotification($userId, $compromissoId, $action) {
+        // Verificar se o modelo de notificação está disponível
+        if (!class_exists('Notification')) {
+            require_once __DIR__ . '/../models/Notification.php';
+        }
+        
+        $notificationModel = new Notification();
+        
+        // Buscar o compromisso
+        $compromisso = $this->compromissoModel->getById($compromissoId);
+        if (!$compromisso) return false;
+        
+        // Formatar data
+        $dateObj = new DateTime($compromisso['start_datetime']);
+        $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+        
+        // Definir mensagem baseada na ação
+        if ($action === 'approved') {
+            $message = "Seu compromisso \"{$compromisso['title']}\" foi aprovado para {$formattedDate}";
+        } else {
+            $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} foi rejeitado";
+        }
+        
+        // Criar notificação
+        $notificationData = [
+            'user_id' => $userId,
+            'compromisso_id' => $compromissoId,
+            'message' => $message,
+            'is_read' => 0
+        ];
+        
+        return $notificationModel->create($notificationData);
     }
 }

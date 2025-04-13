@@ -12,6 +12,9 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
 
     <title><?= APP_NAME ?></title>
+
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/approval-modal.css">
+
     
     <!-- CSS Principal - Mantenha esses sempre carregados para o layout básico funcionar -->
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/style.css">
@@ -66,6 +69,24 @@
                 <ul>
                 <li><a href="<?= PUBLIC_URL ?>/">Início</a></li>
                     <?php if (isset($_SESSION['user_id'])): ?>
+                        <li class="notification-item">
+                            <a href="<?= PUBLIC_URL ?>/meuscompromissos?status=aguardando_aprovacao" class="notification-icon">
+                                <i class="fa fa-bell"></i>
+                                <?php 
+                                // Buscar contagem de compromissos aguardando aprovação
+                                $pendingCount = 0;
+                                if (isset($notificationModel)) {
+                                    $pendingCount = $notificationModel->countPendingApprovals($_SESSION['user_id']);
+                                }
+                                
+                                if ($pendingCount > 0): 
+                                ?>
+                                <span class="notification-badge"><?= $pendingCount ?></span>
+                                <?php else: ?>
+                                <span class="notification-badge hidden">0</span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
                         <li><a href="<?= PUBLIC_URL ?>/agendas">Minhas Agendas</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/meuscompromissos">Meus Compromissos</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/shares/shared">Agendas Compartilhadas</a></li>
