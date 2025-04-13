@@ -1,5 +1,5 @@
 <?php
-// Arquivo: app/views/shares/public.php
+// Arquivo: app/views/shares/public.php (versão corrigida)
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -8,66 +8,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($agenda['title']) ?> - Agenda Pública</title>
     
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/style.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/component.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/compromissos.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/shares.css">
+    
     <!-- FullCalendar CDN -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
     
-    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/shares/public.css">
     <style>
         :root {
             --agenda-color: <?= $agenda['color'] ?? '#004a8f' ?>;
         }
         
-        /* Estilos específicos do FullCalendar para visualização pública */
-        #calendar {
-            min-height: 500px;
-            background-color: #fff;
-            border-radius: 8px;
-            overflow: hidden;
+        body {
+            font-family: "Roboto", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
         }
         
-        .fc .fc-toolbar-title {
-            font-size: 1.4rem;
-            color: var(--agenda-color);
-        }
-        
-        .fc .fc-button-primary {
+        header {
             background-color: var(--agenda-color);
-            border-color: var(--agenda-color);
+            color: #fff;
+            padding: 2rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .fc .fc-button-primary:not(:disabled):hover {
-            background-color: var(--agenda-color);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .header-content h1 {
+            margin: 0 0 1rem 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .description {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
             opacity: 0.9;
         }
         
-        .fc .fc-button-primary:not(:disabled).fc-button-active,
-        .fc .fc-button-primary:not(:disabled):active {
-            background-color: var(--agenda-color);
+        .owner-info {
+            font-size: 0.9rem;
             opacity: 0.8;
         }
         
+        main {
+            padding: 2rem 0;
+        }
+        
+        /* Opções de visualização do calendário */
         .view-options {
             display: flex;
             justify-content: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         
-        .view-options .btn-group {
+        .btn-group {
             display: flex;
-            border-radius: 4px;
+            border-radius: 6px;
             overflow: hidden;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
         }
         
         .view-option {
-            padding: 0.5rem 1rem;
+            padding: 0.7rem 1.2rem;
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #333;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
         }
         
         .view-option:hover {
@@ -80,14 +107,167 @@
             border-color: var(--agenda-color);
         }
         
-        .view-option:first-child {
-            border-top-left-radius: 4px;
-            border-bottom-left-radius: 4px;
+        /* Calendário */
+        .calendar-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
         }
         
-        .view-option:last-child {
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
+        #calendar {
+            min-height: 500px;
+        }
+        
+        /* Lista de compromissos */
+        .events-list-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            color: var(--agenda-color);
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .events-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-select,
+        .filter-input {
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        
+        .filter-input {
+            min-width: 250px;
+        }
+        
+        /* Cards de eventos */
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .event-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .event-card.event-status-pendente {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .event-card.event-status-realizado {
+            border-left: 4px solid #28a745;
+        }
+        
+        .event-card.event-status-cancelado {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .event-card.event-status-aguardando_aprovacao {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .event-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .event-status {
+            display: flex;
+            align-items: center;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-pendente {
+            background-color: #fff9e6;
+            color: #ffc107;
+        }
+        
+        .badge-realizado {
+            background-color: #e6f4ea;
+            color: #28a745;
+        }
+        
+        .badge-cancelado {
+            background-color: #f8e6e6;
+            color: #dc3545;
+        }
+        
+        .badge-aguardando_aprovacao {
+            background-color: #e6f7fa;
+            color: #17a2b8;
+        }
+        
+        .event-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .event-datetime {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .event-location,
+        .event-recurrence {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .event-description {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #eee;
         }
         
         /* Modal de evento */
@@ -140,15 +320,117 @@
             color: var(--agenda-color);
         }
         
+        /* Ícones usando pseudo-elementos */
+        .icon-calendar::before {
+            content: "📅 ";
+        }
+        
+        .icon-clock::before {
+            content: "🕒 ";
+        }
+        
+        .icon-location::before {
+            content: "📍 ";
+        }
+        
+        .icon-repeat::before {
+            content: "🔄 ";
+        }
+        
+        /* Estado vazio */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        footer {
+            background-color: var(--agenda-color);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            margin-top: 2rem;
+            opacity: 0.9;
+        }
+        
+        /* Botões */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--agenda-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e9ecef;
+        }
+        
+        /* Responsividade */
         @media (max-width: 768px) {
+            .header-content h1 {
+                font-size: 1.5rem;
+            }
+            
+            .events-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-input {
+                min-width: auto;
+            }
+            
             .view-options {
                 flex-wrap: wrap;
+            }
+            
+            .view-option {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            
+            .event-datetime {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .calendar-container,
+            .events-list-container {
+                padding: 1rem;
+            }
+            
+            .event-modal-content {
+                width: 95%;
+                margin: 5% auto;
             }
         }
     </style>
 </head>
 <body>
-    <header style="background-color: <?= $agenda['color'] ?? '#004a8f' ?>;">
+    <header>
         <div class="container">
             <div class="header-content">
                 <h1><?= htmlspecialchars($agenda['title']) ?></h1>
@@ -182,7 +464,7 @@
         
         <!-- Lista de Compromissos -->
         <div class="events-list-container">
-            <h2 class="section-title" style="color: <?= $agenda['color'] ?? '#004a8f' ?>;">Compromissos</h2>
+            <h2 class="section-title">Compromissos</h2>
             
             <?php if (empty($allCompromissos)): ?>
                 <div class="empty-state">
