@@ -265,9 +265,10 @@ $routes = [
     'action' => 'toggleActive',
     'method' => 'POST'
 ],
-'/api/pending-approvals' =>[
-    'controller' =>'ApiController',
-    'controller' =>'ApiController',
+'/api/pending-approvals' => [
+    'controller' => 'ApiController',
+    'action' => 'getPendingApprovals',
+    'method' => 'GET'
 ]
 ];
 
