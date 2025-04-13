@@ -265,6 +265,10 @@ $routes = [
     'action' => 'toggleActive',
     'method' => 'POST'
 ],
+'/api/pending-approvals' =>[
+    'controller' =>'ApiController',
+    'controller' =>'ApiController',
+]
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública
