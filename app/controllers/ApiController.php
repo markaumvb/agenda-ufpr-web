@@ -253,4 +253,77 @@ class ApiController {
         echo json_encode($data);
         exit;
     }
+
+    public function getPendingApprovals() {
+        try {
+            // Verificar se o usuário está autenticado
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['error' => 'Não autenticado'], 401);
+                exit;
+            }
+            
+            $userId = $_SESSION['user_id'];
+            
+            // Buscar agendas que o usuário é proprietário
+            $query = "SELECT id FROM agendas WHERE user_id = :user_id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $agendaIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (empty($agendaIds)) {
+                $this->jsonResponse(['count' => 0, 'compromissos' => []]);
+                exit;
+            }
+            
+            // Buscar compromissos aguardando aprovação nas agendas do usuário
+            $placeholders = implode(',', array_fill(0, count($agendaIds), '?'));
+            
+            $query = "
+                SELECT c.*, a.title as agenda_title, u.name as created_by_name
+                FROM compromissos c
+                JOIN agendas a ON c.agenda_id = a.id
+                LEFT JOIN users u ON c.created_by = u.id
+                WHERE c.agenda_id IN ({$placeholders})
+                AND c.status = 'aguardando_aprovacao'
+                ORDER BY c.start_datetime ASC
+            ";
+            
+            $stmt = $this->db->prepare($query);
+            
+            // Associar agendaIds aos placeholders
+            foreach ($agendaIds as $index => $agendaId) {
+                $stmt->bindValue($index + 1, $agendaId, PDO::PARAM_INT);
+            }
+            
+            $stmt->execute();
+            $compromissos = $stmt->fetchAll();
+            
+            // Formatação para o frontend
+            $formattedCompromissos = [];
+            foreach ($compromissos as $compromisso) {
+                $formattedCompromissos[] = [
+                    'id' => $compromisso['id'],
+                    'title' => $compromisso['title'],
+                    'description' => $compromisso['description'],
+                    'start_datetime' => $compromisso['start_datetime'],
+                    'end_datetime' => $compromisso['end_datetime'],
+                    'location' => $compromisso['location'],
+                    'status' => $compromisso['status'],
+                    'agenda_id' => $compromisso['agenda_id'],
+                    'agenda_title' => $compromisso['agenda_title'],
+                    'created_by' => $compromisso['created_by'],
+                    'created_by_name' => $compromisso['created_by_name'] ?? 'Usuário'
+                ];
+            }
+            
+            $this->jsonResponse([
+                'count' => count($formattedCompromissos),
+                'compromissos' => $formattedCompromissos
+            ]);
+        } catch (Exception $e) {
+            $this->jsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
 }
