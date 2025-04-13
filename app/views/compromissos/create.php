@@ -40,15 +40,11 @@
             <input type="text" id="location" name="location" class="form-control">
         </div>
         
-        <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status" class="form-control">
-                <option value="pendente" selected>Pendente</option>
-                <option value="realizado">Realizado</option>
-                <option value="cancelado">Cancelado</option>
-                <option value="aguardando_aprovacao">Aguardando Aprovação</option>
-            </select>
-        </div>
+        <input type="hidden" name="status" value="pendente">
+            <div class="form-group">
+                <label for="status-display">Status</label>
+                <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+            </div>
         
         <div class="form-group">
             <label>Recorrência</label>
