@@ -1,113 +1,131 @@
-/* 
- * Arquivo: public/assets/css/forms.css
- * Estilos para formulários do sistema
- */
-
-/* Container de formulário */
 .form-container {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 2rem auto;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
 }
 
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
 }
 
 .form-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   color: #004a8f;
 }
 
-/* Grupos de campos */
 .form-group {
   margin-bottom: 1.5rem;
 }
 
-.form-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.form-group-half {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-/* Labels e campos */
 label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: 500;
+  color: #444;
 }
 
 .form-control {
+  display: block;
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.75rem 1rem;
   font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .form-control:focus {
-  border-color: #004a8f;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 74, 143, 0.1);
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: 0;
 }
 
-textarea.form-control {
-  resize: vertical;
-  min-height: 100px;
+.form-control.readonly {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
 }
 
 .form-text {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
   font-size: 0.875rem;
   color: #6c757d;
 }
 
-/* Selects */
-select.form-control {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 12px 12px;
-  padding-right: 2rem;
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -10px;
+  margin-left: -10px;
+  gap: 1.5rem;
 }
 
-/* Checkbox e Radio */
-.radio-group,
-.checkbox-group {
+.form-group-half {
+  flex: 1 0 calc(50% - 1.5rem);
+  min-width: 220px;
+}
+
+.form-group-large {
+  flex: 3;
+  min-width: 300px;
+}
+
+.form-group-small {
+  flex: 1;
+  min-width: 120px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.form-actions-end {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Checkbox e radio customizados */
+.checkbox-group,
+.radio-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   margin-top: 0.5rem;
 }
 
-.radio-container,
-.checkbox-container {
-  display: block;
+.checkbox-container,
+.radio-container {
   position: relative;
   padding-left: 30px;
-  margin-bottom: 12px;
+  margin-bottom: 0.5rem;
   cursor: pointer;
-  font-weight: normal;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  min-height: 24px;
 }
 
-.radio-container input,
-.checkbox-container input {
+.checkbox-container input,
+.radio-container input {
   position: absolute;
   opacity: 0;
   cursor: pointer;
@@ -115,44 +133,56 @@ select.form-control {
   width: 0;
 }
 
-.radiomark,
-.checkmark {
+.checkmark,
+.radiomark {
   position: absolute;
   top: 0;
   left: 0;
   height: 20px;
   width: 20px;
-  background-color: #eee;
-}
-
-.radiomark {
-  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #ddd;
 }
 
 .checkmark {
   border-radius: 4px;
 }
 
-.radio-container:hover input ~ .radiomark,
-.checkbox-container:hover input ~ .checkmark {
-  background-color: #ccc;
+.radiomark {
+  border-radius: 50%;
 }
 
-.radio-container input:checked ~ .radiomark,
-.checkbox-container input:checked ~ .checkmark {
+.checkbox-container:hover input ~ .checkmark,
+.radio-container:hover input ~ .radiomark {
+  background-color: #f8f9fa;
+}
+
+.checkbox-container input:checked ~ .checkmark,
+.radio-container input:checked ~ .radiomark {
   background-color: #004a8f;
+  border-color: #004a8f;
 }
 
-.radiomark:after,
-.checkmark:after {
+.checkmark:after,
+.radiomark:after {
   content: "";
   position: absolute;
   display: none;
 }
 
-.radio-container input:checked ~ .radiomark:after,
-.checkbox-container input:checked ~ .checkmark:after {
+.checkbox-container input:checked ~ .checkmark:after,
+.radio-container input:checked ~ .radiomark:after {
   display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .radio-container .radiomark:after {
@@ -164,105 +194,93 @@ select.form-control {
   background: white;
 }
 
-.checkbox-container .checkmark:after {
-  left: 7px;
-  top: 3px;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 3px 3px 0;
-  transform: rotate(45deg);
-}
-
-/* Opções de repetição */
-.repeat-option {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-/* Color picker */
+/* Seletor de cores customizado */
 .color-picker {
   height: 40px;
   padding: 5px;
-  width: 100px;
+  cursor: pointer;
 }
 
-/* Ações do formulário */
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 2rem;
-  border-top: 1px solid #eee;
-  padding-top: 1rem;
+/* Opções de recorrência (para compromissos) */
+.repeat-option {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #eee;
 }
 
-.form-actions-center {
-  justify-content: center;
+/* Validação */
+.form-control.is-invalid {
+  border-color: #dc3545;
 }
 
-.form-actions-between {
-  justify-content: space-between;
-}
-
-.form-actions-end {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Campo obrigatório */
-.required::after {
-  content: " *";
-  color: #dc3545;
-}
-
-/* Mensagens de erro */
 .field-error {
-  display: block;
   color: #dc3545;
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
-/* Estado de erro do campo */
-.form-control.is-invalid {
-  border-color: #dc3545;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23dc3545' viewBox='0 0 16 16'%3E%3Cpath d='M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right calc(0.375em + 0.1875rem) center;
-  background-size: 12px 12px;
-  padding-right: 2.5rem;
+.validation-errors {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
 }
 
-/* Formulários responsivos */
-@media (max-width: 576px) {
+.validation-errors li {
+  margin-bottom: 0.5rem;
+}
+
+/* Informações adicionais de formulário */
+.form-info {
+  margin-bottom: 1.5rem;
+  color: #6c757d;
+}
+
+.auth-info {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
   .form-container {
     padding: 1.5rem;
   }
 
-  .form-row {
+  .form-header {
     flex-direction: column;
-    gap: 0;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .form-group-half {
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-group-half,
+  .form-group-large,
+  .form-group-small {
     width: 100%;
-    margin-bottom: 1.5rem;
   }
 
   .form-actions {
     flex-direction: column;
+    gap: 1rem;
     align-items: stretch;
   }
 
-  .form-actions button,
-  .form-actions a {
+  .form-actions .btn {
+    width: 100%;
     margin-bottom: 0.5rem;
   }
 
   .form-actions-end {
     flex-direction: column;
-    align-items: stretch;
   }
 }
