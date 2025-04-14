@@ -211,7 +211,7 @@
                                 </form>
                             <?php endif; ?>
                             
-                            <?php if ($compromisso['status'] !== 'cancelado'): ?>
+                            <?php if ($compromisso['status'] === 'pendente'): ?>
                                 <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
                                     <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                                     <input type="hidden" name="status" value="cancelado">
@@ -225,12 +225,14 @@
                                 <i class="icon-edit"></i>
                             </a>
                             
-                            <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
-                                <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                            <?php if ($compromisso['status'] === 'pendente'): ?>
+                                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
+                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
-                                    <i class="icon-trash"></i>
-                                </button>
-                            </form>
+                                        <i class="icon-trash"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>

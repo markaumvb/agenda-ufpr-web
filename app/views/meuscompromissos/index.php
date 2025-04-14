@@ -153,8 +153,8 @@
                                             Rejeitar
                                         </a>
                                     <?php else: ?>
-                                        <?php if ($compromisso['status'] !== 'cancelado' && 
-                                              (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id'])): ?>
+                                        <?php if ($compromisso['status'] === 'pendente' && 
+                                            (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id'])): ?>
                                             <a href="#" class="dropdown-item cancel-btn" data-id="<?= $compromisso['id'] ?>">
                                                 Cancelar
                                             </a>
