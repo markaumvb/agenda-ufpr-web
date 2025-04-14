@@ -586,50 +586,58 @@ class CompromissoController extends BaseController {
             exit;
         }
         
-// Buscar o compromisso
-$compromisso = $this->compromissoModel->getById($id);
+        // Buscar o compromisso
+        $compromisso = $this->compromissoModel->getById($id);
         
-if (!$compromisso) {
-    $_SESSION['flash_message'] = 'Compromisso não encontrado';
-    $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/agendas');
-    exit;
-}
-
-// Buscar a agenda do compromisso
-$agenda = $this->agendaModel->getById($compromisso['agenda_id']);
-
-// Verificar se o usuário é o dono da agenda ou tem permissão para editar
-$isOwner = $agenda['user_id'] == $_SESSION['user_id'];
-$canEdit = $isOwner;
-
-if (!$isOwner) {
-    require_once __DIR__ . '/../models/AgendaShare.php';
-    $shareModel = new AgendaShare();
-    $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
-}
-
-if (!$canEdit) {
-    $_SESSION['flash_message'] = 'Você não tem permissão para excluir este compromisso';
-    $_SESSION['flash_type'] = 'danger';
-    header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
-    exit;
-}
-
-// Excluir o compromisso
-$result = $this->compromissoModel->delete($id, $deleteFuture);
-
-if ($result) {
-    $_SESSION['flash_message'] = 'Compromisso excluído com sucesso';
-    $_SESSION['flash_type'] = 'success';
-} else {
-    $_SESSION['flash_message'] = 'Erro ao excluir compromisso';
-    $_SESSION['flash_type'] = 'danger';
-}
-
-header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
-exit;
-}
+        if (!$compromisso) {
+            $_SESSION['flash_message'] = 'Compromisso não encontrado';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/agendas');
+            exit;
+        }
+        
+        // NOVA REGRA: Verificar se o status é 'pendente'
+        if ($compromisso['status'] !== 'pendente') {
+            $_SESSION['flash_message'] = 'Apenas compromissos com status pendente podem ser excluídos';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
+            exit;
+        }
+        
+        // Buscar a agenda do compromisso
+        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+        
+        // Verificar se o usuário é o dono da agenda ou tem permissão para editar
+        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+        $canEdit = $isOwner;
+        
+        if (!$isOwner) {
+            require_once __DIR__ . '/../models/AgendaShare.php';
+            $shareModel = new AgendaShare();
+            $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
+        }
+        
+        if (!$canEdit) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para excluir este compromisso';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
+            exit;
+        }
+        
+        // Excluir o compromisso
+        $result = $this->compromissoModel->delete($id, $deleteFuture);
+        
+        if ($result) {
+            $_SESSION['flash_message'] = 'Compromisso excluído com sucesso';
+            $_SESSION['flash_type'] = 'success';
+        } else {
+            $_SESSION['flash_message'] = 'Erro ao excluir compromisso';
+            $_SESSION['flash_type'] = 'danger';
+        }
+        
+        header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
+        exit;
+    }
 
 /**
 * Cancela eventos futuros de uma série recorrente

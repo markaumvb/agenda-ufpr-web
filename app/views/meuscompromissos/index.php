@@ -169,10 +169,16 @@
                                         <?php endif; ?>
                                         
                                         <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
-                                            <a href="#" class="dropdown-item delete-btn" data-id="<?= $compromisso['id'] ?>">
-                                                Excluir
-                                            </a>
-                                        <?php endif; ?>
+                                            <?php if ($compromisso['status'] === 'pendente'): ?>
+                                                <a href="#" class="dropdown-item delete-btn" data-id="<?= $compromisso['id'] ?>">
+                                                    Excluir
+                                                </a>
+                                                <?php else: ?>
+                                                    <span class="dropdown-item disabled" style="color: #aaa; cursor: not-allowed;">
+                                                        Excluir (apenas compromissos pendentes)
+                                                    </span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>

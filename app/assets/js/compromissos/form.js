@@ -64,7 +64,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Botões de exclusão (apenas para edição)
   if (isEditForm) {
     document.querySelectorAll(".delete-form").forEach((form) => {
       form.addEventListener("submit", function (event) {

@@ -1,12 +1,3 @@
-/**
- * Script para a página de Meus Compromissos
- * Funcionalidades:
- * - Filtros dinâmicos
- * - Expansão de descrições
- * - Dropdowns de ações
- * - Confirmações antes de ações
- */
-
 document.addEventListener("DOMContentLoaded", function () {
   // Seletores de elementos principais
   const filterAgenda = document.getElementById("filter-agenda");
@@ -148,6 +139,12 @@ document.addEventListener("DOMContentLoaded", function () {
   deleteBtns.forEach((btn) => {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
+
+      // Verificar se o botão ou seu ancestral tem a classe 'disabled'
+      if (this.classList.contains("disabled") || this.closest(".disabled")) {
+        return false;
+      }
+
       if (
         confirm(
           "Tem certeza que deseja excluir este compromisso? Esta ação não pode ser desfeita."

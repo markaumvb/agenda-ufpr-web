@@ -227,7 +227,7 @@
                             
                             <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
                                 <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
                                     <i class="icon-trash"></i>
                                 </button>
                             </form>
