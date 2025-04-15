@@ -272,7 +272,7 @@ class AgendaController extends BaseController {
         
         // Obter o ID da agenda
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        $status = isset($_POST['is_active']) ? 1 : 0;
+        $status = filter_input(INPUT_POST, 'is_active', FILTER_VALIDATE_INT);
         
         if (!$id) {
             $_SESSION['flash_message'] = 'Agenda não encontrada';
