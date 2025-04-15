@@ -202,13 +202,15 @@ class CompromissoController extends BaseController {
         $repeatDays = isset($_POST['repeat_days']) ? implode(',', $_POST['repeat_days']) : null;
         $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING) ?: 'pendente';
 
-        $isPublic = isset($_POST['public']) && $_POST['public'] == 1;
-        // Verificar se o usuário atual é o proprietário da agenda
-        $isOwner = $this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id']);
-
-        // Se for agenda pública e o usuário não for o proprietário, forçar status "aguardando_aprovacao"
-        if ($isPublic && !$isOwner) {
-            $status = 'aguardando_aprovacao';
+        $isFromPublic = isset($_GET['public']) || isset($_POST['public']);
+        if ($isFromPublic) {
+            // Verificar se o usuário atual é o dono da agenda
+            $isOwner = $this->agendaModel->belongsToUser($agendaId, $_SESSION['user_id']);
+            
+            // Se não for o dono, forçar status "aguardando_aprovação"
+            if (!$isOwner) {
+                $status = 'aguardando_aprovacao';
+            }
 }
         
         // Validar dados obrigatórios

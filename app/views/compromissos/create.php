@@ -41,25 +41,20 @@
         </div>
         
         <?php
-        // Verificar se é uma agenda pública e o usuário não é o dono
-        $isPublicAgenda = isset($_GET['public']) && $_GET['public'] == 1;
-        $isPublicNonOwner = $isPublicAgenda && !$isOwner;
+            $isFromPublic = isset($_GET['public']) || isset($_POST['public']); ;
         ?>
-
-        <?php if ($isPublicNonOwner): ?>
-            <input type="hidden" name="status" value="aguardando_aprovacao">
+        <input type="hidden" name="status" value="pendente">
+        <?php if ($isFromPublic): ?>
             <input type="hidden" name="public" value="1">
-            <div class="form-group">
-                <label for="status-display">Status</label>
-                <input type="text" id="status-display" class="form-control" value="Aguardando Aprovação" readonly>
-            </div>
-        <?php else: ?>
-            <input type="hidden" name="status" value="pendente">
-            <div class="form-group">
-                <label for="status-display">Status</label>
-                <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
-            </div>
         <?php endif; ?>
+
+        <div class="form-group">
+            <label for="status-display">Status</label>
+            <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+            <?php if ($isFromPublic): ?>
+            <small class="form-text text-info">Nota: Se você não for o proprietário desta agenda, o compromisso será marcado como "Aguardando Aprovação".</small>
+            <?php endif; ?>
+        </div>
         
         <div class="form-group">
             <label>Recorrência</label>
