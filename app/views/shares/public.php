@@ -442,16 +442,15 @@
                 <div class="owner-info">
                     Agenda de <?= htmlspecialchars($owner['name']) ?>
                 </div>  
-                
-                <div class="agenda-actions" style="margin-top: 15px;">
-                    <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Criar Compromisso
-                    </a>
-                </div>
             </div>
         </div>
     </header>
     
+    <div class="agenda-actions" style="margin-top: 20px; text-align: center;">
+                    <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-primary" style="padding: 12px 24px; font-size: 1.1rem;">
+                        <i class="fas fa-plus"></i> Criar Compromisso na Agenda
+                    </a>
+                </div>
     <main class="container">
         <!-- Opções de visualização do calendário -->
         <div class="view-options">

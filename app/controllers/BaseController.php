@@ -6,9 +6,13 @@ class BaseController {
      */
     protected function checkAuth() {
         if (!isset($_SESSION['user_id'])) {
+            // Capturar URL atual para redirecionamento após login
+            $currentUrl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            $redirectUrl = urlencode(BASE_URL . $currentUrl);
+            
             $_SESSION['flash_message'] = 'Você precisa estar logado para acessar essa página';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/login');
+            header('Location: ' . BASE_URL . '/login?redirect=' . $redirectUrl);
             exit;
         }
     }

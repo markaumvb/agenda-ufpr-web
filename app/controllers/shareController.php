@@ -229,9 +229,6 @@ class ShareController extends BaseController {
         require_once __DIR__ . '/../views/shared/footer.php';
     }
     
-    /**
-     * Gera uma URL pública para uma agenda
-     */
     public function generatePublicUrl() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

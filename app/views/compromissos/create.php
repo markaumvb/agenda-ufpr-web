@@ -40,11 +40,26 @@
             <input type="text" id="location" name="location" class="form-control">
         </div>
         
-        <input type="hidden" name="status" value="pendente">
+        <?php
+        // Verificar se é uma agenda pública e o usuário não é o dono
+        $isPublicAgenda = isset($_GET['public']) && $_GET['public'] == 1;
+        $isPublicNonOwner = $isPublicAgenda && !$isOwner;
+        ?>
+
+        <?php if ($isPublicNonOwner): ?>
+            <input type="hidden" name="status" value="aguardando_aprovacao">
+            <input type="hidden" name="public" value="1">
+            <div class="form-group">
+                <label for="status-display">Status</label>
+                <input type="text" id="status-display" class="form-control" value="Aguardando Aprovação" readonly>
+            </div>
+        <?php else: ?>
+            <input type="hidden" name="status" value="pendente">
             <div class="form-group">
                 <label for="status-display">Status</label>
                 <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
             </div>
+        <?php endif; ?>
         
         <div class="form-group">
             <label>Recorrência</label>

@@ -100,7 +100,11 @@ class AuthController {
             $_SESSION['flash_message'] = 'Login realizado com sucesso! Bem-vindo(a), ' . $user['name'] . '.';
             $_SESSION['flash_type'] = 'success';
             
-            header('Location: ' . BASE_URL . '/agendas');
+            // Verificar se há um URL para redirecionar após o login
+            $redirect = filter_input(INPUT_POST, 'redirect', FILTER_SANITIZE_URL);
+
+            // Se houver, redirecionar para lá; senão, ir para a página de agendas
+            $redirectUrl = $redirect ? $redirect : BASE_URL . '/agendas';
             exit;
                 
         } catch (Exception $e) {
@@ -171,7 +175,6 @@ class AuthController {
             // Validar os campos
             $rules = [
                 'name' => 'required|min:3|max:100',
-                // Removida a validação de email
             ];
             
             $validator = new Validator($data, $rules);
