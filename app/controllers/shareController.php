@@ -276,12 +276,13 @@ class ShareController extends BaseController {
             $hash = md5(uniqid(rand(), true));
         }
         
-        // Atualizar a agenda
+        // Atualizar a agenda - PRESERVANDO o valor is_active
         $result = $this->agendaModel->update($agendaId, [
             'title' => $agenda['title'],
             'description' => $agenda['description'],
             'is_public' => $newIsPublic,
-            'color' => $agenda['color']
+            'color' => $agenda['color'],
+            'is_active' => $agenda['is_active'] // Preservar o valor atual
         ]);
         
         // Se estiver tornando a agenda pública, atualizar o hash

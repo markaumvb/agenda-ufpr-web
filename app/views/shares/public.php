@@ -442,6 +442,12 @@
                 <div class="owner-info">
                     Agenda de <?= htmlspecialchars($owner['name']) ?>
                 </div>
+                <!-- Novo botão de criar compromisso -->
+            <div class="agenda-actions" style="margin-top: 15px;">
+                <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Criar Compromisso
+                </a>
+            </div>
             </div>
         </div>
     </header>

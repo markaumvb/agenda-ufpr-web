@@ -764,7 +764,15 @@ class Agenda {
             $stmt->bindParam(':hash', $hash, PDO::PARAM_STR);
             $stmt->execute();
             
-            return $stmt->fetch();
+            $agenda = $stmt->fetch();
+            
+            // Garantir que is_active e is_public sejam tratados como booleanos
+            if ($agenda) {
+                $agenda['is_active'] = (bool)(int)$agenda['is_active'];
+                $agenda['is_public'] = (bool)(int)$agenda['is_public'];
+            }
+            
+            return $agenda;
         } catch (PDOException $e) {
             error_log('Erro ao buscar agenda por hash: ' . $e->getMessage());
             return false;
