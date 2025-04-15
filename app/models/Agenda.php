@@ -1,12 +1,7 @@
 <?php
-// app/models/Agenda.php
-
 class Agenda {
     private $db;
     
-    /**
-     * Construtor
-     */
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }

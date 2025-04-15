@@ -1,10 +1,6 @@
-<?php
-// Arquivo: app/views/auth/login.php
-?>
-
 <div class="form-container">
     <h2>Login no Sistema de Agendamento UFPR</h2>
-    <p class="form-info">Acesse com seu usuário e senha da UFPR para gerenciar suas agendas e compromissos.</p>
+    <p class="form-info">Acesse com seu usuário@ufpr.br e senha para gerenciar suas agendas e compromissos.</p>
     
     <?php if (isset($_SESSION['validation_errors'])): ?>
     <div class="alert alert-danger">
@@ -43,7 +39,7 @@
         </div>
         
         <div class="auth-info">
-            <p>Este sistema utiliza autenticação RADIUS da UFPR. No primeiro acesso, você será solicitado a completar seu cadastro.</p>
+            <p>Apenas usuários da UFPR podem acessar ao sistema de agendamento</p>
         </div>
     </form>
 </div>
