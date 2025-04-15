@@ -130,7 +130,7 @@ class CompromissoController extends BaseController {
             exit;
         }
 
-        if (!$agenda['is_active']) {
+        if (!(bool)(int)$agenda['is_active'])  {
             $_SESSION['flash_message'] = 'Não é possível criar compromissos em uma agenda desativada';
             $_SESSION['flash_type'] = 'danger';
             header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);

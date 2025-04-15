@@ -146,7 +146,14 @@ class Agenda {
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             
-            return $stmt->fetch();
+            $agenda = $stmt->fetch();
+            
+            // Garantir que is_active seja tratado como booleano
+            if ($agenda) {
+                $agenda['is_active'] = (bool)(int)$agenda['is_active'];
+            }
+            
+            return $agenda;
         } catch (PDOException $e) {
             error_log('Erro ao buscar agenda: ' . $e->getMessage());
             return false;
