@@ -268,7 +268,7 @@ class CompromissoController extends BaseController {
         ];
         
         // Salvar o compromisso
-        $compromissoId = $compromissoModel->save($compromissoData);
+        $compromissoId = $compromissoModel->create($compromissoData);
         
         if ($compromissoId) {
             $_SESSION['flash_message'] = ($_POST['status'] === 'aguardando_aprovacao') 
