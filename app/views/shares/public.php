@@ -739,6 +739,8 @@
         
         // Renderizar o calendário
         calendar.render();
+        window.calendar = calendar;
+        window.allEvents = events;
         
         // Configurar botões de visualização
         document.querySelectorAll('.view-option').forEach(button => {
@@ -872,5 +874,6 @@
         }
     });
     </script>
+    <script src="<?= PUBLIC_URL ?>/app/assets/js/shares/public.js"></script>
 </body>
 </html>

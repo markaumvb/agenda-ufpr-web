@@ -1,53 +1,92 @@
-// Filtros da lista de compromissos
-document.addEventListener("DOMContentLoaded", function () {
+ocument.addEventListener("DOMContentLoaded", function () {
+  // Filtros da lista de compromissos
   const filterStatus = document.getElementById("filter-status");
   const filterMonth = document.getElementById("filter-month");
   const filterSearch = document.getElementById("filter-search");
   const eventCards = document.querySelectorAll(".event-card");
-
-  if (!filterStatus || !filterMonth || !filterSearch) return;
+  const clearFilters = document.getElementById("clear-filters");
 
   // Aplicar filtros quando alterados
-  filterStatus.addEventListener("change", applyFilters);
-  filterMonth.addEventListener("change", applyFilters);
-  filterSearch.addEventListener("input", applyFilters);
+  if (filterStatus) filterStatus.addEventListener("change", applyFilters);
+  if (filterMonth) filterMonth.addEventListener("change", applyFilters);
+  if (filterSearch) filterSearch.addEventListener("input", applyFilters);
+  if (clearFilters) clearFilters.addEventListener("click", clearAllFilters);
+
+  // Função para limpar filtros
+  function clearAllFilters() {
+    if (filterStatus) filterStatus.value = "all";
+    if (filterMonth) filterMonth.value = "all";
+    if (filterSearch) filterSearch.value = "";
+
+    applyFilters();
+  }
 
   // Função para aplicar os filtros
   function applyFilters() {
-    const statusFilter = filterStatus.value;
-    const monthFilter = filterMonth.value;
-    const searchFilter = filterSearch.value.toLowerCase().trim();
+    const statusFilter = filterStatus ? filterStatus.value : "all";
+    const monthFilter = filterMonth ? filterMonth.value : "all";
+    const searchFilter = filterSearch
+      ? filterSearch.value.toLowerCase().trim()
+      : "";
 
+    let visibleCount = 0;
+
+    // Filtrar cards de eventos
     eventCards.forEach((card) => {
       const status = card.dataset.status;
       const month = card.dataset.month;
-      const searchText = card.dataset.search;
+      const searchText = card.dataset.search || "";
 
-      // Verificar status
+      // Verificar correspondência com filtros
       const statusMatch = statusFilter === "all" || status === statusFilter;
-
-      // Verificar mês
       const monthMatch = monthFilter === "all" || month === monthFilter;
-
-      // Verificar texto de busca
-      const searchMatch = searchText.includes(searchFilter);
+      const searchMatch = !searchFilter || searchText.includes(searchFilter);
 
       // Exibir ou ocultar o card
-      if (statusMatch && monthMatch && searchMatch) {
-        card.style.display = "block";
-      } else {
-        card.style.display = "none";
-      }
+      const isVisible = statusMatch && monthMatch && searchMatch;
+      card.style.display = isVisible ? "block" : "none";
+
+      if (isVisible) visibleCount++;
     });
+
+    // Atualizar o calendário (se estiver disponível na página)
+    if (window.calendar && window.allEvents) {
+      const filteredEvents = window.allEvents.filter((event) => {
+        // Status
+        const statusMatch =
+          statusFilter === "all" || event.extendedProps.status === statusFilter;
+
+        // Mês
+        const eventDate = new Date(event.start);
+        const eventMonth = (eventDate.getMonth() + 1).toString();
+        const monthMatch = monthFilter === "all" || eventMonth === monthFilter;
+
+        // Texto
+        const searchableText = (
+          event.title +
+          " " +
+          (event.extendedProps.description || "") +
+          " " +
+          (event.extendedProps.location || "")
+        ).toLowerCase();
+        const searchMatch =
+          !searchFilter || searchableText.includes(searchFilter);
+
+        return statusMatch && monthMatch && searchMatch;
+      });
+
+      window.calendar.removeAllEvents();
+      window.calendar.addEventSource(filteredEvents);
+    }
+
+    // Mostrar mensagem se não há resultados
+    const noResults = document.querySelector(".no-results");
+    if (noResults) {
+      noResults.style.display = visibleCount === 0 ? "block" : "none";
+    }
   }
 
-  // Definir mês atual no filtro (se disponível na URL)
-  const urlParams = new URLSearchParams(window.location.search);
-  const monthParam = urlParams.get("month");
-  if (
-    monthParam &&
-    filterMonth.querySelector(`option[value="${monthParam}"]`)
-  ) {
-    filterMonth.value = monthParam;
-  }
+  // Expor funções para uso global
+  window.applyFilters = applyFilters;
+  window.clearAllFilters = clearAllFilters;
 });

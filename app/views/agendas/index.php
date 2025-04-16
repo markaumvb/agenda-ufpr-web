@@ -41,7 +41,6 @@
 
     <div class="agenda-grid">
     <?php 
-    // Limpar qualquer variável que possa estar interferindo no loop
     unset($agenda);
     
     // Itere sobre o array usando o índice para evitar problemas de referência
@@ -50,6 +49,7 @@
     ?>
         <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
         <div class="agenda-card-header">
+        <h1 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h1>
             <div class="agenda-visibility">
                 <?php if ($agenda['is_public']): ?>
                     <span class="badge badge-success">Pública</span>
@@ -77,9 +77,9 @@
                 <?php endif; ?>
                 
                 <?php if (!empty($agenda['description'])): ?>
-                    <p class="agenda-description"><?= htmlspecialchars($agenda['title']) ?></p>
+                    <h2 class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></h2>
                 <?php else: ?>
-                    <p class="agenda-description text-muted">Sem descrição</p>
+                    <h2 class="agenda-description text-muted">Sem descrição</h2>
                 <?php endif; ?>
                 
                 <div class="agenda-stats">
