@@ -123,9 +123,16 @@ class AuthController {
                 
                 // Verificar se há redirecionamento após login
                 if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
-                    $redirectUrl = urldecode($_POST['redirect']);
-                    $redirectUrl = str_replace('agenda_ufpr/agenda_ufpr', 'agenda_ufpr', $redirectUrl);
-                    header("Location: " . $redirectUrl);
+                    $redirectPath = $_POST['redirect'];
+                    
+                    // Verificar se o caminho é absoluto ou relativo
+                    if (strpos($redirectPath, 'http') === 0) {
+                        // É uma URL completa, usar como está
+                        header("Location: " . $redirectPath);
+                    } else {
+                        // É um caminho relativo, combinar com PUBLIC_URL
+                        header("Location: " . PUBLIC_URL . $redirectPath);
+                    }
                     exit;
                 }
                 

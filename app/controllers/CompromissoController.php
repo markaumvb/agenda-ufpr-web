@@ -136,10 +136,10 @@ public function create() {
     $isFromPublic = isset($_GET['public']) && $_GET['public'] == 1;
     
     if ($isFromPublic && !isset($_SESSION['user_id'])) {
-        $baseUrl = rtrim(BASE_URL, '/');
-        // Redirecionar para login com URL de retorno
-        $redirectUrl = $baseUrl . '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
-        header("Location: " . $baseUrl . "/login?redirect=" . urlencode($redirectUrl));
+        $redirectPath = '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
+    
+        // Montar a URL completa apenas uma vez
+        header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath));
         exit;
     }
     
