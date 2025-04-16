@@ -123,7 +123,8 @@ class AuthController {
                 
                 // Verificar se há redirecionamento após login
                 if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
-                    header("Location: " . $_POST['redirect']);
+                    $redirectUrl = urldecode($_POST['redirect']);
+                    header("Location: " . $redirectUrl);
                     exit;
                 }
                 
