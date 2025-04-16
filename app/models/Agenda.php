@@ -405,38 +405,18 @@ class Agenda {
         }
     }
     
-    /**
-     * Verifica se uma agenda pode ser excluída
-     * 
-     * @param int $agendaId ID da agenda
-     * @return bool Se a agenda pode ser excluída
-     */
     public function canBeDeleted($agendaId) {
-        try {
-            $query = "
-                SELECT COUNT(*) FROM compromissos 
-                WHERE agenda_id = :agenda_id 
-                AND (status = 'pendente' OR status = 'aguardando_aprovacao')
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            return (int)$stmt->fetchColumn() === 0;
-        } catch (PDOException $e) {
-            error_log('Erro ao verificar se agenda pode ser excluída: ' . $e->getMessage());
-            return false;
-        }
+        // Verificar se há compromissos realizados ou cancelados
+        $sql = "SELECT COUNT(*) as count FROM compromissos 
+                WHERE agenda_id = ? AND status IN ('realizado', 'cancelado')";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$agendaId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Se não existirem compromissos realizados ou cancelados, pode ser excluída
+        return (int) $result['count'] === 0;
     }
 
-    /**
-     * Obtém todas as agendas que o usuário possui acesso (próprias e compartilhadas)
-     * 
-     * @param int $userId ID do usuário
-     * @param string $search Termo de pesquisa (opcional)
-     * @return array Lista de agendas
-     */
     public function getAllAccessibleByUser($userId, $search = null, $includeInactive = false) {
         try {
             // Verificar se o usuário existe
@@ -772,5 +752,16 @@ class Agenda {
             error_log('Erro ao buscar agenda por hash: ' . $e->getMessage());
             return false;
         }
+    }
+
+    public function updateStatus($agendaId, $isActive) {
+        $sql = "UPDATE agendas SET is_active = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
+    }
+    public function delete($agendaId) {
+        $sql = "DELETE FROM agendas WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$agendaId]);
     }
 }

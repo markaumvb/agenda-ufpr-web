@@ -966,4 +966,18 @@ class Compromisso {
             substr($hex, 20, 12)
         );
     }
+
+    public function deleteAllFromAgenda($agendaId) {
+        $sql = "DELETE FROM compromissos WHERE agenda_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$agendaId]);
+    }
+
+    public function countByStatus($agendaId, $status) {
+        $sql = "SELECT COUNT(*) as count FROM compromissos WHERE agenda_id = ? AND status = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$agendaId, $status]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) $result['count'];
+    }
 }

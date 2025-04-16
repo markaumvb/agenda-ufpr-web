@@ -216,91 +216,158 @@ class AgendaController extends BaseController {
      * Exclui uma agenda
      */
     public function delete() {
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/agendas');
+        // Verificar se o usuário está logado
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . PUBLIC_URL . '/login');
             exit;
         }
         
-        // Obter o ID da agenda
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        
-        if (!$id) {
-            $_SESSION['flash_message'] = 'Agenda não encontrada';
+        // Verificar se o ID da agenda foi enviado
+        if (!isset($_POST['id'])) {
+            $_SESSION['flash_message'] = 'ID da agenda não fornecido.';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
+            header('Location: ' . PUBLIC_URL . '/agendas');
             exit;
         }
         
-        // Verificar se a agenda pertence ao usuário
-        if (!$this->agendaModel->belongsToUser($id, $_SESSION['user_id'])) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para excluir esta agenda';
+        $agendaId = $_POST['id'];
+        $userId = $_SESSION['user_id'];
+        
+        // Carregar os modelos necessários
+        require_once __DIR__ . '/../models/Agenda.php';
+        require_once __DIR__ . '/../models/Compromisso.php';
+        require_once __DIR__ . '/../models/AgendaShare.php';
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        
+        $agendaModel = new Agenda();
+        $compromissoModel = new Compromisso();
+        $shareModel = new AgendaShare();
+        $authService = new AuthorizationService();
+        
+        // Verificar se a agenda existe
+        $agenda = $agendaModel->getById($agendaId);
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada.';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
+            header('Location: ' . PUBLIC_URL . '/agendas');
             exit;
         }
         
-        // Verificar se a agenda pode ser excluída
-        if (!$this->agendaModel->canBeDeleted($id)) {
-            $_SESSION['flash_message'] = 'Esta agenda não pode ser excluída pois possui compromissos pendentes ou aguardando aprovação';
+        // Verificar se o usuário é o dono da agenda
+        $isOwner = $authService->isAgendaOwner($agendaId, $userId);
+        
+        if (!$isOwner) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para excluir esta agenda.';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
+            header('Location: ' . PUBLIC_URL . '/agendas');
             exit;
         }
         
-        // Excluir a agenda
-        $result = $this->agendaModel->delete($id);
+        // Verificar se há compromissos realizados ou cancelados
+        $realizadosCount = $compromissoModel->countByStatus($agendaId, 'realizado');
+        $canceladosCount = $compromissoModel->countByStatus($agendaId, 'cancelado');
+        
+        if ($realizadosCount > 0 || $canceladosCount > 0) {
+            $_SESSION['flash_message'] = 'Não é possível excluir a agenda pois há compromissos realizados ou cancelados.';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . PUBLIC_URL . '/agendas');
+            exit;
+        }
+        
+        // Exclui todos os compromissos da agenda
+        $compromissoModel->deleteAllFromAgenda($agendaId);
+        
+        // Exclui todos os compartilhamentos da agenda
+        $shareModel->deleteAllFromAgenda($agendaId);
+        
+        // Exclui a agenda
+        $result = $agendaModel->delete($agendaId);
         
         if ($result) {
-            $_SESSION['flash_message'] = 'Agenda excluída com sucesso';
+            $_SESSION['flash_message'] = 'Agenda excluída com sucesso!';
             $_SESSION['flash_type'] = 'success';
         } else {
-            $_SESSION['flash_message'] = 'Erro ao excluir agenda';
+            $_SESSION['flash_message'] = 'Erro ao excluir agenda.';
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/agendas');
+        header('Location: ' . PUBLIC_URL . '/agendas');
         exit;
     }
 
     public function toggleActive() {
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/agendas');
+        // Verificar se o usuário está logado
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . PUBLIC_URL . '/login');
             exit;
         }
         
-        // Obter o ID da agenda
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        $status = filter_input(INPUT_POST, 'is_active', FILTER_VALIDATE_INT);
-        
-        if (!$id) {
-            $_SESSION['flash_message'] = 'Agenda não encontrada';
+        // Verificar se os dados necessários foram enviados
+        if (!isset($_POST['id']) || !isset($_POST['is_active'])) {
+            $_SESSION['flash_message'] = 'Dados incompletos.';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
+            header('Location: ' . PUBLIC_URL . '/agendas');
             exit;
         }
         
-        // Verificar se a agenda pertence ao usuário
-        if (!$this->agendaModel->belongsToUser($id, $_SESSION['user_id'])) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para modificar esta agenda';
+        $agendaId = $_POST['id'];
+        $isActive = $_POST['is_active'] == '1'; // Converter para booleano
+        $userId = $_SESSION['user_id'];
+        
+        // Carregar os modelos necessários
+        require_once __DIR__ . '/../models/Agenda.php';
+        require_once __DIR__ . '/../models/Compromisso.php';
+        require_once __DIR__ . '/../services/AuthorizationService.php';
+        
+        $agendaModel = new Agenda();
+        $compromissoModel = new Compromisso();
+        $authService = new AuthorizationService();
+        
+        // Verificar se a agenda existe
+        $agenda = $agendaModel->getById($agendaId);
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada.';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
+            header('Location: ' . PUBLIC_URL . '/agendas');
             exit;
         }
         
-        // Alternar o status
-        $result = $this->agendaModel->toggleActive($id, $status);
+        // Verificar se o usuário é o dono da agenda
+        $isOwner = $authService->isAgendaOwner($agendaId, $userId);
+        
+        if (!$isOwner) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para alterar esta agenda.';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . PUBLIC_URL . '/agendas');
+            exit;
+        }
+        
+        // Se estiver tentando desativar a agenda
+        if (!$isActive) {
+            // Verificar se há compromissos pendentes ou aguardando aprovação
+            $pendingCount = $compromissoModel->countByStatus($agendaId, 'pendente');
+            $awaitingCount = $compromissoModel->countByStatus($agendaId, 'aguardando_aprovacao');
+            
+            if ($pendingCount > 0 || $awaitingCount > 0) {
+                $_SESSION['flash_message'] = 'Não é possível desativar a agenda pois há compromissos pendentes ou aguardando aprovação.';
+                $_SESSION['flash_type'] = 'danger';
+                header('Location: ' . PUBLIC_URL . '/agendas');
+                exit;
+            }
+        }
+        
+        // Atualizar o status da agenda
+        $result = $agendaModel->updateStatus($agendaId, $isActive);
         
         if ($result) {
-            $_SESSION['flash_message'] = $status ? 'Agenda ativada com sucesso' : 'Agenda desativada com sucesso';
+            $_SESSION['flash_message'] = $isActive ? 'Agenda ativada com sucesso!' : 'Agenda desativada com sucesso!';
             $_SESSION['flash_type'] = 'success';
         } else {
-            $_SESSION['flash_message'] = 'Erro ao alterar status da agenda';
+            $_SESSION['flash_message'] = 'Erro ao atualizar o status da agenda.';
             $_SESSION['flash_type'] = 'danger';
         }
         
-        header('Location: ' . BASE_URL . '/agendas');
+        header('Location: ' . PUBLIC_URL . '/agendas');
         exit;
     }
 }
