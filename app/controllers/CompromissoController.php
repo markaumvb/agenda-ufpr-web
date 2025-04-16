@@ -137,9 +137,16 @@ public function create() {
     
     
     if ($isFromPublic && !isset($_SESSION['user_id'])) {
-        // Construir caminho relativo para evitar duplicação de URL
-        $redirectPath = '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
-        header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath));
+        // Armazenar dados de redirecionamento na sessão
+        $_SESSION['redirect_after_login'] = [
+            'controller' => 'compromissos',
+            'action' => 'new',
+            'agenda_id' => $agendaId,
+            'public' => 1
+        ];
+        
+        // Redirecionar para login (sem parâmetros adicionais na URL)
+        header("Location: " . PUBLIC_URL . "/login");
         exit;
     }
     

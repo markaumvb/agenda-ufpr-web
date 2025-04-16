@@ -122,18 +122,21 @@ class AuthController {
                 $_SESSION['flash_type'] = 'success';
                 
                 // Verificar se há redirecionamento após login
-                if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
-                    $redirectPath = $_POST['redirect'];
+                if (isset($_SESSION['redirect_after_login']) && is_array($_SESSION['redirect_after_login'])) {
+                    $redirect = $_SESSION['redirect_after_login'];
+                    unset($_SESSION['redirect_after_login']); // Limpar da sessão
                     
-                    // Se for caminho relativo, adicionar PUBLIC_URL
-                    if (strpos($redirectPath, 'http') !== 0) {
-                        $redirectUrl = PUBLIC_URL . $redirectPath;
-                    } else {
-                        $redirectUrl = $redirectPath;
+                    if ($redirect['controller'] == 'compromissos' && $redirect['action'] == 'new') {
+                        // Construir URL para criação de compromisso
+                        $url = PUBLIC_URL . "/compromissos/new?agenda_id=" . $redirect['agenda_id'];
+                        
+                        if (isset($redirect['public']) && $redirect['public'] == 1) {
+                            $url .= "&public=1";
+                        }
+                        
+                        header("Location: " . $url);
+                        exit;
                     }
-                    
-                    header("Location: " . $redirectUrl);
-                    exit;
                 }
                 
                 // Redirecionamento padrão

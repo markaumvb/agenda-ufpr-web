@@ -447,7 +447,7 @@
     </header>
     
     <div class="agenda-actions" style="margin-top: 20px; text-align: center;">
-        <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-primary" style="padding: 12px 24px; font-size: 1.1rem;">
+    <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-primary">
             <i class="fas fa-plus"></i> Criar Compromisso na Agenda
         </a>
     </div>
