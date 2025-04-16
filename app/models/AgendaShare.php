@@ -169,4 +169,10 @@ class AgendaShare {
         
         return (bool)$access['can_edit'];
     }
+
+    public function deleteAllFromAgenda($agendaId) {
+        $sql = "DELETE FROM agenda_shares WHERE agenda_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$agendaId]);
+    }
 }

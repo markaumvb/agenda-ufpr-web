@@ -759,9 +759,5 @@ class Agenda {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
     }
-    public function delete($agendaId) {
-        $sql = "DELETE FROM agendas WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$agendaId]);
-    }
+    
 }
