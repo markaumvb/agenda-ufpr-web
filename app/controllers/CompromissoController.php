@@ -108,181 +108,242 @@ class CompromissoController extends BaseController {
     }
     
 
-    public function create() {
-        // Obter o ID da agenda da URL
-        $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
-        
-        // Se não foi fornecido um ID de agenda, redirecionar para a lista de agendas
-        if (!$agendaId) {
-            $_SESSION['flash_message'] = 'Agenda não especificada';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
-            exit;
-        }
-        
-        // Verificar se a agenda existe e se o usuário tem acesso a ela
-        $agenda = $this->agendaModel->getById($agendaId);
-        
-        if (!$agenda) {
-            $_SESSION['flash_message'] = 'Agenda não encontrada';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
-            exit;
-        }
-
-        if (!(bool)(int)$agenda['is_active'])  {
-            $_SESSION['flash_message'] = 'Não é possível criar compromissos em uma agenda desativada';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
-            exit;
-        }
-        
-        // Verificar se o usuário é o dono da agenda ou tem permissão para editar
-        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
-        $canEdit = $isOwner;
-        
-        if (!$isOwner) {
-            require_once __DIR__ . '/../models/AgendaShare.php';
-            $shareModel = new AgendaShare();
-            $canEdit = $shareModel->canEdit($agendaId, $_SESSION['user_id']);
-        }
-        
-        if (!$canEdit) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $agendaId);
-            exit;
-        }
-        
-        // Data e hora padrão (próxima hora)
-        $defaultDate = new DateTime();
-        $defaultDate->setTime($defaultDate->format('H') + 1, 0);
-        $defaultStartDateTime = $defaultDate->format('Y-m-d\TH:i');
-        
-        $defaultEndDate = clone $defaultDate;
-        $defaultEndDate->modify('+1 hour');
-        $defaultEndDateTime = $defaultEndDate->format('Y-m-d\TH:i');
-        
-        // Obter datas pré-selecionadas da URL (se houver)
-        $selectedDate = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING);
-        if ($selectedDate) {
-            $selectedDate = new DateTime($selectedDate);
-            $defaultStartDateTime = $selectedDate->format('Y-m-d\TH:i');
-            
-            $defaultEndDate = clone $selectedDate;
-            $defaultEndDate->modify('+1 hour');
-            $defaultEndDateTime = $defaultEndDate->format('Y-m-d\TH:i');
-        }
-        
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/compromissos/create.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
-    }
+/**
+ * Exibe o formulário de criação de compromisso
+ */
+public function create() {
+    // Verificar se a agenda existe
+    $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
     
-    /**
-     * Salva um novo compromisso no banco de dados
-     */
-    public function store() {
-        // Verificar se o usuário está logado
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: ' . PUBLIC_URL . '/login');
-            exit;
-        }
-    
-        // Verificar se os campos obrigatórios foram enviados
-        if (!isset($_POST['agenda_id']) || !isset($_POST['title']) || 
-            !isset($_POST['start_datetime']) || !isset($_POST['end_datetime'])) {
-            $_SESSION['flash_message'] = 'Todos os campos obrigatórios devem ser preenchidos.';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/compromissos/new?agenda_id=' . $_POST['agenda_id']);
-            exit;
-        }
-    
-        $agendaId = $_POST['agenda_id'];
-        $userId = $_SESSION['user_id'];
-        
-        // Carregar os modelos necessários
-        require_once __DIR__ . '/../models/Agenda.php';
-        require_once __DIR__ . '/../models/Compromisso.php';
-        require_once __DIR__ . '/../services/AuthorizationService.php';
-        
-        $agendaModel = new Agenda();
-        $compromissoModel = new Compromisso();
-        $authService = new AuthorizationService();
-        
-        // Verificar se a agenda existe
-        $agenda = $agendaModel->getById($agendaId);
-        if (!$agenda) {
-            $_SESSION['flash_message'] = 'Agenda não encontrada.';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/agendas');
-            exit;
-        }
-        
-        // Verificar se a agenda está ativa
-        if (!$agenda['is_active']) {
-            $_SESSION['flash_message'] = 'Esta agenda está desativada. Não é possível criar novos compromissos.';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/compromissos?agenda_id=' . $agendaId);
-            exit;
-        }
-        
-        // Verificar se o usuário é o dono da agenda
-        $isOwner = $authService->isAgendaOwner($agendaId, $userId);
-        
-        // Verificar se o usuário tem permissão para criar compromissos
-        if (!$isOwner && !$authService->canEditAgenda($agendaId, $userId) && !$agenda['is_public']) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda.';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/compromissos?agenda_id=' . $agendaId);
-            exit;
-        }
-        
-        // Verificar se a requisição vem de uma agenda pública
-        $isFromPublic = isset($_POST['public']) && $_POST['public'] == 1;
-        
-        // Definir o status baseado no tipo de usuário e origem
-        if (($isFromPublic || $agenda['is_public']) && !$isOwner && !$authService->canEditAgenda($agendaId, $userId)) {
-            // Se for de uma agenda pública e o usuário não for o dono ou não tiver permissão de edição
-            $_POST['status'] = 'aguardando_aprovacao';
-        } else {
-            // Caso contrário (usuário é o dono, tem permissão para editar, ou agenda não é pública)
-            $_POST['status'] = 'pendente';
-        }
-        
-        // Preparar dados do compromisso
-        $compromissoData = [
-            'agenda_id' => $agendaId,
-            'title' => $_POST['title'],
-            'description' => $_POST['description'] ?? '',
-            'start_datetime' => $_POST['start_datetime'],
-            'end_datetime' => $_POST['end_datetime'],
-            'location' => $_POST['location'] ?? '',
-            'status' => $_POST['status'],
-            'created_by' => $userId,
-            'updated_by' => $userId,
-            'repeat_type' => $_POST['repeat_type'] ?? 'none',
-            'repeat_until' => !empty($_POST['repeat_until']) ? $_POST['repeat_until'] : null,
-            'repeat_days' => isset($_POST['repeat_days']) ? implode(',', $_POST['repeat_days']) : null
-        ];
-        
-        // Salvar o compromisso
-        $compromissoId = $compromissoModel->create($compromissoData);
-        
-        if ($compromissoId) {
-            $_SESSION['flash_message'] = ($_POST['status'] === 'aguardando_aprovacao') 
-                ? 'Compromisso enviado para aprovação com sucesso!'
-                : 'Compromisso criado com sucesso!';
-            $_SESSION['flash_type'] = 'success';
-        } else {
-            $_SESSION['flash_message'] = 'Erro ao criar compromisso.';
-            $_SESSION['flash_type'] = 'danger';
-        }
-        
-        header('Location: ' . PUBLIC_URL . '/compromissos?agenda_id=' . $agendaId);
+    if (!$agendaId) {
+        $_SESSION['flash_message'] = 'Agenda não especificada';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/agendas");
         exit;
     }
+    
+    // Obter agenda
+    $agenda = $this->agendaModel->getById($agendaId);
+    
+    if (!$agenda) {
+        $_SESSION['flash_message'] = 'Agenda não encontrada';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/agendas");
+        exit;
+    }
+    
+    // Verificar se vem de agenda pública e se usuário está logado
+    $isFromPublic = isset($_GET['public']) && $_GET['public'] == 1;
+    
+    if ($isFromPublic && !isset($_SESSION['user_id'])) {
+        // Redirecionar para login com URL de retorno
+        $redirectUrl = PUBLIC_URL . '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
+        header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectUrl));
+        exit;
+    }
+    
+    // Verificar permissões se não for de agenda pública
+    if (!$isFromPublic) {
+        // Verificar se o usuário tem acesso à agenda
+        $authService = new AuthorizationService();
+        if (!$authService->canAccessAgenda($agendaId, $_SESSION['user_id'])) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para acessar esta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header("Location: " . PUBLIC_URL . "/agendas");
+            exit;
+        }
+        
+        // Verificar se o usuário pode editar a agenda
+        if (!$authService->canEditAgenda($agendaId, $_SESSION['user_id'])) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
+            exit;
+        }
+    }
+    
+    // Verificar se a agenda está ativa
+    if (!$agenda['is_active']) {
+        $_SESSION['flash_message'] = 'Esta agenda está desativada. Não é possível criar novos compromissos.';
+        $_SESSION['flash_type'] = 'warning';
+        header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
+        exit;
+    }
+    
+    // Definir data/hora padrão para novo compromisso
+    $defaultDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+    $defaultStartDateTime = $defaultDate . 'T' . date('H:i');
+    $defaultEndDateTime = $defaultDate . 'T' . date('H:i', strtotime('+1 hour'));
+    
+    // Exibir formulário
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/compromissos/create.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
+
+/**
+ * Processa o formulário de criação de compromisso
+ */
+public function store() {
+    // Validar dados do formulário
+    $requiredFields = ['agenda_id', 'title', 'start_datetime', 'end_datetime'];
+    foreach ($requiredFields as $field) {
+        if (!isset($_POST[$field]) || trim($_POST[$field]) === '') {
+            $_SESSION['flash_message'] = 'Todos os campos obrigatórios devem ser preenchidos';
+            $_SESSION['flash_type'] = 'danger';
+            header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $_POST['agenda_id']);
+            exit;
+        }
+    }
+    
+    // Obter a agenda
+    $agendaId = (int)$_POST['agenda_id'];
+    $agenda = $this->agendaModel->getById($agendaId);
+    
+    if (!$agenda) {
+        $_SESSION['flash_message'] = 'Agenda não encontrada';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/agendas");
+        exit;
+    }
+    
+    // Verificar se é de uma agenda pública
+    $isFromPublic = isset($_POST['public']) && $_POST['public'] == 1;
+    
+    // Verificar permissões se não for de agenda pública
+    if (!$isFromPublic) {
+        // Verificar se o usuário tem permissão para editar a agenda
+        $authService = new AuthorizationService();
+        if (!$authService->canEditAgenda($agendaId, $_SESSION['user_id'])) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para criar compromissos nesta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
+            exit;
+        }
+    }
+    
+    // Verificar se a agenda está ativa
+    if (!$agenda['is_active']) {
+        $_SESSION['flash_message'] = 'Esta agenda está desativada. Não é possível criar novos compromissos.';
+        $_SESSION['flash_type'] = 'warning';
+        header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
+        exit;
+    }
+    
+    // Definir status com base no tipo de usuário
+    $status = 'pendente'; // Status padrão
+    
+    if ($isFromPublic) {
+        // Verificar se o usuário é dono da agenda
+        if ($agenda['user_id'] != $_SESSION['user_id']) {
+            // Se não for o dono, alterar o status para "aguardando_aprovacao"
+            $status = 'aguardando_aprovacao';
+        }
+    }
+    
+    // Verificar datas
+    $startDatetime = $_POST['start_datetime'];
+    $endDatetime = $_POST['end_datetime'];
+    
+    if (strtotime($endDatetime) <= strtotime($startDatetime)) {
+        $_SESSION['flash_message'] = 'A data e hora de término deve ser posterior à data e hora de início';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+        exit;
+    }
+    
+    // Preparar dados do compromisso
+    $compromissoData = [
+        'agenda_id' => $agendaId,
+        'title' => trim($_POST['title']),
+        'description' => isset($_POST['description']) ? trim($_POST['description']) : '',
+        'location' => isset($_POST['location']) ? trim($_POST['location']) : '',
+        'status' => $status,
+        'start_datetime' => $startDatetime,
+        'end_datetime' => $endDatetime,
+        'created_by' => $_SESSION['user_id'],
+        'repeat_type' => isset($_POST['repeat_type']) ? $_POST['repeat_type'] : 'none'
+    ];
+    
+    // Opções de recorrência
+    if ($compromissoData['repeat_type'] !== 'none') {
+        if (!isset($_POST['repeat_until']) || trim($_POST['repeat_until']) === '') {
+            $_SESSION['flash_message'] = 'Para compromissos recorrentes, é necessário definir uma data final';
+            $_SESSION['flash_type'] = 'danger';
+            header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+            exit;
+        }
+        
+        $compromissoData['repeat_until'] = $_POST['repeat_until'];
+        
+        if ($compromissoData['repeat_type'] === 'specific_days') {
+            if (!isset($_POST['repeat_days']) || !is_array($_POST['repeat_days']) || empty($_POST['repeat_days'])) {
+                $_SESSION['flash_message'] = 'Selecione pelo menos um dia da semana para a recorrência';
+                $_SESSION['flash_type'] = 'danger';
+                header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+                exit;
+            }
+            
+            $compromissoData['repeat_days'] = implode(',', $_POST['repeat_days']);
+        }
+    }
+    
+    // Salvar compromisso
+    try {
+        $compromissoId = $this->compromissoModel->create($compromissoData);
+        
+        if ($compromissoId) {
+            // Mensagem de sucesso baseada no status
+            if ($status === 'aguardando_aprovacao') {
+                $_SESSION['flash_message'] = 'Compromisso criado com sucesso e aguardando aprovação do proprietário da agenda';
+            } else {
+                $_SESSION['flash_message'] = 'Compromisso criado com sucesso';
+            }
+            $_SESSION['flash_type'] = 'success';
+            
+            // Notificar o dono da agenda se o compromisso estiver aguardando aprovação
+            if ($status === 'aguardando_aprovacao') {
+                // Adicionar notificação ao banco de dados
+                $notificationModel = new NotificationModel();
+                $notificationModel->create([
+                    'user_id' => $agenda['user_id'], // ID do dono da agenda
+                    'type' => 'approval_request',
+                    'message' => 'Novo compromisso aguardando aprovação em sua agenda ' . $agenda['title'],
+                    'compromisso_id' => $compromissoId,
+                    'agenda_id' => $agendaId,
+                    'created_by' => $_SESSION['user_id']
+                ]);
+                
+                // Enviar e-mail se disponível
+                if (class_exists('EmailService')) {
+                    $emailService = new EmailService();
+                    $userModel = new User();
+                    $owner = $userModel->getById($agenda['user_id']);
+                    $requester = $userModel->getById($_SESSION['user_id']);
+                    
+                    if ($owner && $requester) {
+                        $emailService->sendApprovalRequestNotification($owner, $requester, $agenda, $compromissoData);
+                    }
+                }
+            }
+            
+            // Redirecionar
+            if ($isFromPublic) {
+                header("Location: " . PUBLIC_URL . "/public-agenda/" . $agenda['public_hash']);
+            } else {
+                header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
+            }
+            exit;
+        } else {
+            throw new Exception('Erro ao criar compromisso');
+        }
+    } catch (Exception $e) {
+        $_SESSION['flash_message'] = 'Erro ao criar compromisso: ' . $e->getMessage();
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+        exit;
+    }
+}
     
 
     public function edit() {

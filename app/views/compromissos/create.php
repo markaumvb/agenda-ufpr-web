@@ -55,6 +55,18 @@
             <small class="form-text text-info">Nota: Se você não for o proprietário desta agenda, o compromisso será marcado como "Aguardando Aprovação".</small>
             <?php endif; ?>
         </div>
+        <input type="hidden" name="status" value="pendente">
+        <?php if ($isFromPublic): ?>
+            <input type="hidden" name="public" value="1">
+        <?php endif; ?>
+
+        <div class="form-group">
+            <label for="status-display">Status</label>
+            <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+            <?php if ($isFromPublic): ?>
+            <small class="form-text text-info">Nota: Se você não for o proprietário desta agenda, o compromisso será marcado como "Aguardando Aprovação".</small>
+            <?php endif; ?>
+        </div>
         
         <div class="form-group">
             <label>Recorrência</label>

@@ -14,9 +14,9 @@
     <?php endif; ?>
     
     <form action="<?= BASE_URL ?>/login-process" method="post" class="login-form">
-            <?php if (isset($_GET['redirect'])): ?>
-                <input type="hidden" name="redirect" value="<?= htmlspecialchars($_GET['redirect']) ?>">
-            <?php endif; ?>
+        <?php if (isset($_GET['redirect'])): ?>
+            <input type="hidden" name="redirect" value="<?= htmlspecialchars($_GET['redirect']) ?>">
+        <?php endif; ?>
         <div class="form-group">
             <label for="username">Usuário UFPR:</label>
             <input type="text" id="username" name="username" required 
