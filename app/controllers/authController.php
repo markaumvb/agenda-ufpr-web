@@ -125,14 +125,14 @@ class AuthController {
                 if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
                     $redirectPath = $_POST['redirect'];
                     
-                    // Verificar se o caminho é absoluto ou relativo
-                    if (strpos($redirectPath, 'http') === 0) {
-                        // É uma URL completa, usar como está
-                        header("Location: " . $redirectPath);
+                    // Se for caminho relativo, adicionar PUBLIC_URL
+                    if (strpos($redirectPath, 'http') !== 0) {
+                        $redirectUrl = PUBLIC_URL . $redirectPath;
                     } else {
-                        // É um caminho relativo, combinar com PUBLIC_URL
-                        header("Location: " . PUBLIC_URL . $redirectPath);
+                        $redirectUrl = $redirectPath;
                     }
+                    
+                    header("Location: " . $redirectUrl);
                     exit;
                 }
                 

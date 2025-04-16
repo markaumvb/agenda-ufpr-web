@@ -137,19 +137,10 @@ public function create() {
     
     
     if ($isFromPublic && !isset($_SESSION['user_id'])) {
-        $log = fopen(__DIR__ . '/../../logs/redirect_debug.log', 'a');
-    
-    $redirectPath = '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
-    
-    fwrite($log, date('Y-m-d H:i:s') . " - Redirect path: " . $redirectPath . "\n");
-    fwrite($log, date('Y-m-d H:i:s') . " - PUBLIC_URL: " . PUBLIC_URL . "\n");
-    fwrite($log, date('Y-m-d H:i:s') . " - Full redirect URL: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath) . "\n");
-    
-    fclose($log);
-    
-    // Redirecionamento corrigido
-    header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath));
-    exit;
+        // Construir caminho relativo para evitar duplicação de URL
+        $redirectPath = '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
+        header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath));
+        exit;
     }
     
     // Verificar permissões se não for de agenda pública
