@@ -212,9 +212,6 @@ class AgendaController extends BaseController {
         exit;
     }
     
-    /**
-     * Exclui uma agenda
-     */
     public function delete() {
         // Verificar se o usuário está logado
         if (!isset($_SESSION['user_id'])) {
@@ -236,12 +233,10 @@ class AgendaController extends BaseController {
         // Carregar os modelos necessários
         require_once __DIR__ . '/../models/Agenda.php';
         require_once __DIR__ . '/../models/Compromisso.php';
-        require_once __DIR__ . '/../models/AgendaShare.php';
         require_once __DIR__ . '/../services/AuthorizationService.php';
         
         $agendaModel = new Agenda();
         $compromissoModel = new Compromisso();
-        $shareModel = new AgendaShare();
         $authService = new AuthorizationService();
         
         // Verificar se a agenda existe
@@ -274,11 +269,13 @@ class AgendaController extends BaseController {
             exit;
         }
         
-        // Exclui todos os compromissos da agenda
-        $compromissoModel->deleteAllFromAgenda($agendaId);
-        
         // Exclui todos os compartilhamentos da agenda
+        require_once __DIR__ . '/../models/AgendaShare.php';
+        $shareModel = new AgendaShare();
         $shareModel->deleteAllFromAgenda($agendaId);
+        
+        // Exclui todos os compromissos pendentes
+        $compromissoModel->deleteAllFromAgenda($agendaId);
         
         // Exclui a agenda
         $result = $agendaModel->delete($agendaId);

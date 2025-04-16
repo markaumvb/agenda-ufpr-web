@@ -7,14 +7,7 @@ class Compromisso {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    /**
-     * Obtém todos os compromissos de uma agenda em um intervalo de datas
-     * 
-     * @param int $agendaId ID da agenda
-     * @param string $startDate Data inicial (formato Y-m-d)
-     * @param string $endDate Data final (formato Y-m-d)
-     * @return array Lista de compromissos
-     */
+
     public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
         try {
             $query = "
@@ -42,12 +35,7 @@ class Compromisso {
         }
     }
     
-    /**
-     * Obtém todos os compromissos de uma agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @return array Lista de compromissos
-     */
+
     public function getAllByAgenda($agendaId) {
         try {
             $query = "SELECT * FROM compromissos WHERE agenda_id = :agenda_id ORDER BY start_datetime";
@@ -980,4 +968,6 @@ class Compromisso {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int) $result['count'];
     }
+
+    
 }
