@@ -280,6 +280,11 @@ $routes = [
     'action' => 'log',
     'method' => 'POST'
 ],
+'/redirect-from-login' => [
+    'controller' => 'AuthController',
+    'action' => 'redirectFromLogin',
+    'method' => 'GET'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública

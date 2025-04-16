@@ -27,24 +27,18 @@ class AuthController {
      * Exibe o formulário de login
      */
     public function showLoginForm() {
-        try {
-            // Verifica se usuário já está logado
-            if (isset($_SESSION['user_id'])) {
-                header('Location: ' . BASE_URL  );
-                exit;
-            }
-            
-            require_once __DIR__ . '/../views/shared/header.php';
-            require_once __DIR__ . '/../views/auth/login.php';
-            require_once __DIR__ . '/../views/shared/footer.php';
-        } catch (Exception $e) {
-            ExceptionHandler::handle($e);
+        // Capturar ID da agenda se existir
+        if (isset($_GET['agenda_id'])) {
+            // Salvar na sessão para uso após login
+            $_SESSION['redirect_agenda_id'] = (int)$_GET['agenda_id'];
         }
+        
+        // Exibir o formulário de login
+        require_once __DIR__ . '/../views/shared/header.php';
+        require_once __DIR__ . '/../views/auth/login.php';
+        require_once __DIR__ . '/../views/shared/footer.php';
     }
-    
-/**
- * Processa o formulário de login
- */
+
 
 public function login() {
 
@@ -118,59 +112,31 @@ public function login() {
             }
         }
 
-if ($authenticated && $user) {
-    // Login bem sucedido, criar sessão
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['username'] = $user['username'];
-    $_SESSION['name'] = $user['name'];
-    $_SESSION['email'] = $user['email'];
-    
-    // Debug logging
-    DebugHelper::log("Login successful for user", $user['username']);
-    DebugHelper::log("pendingCompromissoAgendaId exists?", isset($_POST['pendingCompromissoAgendaId']));
-    if (isset($_POST['pendingCompromissoAgendaId'])) {
-        DebugHelper::log("pendingCompromissoAgendaId value", $_POST['pendingCompromissoAgendaId']);
-    }
-    
-    // Atualizar último login
-    $userModel->updateLastLogin($user['id']);
-    
-    // Mensagem de boas vindas
-    $_SESSION['flash_message'] = 'Bem-vindo(a), ' . $user['name'] . '!';
-    $_SESSION['flash_type'] = 'success';
-    
-    // VERIFICAR REDIRECIONAMENTO PARA CRIAÇÃO DE COMPROMISSO
-    if (isset($_POST['pendingCompromissoAgendaId']) && !empty($_POST['pendingCompromissoAgendaId'])) {
-        $agendaId = (int)$_POST['pendingCompromissoAgendaId'];
-        DebugHelper::log("Redirecting to compromisso creation", "Agenda ID: $agendaId");
-        
-        // Construir URL de destino
-        $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1";
-        DebugHelper::log("Redirect URL", $redirectUrl);
-        
-        // Redirecionar para a criação de compromisso
-        header("Location: " . $redirectUrl);
-        exit;
-    } else {
-        DebugHelper::log("No pending compromisso found, redirecting to default page");
-    }
+        if ($authenticated && $user) {
+            // Login bem sucedido, criar sessão
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['name'] = $user['name'];
+            $_SESSION['email'] = $user['email'];
             
-            // Verificar se há redirecionamento após login (para compatibilidade)
-            if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
-                $redirectPath = $_POST['redirect'];
+            // Atualizar último login
+            $userModel->updateLastLogin($user['id']);
+            
+            // Mensagem de boas vindas
+            $_SESSION['flash_message'] = 'Bem-vindo(a), ' . $user['name'] . '!';
+            $_SESSION['flash_type'] = 'success';
+            
+            // Verificar se há redirecionamento para agenda
+            if (isset($_SESSION['redirect_agenda_id'])) {
+                $agendaId = $_SESSION['redirect_agenda_id'];
+                unset($_SESSION['redirect_agenda_id']); // Limpar da sessão
                 
-                // Se for caminho relativo, adicionar PUBLIC_URL
-                if (strpos($redirectPath, 'http') !== 0) {
-                    $redirectUrl = PUBLIC_URL . $redirectPath;
-                } else {
-                    $redirectUrl = $redirectPath;
-                }
-                
-                header("Location: " . $redirectUrl);
+                // Redirecionar para a página de criação de compromisso
+                header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
                 exit;
             }
             
-            // Redirecionamento padrão
+            // Redirecionamento padrão se não houver agenda
             header("Location: " . PUBLIC_URL . "/agendas");
             exit;
         } else {
@@ -325,4 +291,37 @@ if ($authenticated && $user) {
             ExceptionHandler::handle($e);
         }
     }
+
+    public function redirectFromLogin() {
+        // Carregar uma página HTML simples que usa JavaScript para redirecionar
+        echo '<!DOCTYPE html>
+        <html>
+        <head>
+            <title>Redirecionando...</title>
+        </head>
+        <body>
+            <p>Redirecionando, por favor aguarde...</p>
+            
+            <script>
+            // Obter o ID da agenda do sessionStorage
+            const agendaId = sessionStorage.getItem("pendingCompromissoAgendaId");
+            console.log("Agenda ID recuperado:", agendaId);
+            
+            if (agendaId) {
+                // Limpar o sessionStorage
+                sessionStorage.removeItem("pendingCompromissoAgendaId");
+                
+                // Redirecionar para a página de criação de compromisso
+                window.location.href = "' . PUBLIC_URL . '/compromissos/new?agenda_id=" + agendaId + "&public=1";
+            } else {
+                // Se não encontrou ID da agenda, redirecionar para a página padrão
+                window.location.href = "' . PUBLIC_URL . '/agendas";
+            }
+            </script>
+        </body>
+        </html>';
+        exit;
+    }
+
+    
 }

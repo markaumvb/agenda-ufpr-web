@@ -1,4 +1,4 @@
-ocument.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   // Filtros da lista de compromissos
   const filterStatus = document.getElementById("filter-status");
   const filterMonth = document.getElementById("filter-month");

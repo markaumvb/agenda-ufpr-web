@@ -150,4 +150,4 @@
     </div>
 <?php endif; ?>
 
-<script src="<?= PUBLIC_URL ?>/assets/js/agendas/index.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/index.js"></script>
