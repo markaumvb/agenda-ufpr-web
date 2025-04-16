@@ -122,19 +122,15 @@ class AuthController {
                 $_SESSION['flash_type'] = 'success';
                 
                 // Verificar se há redirecionamento após login
-                if (isset($_SESSION['redirect_after_login']) && is_array($_SESSION['redirect_after_login'])) {
-                    $redirect = $_SESSION['redirect_after_login'];
-                    unset($_SESSION['redirect_after_login']); // Limpar da sessão
+                if ($authenticated && $user) {
+                    // [código existente para configurar a sessão do usuário]
                     
-                    if ($redirect['controller'] == 'compromissos' && $redirect['action'] == 'new') {
-                        // Construir URL para criação de compromisso
-                        $url = PUBLIC_URL . "/compromissos/new?agenda_id=" . $redirect['agenda_id'];
+                    // Verificar se há redirecionamento pendente para agenda pública
+                    if (isset($_SESSION['redirect_to_new_compromisso'])) {
+                        $agendaId = $_SESSION['redirect_to_new_compromisso'];
+                        unset($_SESSION['redirect_to_new_compromisso']);
                         
-                        if (isset($redirect['public']) && $redirect['public'] == 1) {
-                            $url .= "&public=1";
-                        }
-                        
-                        header("Location: " . $url);
+                        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
                         exit;
                     }
                 }

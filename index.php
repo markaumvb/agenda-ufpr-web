@@ -269,7 +269,12 @@ $routes = [
     'controller' => 'ApiController',
     'action' => 'getPendingApprovals',
     'method' => 'GET'
-]
+],
+'/compromissos/new-public' => [
+    'controller' => 'CompromissoController',
+    'action' => 'newPublic',
+    'method' => 'GET'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública

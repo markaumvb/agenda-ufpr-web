@@ -137,15 +137,13 @@ public function create() {
     
     
     if ($isFromPublic && !isset($_SESSION['user_id'])) {
-        // Armazenar dados de redirecionamento na sessão
-        $_SESSION['redirect_after_login'] = [
-            'controller' => 'compromissos',
-            'action' => 'new',
-            'agenda_id' => $agendaId,
-            'public' => 1
-        ];
+        // REMOVA qualquer código existente aqui e substitua pelo seguinte:
         
-        // Redirecionar para login (sem parâmetros adicionais na URL)
+        // Salvar na sessão a página para onde voltar após o login
+        $_SESSION['return_to_agenda_id'] = $agendaId;
+        $_SESSION['return_to_public'] = 1;
+        
+        // Redirecionar para o login sem parâmetros extras na URL
         header("Location: " . PUBLIC_URL . "/login");
         exit;
     }
@@ -880,5 +878,30 @@ echo json_encode(['conflict' => $hasConflict]);
 exit;
 }
 
+public function newPublic() {
+    // Obter ID da agenda
+    $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
+    
+    if (!$agendaId) {
+        $_SESSION['flash_message'] = 'Agenda não especificada';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/agendas");
+        exit;
+    }
+    
+    // Salvar na sessão para uso após o login
+    $_SESSION['redirect_to_new_compromisso'] = $agendaId;
+    
+    // Verificar se o usuário está logado
+    if (!isset($_SESSION['user_id'])) {
+        // Redirecionar para login (sem parâmetros complexos)
+        header("Location: " . PUBLIC_URL . "/login");
+        exit;
+    }
+    
+    // Se já estiver logado, redirecionar para o formulário normal
+    header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
+    exit;
+}
 
 }
