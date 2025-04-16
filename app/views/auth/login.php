@@ -48,3 +48,28 @@
 // Limpar possíveis mensagens de erro específicas de campo
 unset($_SESSION['error_fields']);
 ?>
+<script>
+// Verificar se há redirecionamento pendente
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se há um compromisso pendente
+    if (localStorage.getItem('pendingCompromissoAgendaId')) {
+        // Adicionar um campo oculto ao formulário de login
+        const form = document.querySelector('.login-form');
+        
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = 'pendingCompromissoAgendaId';
+        hiddenField.value = localStorage.getItem('pendingCompromissoAgendaId');
+        form.appendChild(hiddenField);
+        
+        const publicField = document.createElement('input');
+        publicField.type = 'hidden';
+        publicField.name = 'pendingCompromissoPublic';
+        publicField.value = localStorage.getItem('pendingCompromissoPublic');
+        form.appendChild(publicField);
+        
+        console.log('Redirecionamento configurado para criação de compromisso na agenda: ' + 
+            localStorage.getItem('pendingCompromissoAgendaId'));
+    }
+});
+</script>

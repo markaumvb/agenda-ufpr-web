@@ -447,9 +447,9 @@
     </header>
     
     <div class="agenda-actions" style="margin-top: 20px; text-align: center;">
-    <a href="<?= PUBLIC_URL ?>/compromissos/new-public?agenda_id=<?= $agenda['id'] ?>" class="btn btn-primary">
+        <button id="createCompromissoBtn" class="btn btn-primary" data-agenda-id="<?= $agenda['id'] ?>">
             <i class="fas fa-plus"></i> Criar Compromisso na Agenda
-        </a>
+        </button>
     </div>
     <main class="container">
         <!-- Opções de visualização do calendário -->
@@ -873,6 +873,22 @@
             }
         }
     });
+    </script>
+    <script>
+        document.getElementById('createCompromissoBtn').addEventListener('click', function() {
+            const agendaId = this.getAttribute('data-agenda-id');
+            
+            // Salvar o ID da agenda no localStorage
+            localStorage.setItem('pendingCompromissoAgendaId', agendaId);
+            localStorage.setItem('pendingCompromissoPublic', '1');
+            
+            // Redirecionar para login ou criação de compromisso
+            <?php if (isset($_SESSION['user_id'])): ?>
+                window.location.href = '<?= PUBLIC_URL ?>/compromissos/new?agenda_id=' + agendaId + '&public=1';
+            <?php else: ?>
+                window.location.href = '<?= PUBLIC_URL ?>/login';
+            <?php endif; ?>
+        });
     </script>
     <script src="<?= PUBLIC_URL ?>/app/assets/js/shares/public.js"></script>
 </body>
