@@ -50,20 +50,20 @@
         <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
         <div class="agenda-card-header">
         <h1 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h1>
-            <div class="agenda-visibility">
-                <?php if ($agenda['is_public']): ?>
-                    <span class="badge badge-success">Pública</span>
-                <?php else: ?>
-                    <span class="badge badge-secondary">Privada</span>
-                <?php endif; ?>
-                
-                <?php if (!$agenda['is_active']): ?>
-                    <span class="badge badge-danger">Desativada</span>
-                <?php endif; ?>
-                
-                <?php if (isset($agenda['is_owner']) && !$agenda['is_owner']): ?>
-                    <span class="badge badge-info">Compartilhada</span>
-                <?php endif; ?>
+        <div class="agenda-visibility">
+        <?php if ($agenda['is_public']): ?>
+                <span class="badge badge-success">Pública</span>
+            <?php else: ?>
+                <span class="badge badge-secondary">Privada</span>
+            <?php endif; ?>
+            
+            <?php if (!$agenda['is_active']): ?>
+                <span class="badge badge-danger">Desativada</span>
+            <?php endif; ?>
+            
+            <?php if (isset($agenda['is_owner']) && !$agenda['is_owner']): ?>
+                <span class="badge badge-info">Compartilhada</span>
+            <?php endif; ?>
             </div>
         </div>
             

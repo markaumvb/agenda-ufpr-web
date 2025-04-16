@@ -75,9 +75,10 @@
 }
 
 .agenda-card-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  position: relative;
+  padding: 1.25rem 1.5rem 0.75rem; /* Reduzido o padding inferior */
+  display: flex;
+  flex-direction: column; /* Altera para coluna: título acima, tags abaixo */
+  align-items: flex-start;
 }
 
 .agenda-card-header h2 {
@@ -89,58 +90,49 @@
 }
 
 .agenda-visibility {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  margin-bottom: 0.25rem; /* Reduzido */
+  align-self: flex-start; /* Alinhado à esquerda */
 }
 
 .agenda-card-body {
-  padding: 1.5rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  padding: 1rem 1.5rem; /* Reduzido o padding vertical */
 }
 
 .agenda-owner {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem; /* Reduzido */
   font-size: 0.9rem;
-  color: #666;
+}
+
+.agenda-owner p {
+  margin: 0.25rem 0; /* Menos espaço entre linhas */
 }
 
 .agenda-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  margin-top: auto;
+  grid-template-columns: repeat(4, 1fr); /* 4 colunas em vez de 2 */
+  gap: 0.5rem; /* Espaçamento menor */
+  margin-top: 0.5rem; /* Reduzido */
 }
 
 .stat {
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 0.75rem;
+  padding: 0.5rem; /* Padding reduzido */
   text-align: center;
 }
 
 .stat-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.25rem;
+  font-size: 1.1rem; /* Fonte menor */
+  margin-bottom: 0.1rem;
 }
 
 .stat-label {
-  font-size: 0.75rem;
-  color: #666;
+  font-size: 0.7rem; /* Fonte menor */
 }
 
-/* Melhorado: Ações no card com tamanhos uniformes */
 .agenda-card-footer {
-  padding: 1.25rem 1.5rem;
-  background-color: #fafafa;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.75rem 1.5rem; /* Padding vertical reduzido */
 }
 
 .agenda-actions {
@@ -230,18 +222,19 @@
   }
 }
 .agenda-title {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.7rem 0; /* Espaçamento menor abaixo do título */
   font-size: 1.4rem;
   font-weight: 600;
   color: #333;
+  width: 100%; /* Ocupar toda a largura disponível */
 }
 
 .agenda-description {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0; /* Reduzido */
   color: #444;
   font-size: 1.1rem;
   font-weight: normal;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .text-muted {
