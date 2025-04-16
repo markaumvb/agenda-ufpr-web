@@ -135,12 +135,21 @@ public function create() {
     // Verificar se vem de agenda pública e se usuário está logado
     $isFromPublic = isset($_GET['public']) && $_GET['public'] == 1;
     
-    if ($isFromPublic && !isset($_SESSION['user_id'])) {
-        $redirectPath = '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
     
-        // Montar a URL completa apenas uma vez
-        header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath));
-        exit;
+    if ($isFromPublic && !isset($_SESSION['user_id'])) {
+        $log = fopen(__DIR__ . '/../../logs/redirect_debug.log', 'a');
+    
+    $redirectPath = '/compromissos/new?agenda_id=' . $agendaId . '&public=1';
+    
+    fwrite($log, date('Y-m-d H:i:s') . " - Redirect path: " . $redirectPath . "\n");
+    fwrite($log, date('Y-m-d H:i:s') . " - PUBLIC_URL: " . PUBLIC_URL . "\n");
+    fwrite($log, date('Y-m-d H:i:s') . " - Full redirect URL: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath) . "\n");
+    
+    fclose($log);
+    
+    // Redirecionamento corrigido
+    header("Location: " . PUBLIC_URL . "/login?redirect=" . urlencode($redirectPath));
+    exit;
     }
     
     // Verificar permissões se não for de agenda pública
