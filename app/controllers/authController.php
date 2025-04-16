@@ -124,6 +124,7 @@ class AuthController {
                 // Verificar se há redirecionamento após login
                 if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
                     $redirectUrl = urldecode($_POST['redirect']);
+                    $redirectUrl = str_replace('agenda_ufpr/agenda_ufpr', 'agenda_ufpr', $redirectUrl);
                     header("Location: " . $redirectUrl);
                     exit;
                 }
