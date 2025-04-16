@@ -73,3 +73,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<script>
+// Verificar se há redirecionamento pendente
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se há um compromisso pendente
+    const pendingAgendaId = localStorage.getItem('pendingCompromissoAgendaId');
+    if (pendingAgendaId) {
+        // Adicionar um campo oculto ao formulário de login
+        const form = document.querySelector('.login-form');
+        
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = 'pendingCompromissoAgendaId';
+        hiddenField.value = pendingAgendaId;
+        form.appendChild(hiddenField);
+        
+        const publicField = document.createElement('input');
+        publicField.type = 'hidden';
+        publicField.name = 'pendingCompromissoPublic';
+        publicField.value = localStorage.getItem('pendingCompromissoPublic') || '1';
+        form.appendChild(publicField);
+        
+        console.log('Redirecionamento configurado para criação de compromisso na agenda: ' + pendingAgendaId);
+        
+        // Enviar log para o servidor
+        fetch('<?= PUBLIC_URL ?>/debug-log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'message=Login+form+loaded&pendingAgendaId=' + pendingAgendaId
+        });
+    }
+});
+</script>

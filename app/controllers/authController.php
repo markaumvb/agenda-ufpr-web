@@ -20,6 +20,7 @@ class AuthController {
         // Carregar classes de validação e tratamento de exceções
         require_once __DIR__ . '/../helpers/Validator.php';
         require_once __DIR__ . '/../helpers/ExceptionHandler.php';
+        require_once __DIR__ . '/../helpers/DebugHelper.php';
     }
     
     /**
@@ -44,7 +45,14 @@ class AuthController {
 /**
  * Processa o formulário de login
  */
+
 public function login() {
+
+    // Debug logging
+    DebugHelper::log("Login method called - REQUEST_METHOD", $_SERVER['REQUEST_METHOD']);
+    DebugHelper::log("POST data", $_POST);
+    DebugHelper::log("SESSION data", $_SESSION);
+
     // Verificar se o formulário foi enviado
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $_SESSION['flash_message'] = 'Método inválido';
@@ -110,31 +118,42 @@ public function login() {
             }
         }
 
-        if ($authenticated && $user) {
-            // Login bem sucedido, criar sessão
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['name'] = $user['name'];
-            $_SESSION['email'] = $user['email'];
-            
-            // Atualizar último login
-            $userModel->updateLastLogin($user['id']);
-            
-            // Mensagem de boas vindas
-            $_SESSION['flash_message'] = 'Bem-vindo(a), ' . $user['name'] . '!';
-            $_SESSION['flash_type'] = 'success';
-            
-            // VERIFICAR REDIRECIONAMENTO PARA CRIAÇÃO DE COMPROMISSO
-            if (isset($_POST['pendingCompromissoAgendaId']) && !empty($_POST['pendingCompromissoAgendaId'])) {
-                $agendaId = (int)$_POST['pendingCompromissoAgendaId'];
-                
-                // Construir URL de destino
-                $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1";
-                
-                // Redirecionar para a criação de compromisso
-                header("Location: " . $redirectUrl);
-                exit;
-            }
+if ($authenticated && $user) {
+    // Login bem sucedido, criar sessão
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['name'] = $user['name'];
+    $_SESSION['email'] = $user['email'];
+    
+    // Debug logging
+    DebugHelper::log("Login successful for user", $user['username']);
+    DebugHelper::log("pendingCompromissoAgendaId exists?", isset($_POST['pendingCompromissoAgendaId']));
+    if (isset($_POST['pendingCompromissoAgendaId'])) {
+        DebugHelper::log("pendingCompromissoAgendaId value", $_POST['pendingCompromissoAgendaId']);
+    }
+    
+    // Atualizar último login
+    $userModel->updateLastLogin($user['id']);
+    
+    // Mensagem de boas vindas
+    $_SESSION['flash_message'] = 'Bem-vindo(a), ' . $user['name'] . '!';
+    $_SESSION['flash_type'] = 'success';
+    
+    // VERIFICAR REDIRECIONAMENTO PARA CRIAÇÃO DE COMPROMISSO
+    if (isset($_POST['pendingCompromissoAgendaId']) && !empty($_POST['pendingCompromissoAgendaId'])) {
+        $agendaId = (int)$_POST['pendingCompromissoAgendaId'];
+        DebugHelper::log("Redirecting to compromisso creation", "Agenda ID: $agendaId");
+        
+        // Construir URL de destino
+        $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1";
+        DebugHelper::log("Redirect URL", $redirectUrl);
+        
+        // Redirecionar para a criação de compromisso
+        header("Location: " . $redirectUrl);
+        exit;
+    } else {
+        DebugHelper::log("No pending compromisso found, redirecting to default page");
+    }
             
             // Verificar se há redirecionamento após login (para compatibilidade)
             if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {

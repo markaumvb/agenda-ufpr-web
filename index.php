@@ -275,6 +275,11 @@ $routes = [
     'action' => 'newPublic',
     'method' => 'GET'
 ],
+'/debug-log' => [
+    'controller' => 'DebugController',
+    'action' => 'log',
+    'method' => 'POST'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública
