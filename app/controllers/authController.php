@@ -41,80 +41,138 @@ class AuthController {
         }
     }
     
-    public function login() {
-        try {
-            // Verificar se é uma requisição POST
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new ValidationException(
-                    'Método de requisição inválido', 
-                    [], 
-                    'Método de requisição inválido'
-                );
+/**
+ * Processa o formulário de login
+ */
+public function login() {
+    // Verificar se o formulário foi enviado
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        $_SESSION['flash_message'] = 'Método inválido';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/login");
+        exit;
+    }
+
+    // Validar dados do formulário
+    $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+    if (empty($username) || empty($password)) {
+        $_SESSION['flash_message'] = 'Por favor, preencha todos os campos';
+        $_SESSION['flash_type'] = 'danger';
+        $_SESSION['error_fields'] = [];
+        
+        if (empty($username)) {
+            $_SESSION['error_fields']['username'] = 'O campo usuário é obrigatório';
+        }
+        
+        if (empty($password)) {
+            $_SESSION['error_fields']['password'] = 'O campo senha é obrigatório';
+        }
+        
+        header("Location: " . PUBLIC_URL . "/login");
+        exit;
+    }
+
+    try {
+        // Autenticar usuário
+        $authenticated = false;
+        $user = null;
+
+        // Verificar se o usuário existe no sistema
+        $userModel = new User();
+        $user = $userModel->getByUsername($username);
+
+        if ($user) {
+            // Usuário existe, verificar se a senha está correta (para usuários internos)
+            if (!empty($user['password'])) {
+                if (password_verify($password, $user['password'])) {
+                    $authenticated = true;
+                }
+            } else {
+                // Usuário UFPR, autenticar via RADIUS
+                $radiusService = new RadiusService();
+                if ($radiusService->authenticate($username, $password)) {
+                    $authenticated = true;
+                }
             }
-            
-            // Obter dados do formulário
-            $username = htmlspecialchars(filter_input(INPUT_POST, 'username', FILTER_UNSAFE_RAW) ?? '');
-            $password = $_POST['password'] ?? ''; 
-            
-            // Validação básica
-            if (empty($username) || empty($password)) {
-                $_SESSION['flash_message'] = 'Usuário e senha são obrigatórios';
-                $_SESSION['flash_type'] = 'danger';
-                header('Location: ' . BASE_URL . '/login');
-                exit;
-            }
-            
-            // Tentar autenticar via RADIUS
+        } else if (strpos($username, '@ufpr.br') !== false) {
+            // Usuário UFPR não cadastrado, autenticar via RADIUS
             $radiusService = new RadiusService();
-            $authenticated = $radiusService->authenticate($username, $password);
-            
-            if (!$authenticated) {
-                $_SESSION['flash_message'] = 'Credenciais inválidas. Por favor, verifique seu usuário e senha.';
-                $_SESSION['flash_type'] = 'danger';
-                header('Location: ' . BASE_URL . '/login');
-                exit;
-            }
-            
-            // A partir daqui a autenticação foi bem sucedida
-            // Verificar se o usuário já existe no sistema
-            $user = $this->userModel->findByUsername($username);
-            
-            if (!$user) {
-                // Primeiro acesso do usuário - redirecionar para completar cadastro
-                $_SESSION['temp_username'] = $username;
-                $_SESSION['flash_message'] = 'Primeiro acesso. Por favor, complete seu cadastro.';
-                $_SESSION['flash_type'] = 'success';
+            if ($radiusService->authenticate($username, $password)) {
+                // Autenticação bem sucedida, redirecionar para formulário de registro
+                $_SESSION['new_user'] = [
+                    'username' => $username
+                ];
                 
-                header('Location: ' . BASE_URL . '/register');
+                header("Location: " . PUBLIC_URL . "/register");
                 exit;
             }
-            
-            // Login bem-sucedido - criar sessão
+        }
+
+        if ($authenticated && $user) {
+            // Login bem sucedido, criar sessão
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
-            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['name'] = $user['name'];
+            $_SESSION['email'] = $user['email'];
             
-            // Atualizar última data de login (opcional)
-            $this->userModel->updateLastLogin($user['id']);
+            // Atualizar último login
+            $userModel->updateLastLogin($user['id']);
             
-            $_SESSION['flash_message'] = 'Login realizado com sucesso! Bem-vindo(a), ' . $user['name'] . '.';
+            // Mensagem de boas vindas
+            $_SESSION['flash_message'] = 'Bem-vindo(a), ' . $user['name'] . '!';
             $_SESSION['flash_type'] = 'success';
             
-
-            header('Location: ' . BASE_URL . '/agendas');
-            exit;
+            // VERIFICAR REDIRECIONAMENTO PARA CRIAÇÃO DE COMPROMISSO
+            if (isset($_POST['pendingCompromissoAgendaId']) && !empty($_POST['pendingCompromissoAgendaId'])) {
+                $agendaId = (int)$_POST['pendingCompromissoAgendaId'];
                 
-        } catch (Exception $e) {
-            // Log do erro
-            error_log('Erro na autenticação: ' . $e->getMessage());
+                // Construir URL de destino
+                $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1";
+                
+                // Redirecionar para a criação de compromisso
+                header("Location: " . $redirectUrl);
+                exit;
+            }
             
-            // Mensagem amigável para o usuário
-            $_SESSION['flash_message'] = 'Erro na autenticação. Por favor, tente novamente.';
+            // Verificar se há redirecionamento após login (para compatibilidade)
+            if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
+                $redirectPath = $_POST['redirect'];
+                
+                // Se for caminho relativo, adicionar PUBLIC_URL
+                if (strpos($redirectPath, 'http') !== 0) {
+                    $redirectUrl = PUBLIC_URL . $redirectPath;
+                } else {
+                    $redirectUrl = $redirectPath;
+                }
+                
+                header("Location: " . $redirectUrl);
+                exit;
+            }
+            
+            // Redirecionamento padrão
+            header("Location: " . PUBLIC_URL . "/agendas");
+            exit;
+        } else {
+            // Login falhou
+            $_SESSION['flash_message'] = 'Credenciais inválidas. Por favor, tente novamente.';
             $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/login');
+            $_SESSION['error_fields'] = [
+                'username' => 'Verifique seu nome de usuário',
+                'password' => 'Verifique sua senha'
+            ];
+            
+            header("Location: " . PUBLIC_URL . "/login");
             exit;
         }
+    } catch (Exception $e) {
+        $_SESSION['flash_message'] = 'Erro ao processar login: ' . $e->getMessage();
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/login");
+        exit;
     }
+}
     
     /**
      * Exibe o formulário de registro (primeiro acesso)
