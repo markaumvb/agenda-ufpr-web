@@ -449,12 +449,18 @@
     <div class="agenda-actions" style="margin-top: 20px; text-align: center;">
     <?php if (isset($_SESSION['user_id'])): ?>
         <!-- Usuário já logado -->
-        <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-primary">
+        <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" 
+           class="btn btn-primary" 
+           id="createCompromissoBtn" 
+           data-agenda-id="<?= $agenda['id'] ?>">
             <i class="fas fa-plus"></i> Criar Compromisso na Agenda
         </a>
     <?php else: ?>
-        <!-- Usuário não logado - Solução simples sem JavaScript -->
-        <a href="<?= PUBLIC_URL ?>/login?agenda_id=<?= $agenda['id'] ?>" class="btn btn-primary">
+        <!-- Usuário não logado -->
+        <a href="<?= PUBLIC_URL ?>/login?redirect=public-agenda/<?= $agenda['public_hash'] ?>" 
+           class="btn btn-primary" 
+           id="createCompromissoBtn" 
+           data-agenda-id="<?= $agenda['id'] ?>">
             <i class="fas fa-plus"></i> Criar Compromisso na Agenda
         </a>
     <?php endif; ?>
@@ -883,36 +889,20 @@
     });
     </script>
     <script>
-        document.getElementById('createCompromissoBtn').addEventListener('click', function() {
-            const agendaId = this.getAttribute('data-agenda-id');
-            
-            // Salvar o ID da agenda no localStorage
-            localStorage.setItem('pendingCompromissoAgendaId', agendaId);
-            localStorage.setItem('pendingCompromissoPublic', '1');
-            
-            // Redirecionar para login ou criação de compromisso
-            <?php if (isset($_SESSION['user_id'])): ?>
-                window.location.href = '<?= PUBLIC_URL ?>/compromissos/new?agenda_id=' + agendaId + '&public=1';
-            <?php else: ?>
-                window.location.href = '<?= PUBLIC_URL ?>/login';
+document.addEventListener('DOMContentLoaded', function() {
+    const createBtn = document.getElementById('createCompromissoBtn');
+    if (createBtn) {
+        createBtn.addEventListener('click', function(e) {
+            <?php if (!isset($_SESSION['user_id'])): ?>
+            // Se não estiver logado, armazenar a ID da agenda no sessionStorage
+            sessionStorage.setItem('pendingCompromissoAgendaId', this.getAttribute('data-agenda-id'));
+            sessionStorage.setItem('pendingCompromissoPublic', '1');
             <?php endif; ?>
         });
-    </script>
-    <script src="<?= PUBLIC_URL ?>/app/assets/js/shares/public.js"></script>
-    <script>
-document.getElementById('createCompromissoBtn').addEventListener('click', function() {
-    const agendaId = this.getAttribute('data-agenda-id');
-    
-    // Usar sessionStorage em vez de localStorage (se limpa ao fechar o navegador)
-    sessionStorage.setItem('pendingCompromissoAgendaId', agendaId);
-    
-    // Redirecionar para login ou criação de compromisso
-    <?php if (isset($_SESSION['user_id'])): ?>
-        window.location.href = '<?= PUBLIC_URL ?>/compromissos/new?agenda_id=' + agendaId + '&public=1';
-    <?php else: ?>
-        window.location.href = '<?= PUBLIC_URL ?>/login?from=agenda';
-    <?php endif; ?>
+    }
 });
 </script>
+    <script src="<?= PUBLIC_URL ?>/app/assets/js/shares/public.js"></script>
+    
 </body>
 </html>

@@ -48,3 +48,32 @@
 // Limpar possíveis mensagens de erro específicas de campo
 unset($_SESSION['error_fields']);
 ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se há um redirecionamento pendente
+    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+    const agendaId = sessionStorage.getItem('pendingCompromissoAgendaId');
+    
+    if (redirectUrl || agendaId) {
+        // Adicionar campo oculto ao formulário
+        const form = document.querySelector('.login-form');
+        if (form) {
+            if (agendaId) {
+                const hiddenAgendaId = document.createElement('input');
+                hiddenAgendaId.type = 'hidden';
+                hiddenAgendaId.name = 'pending_agenda_id';
+                hiddenAgendaId.value = agendaId;
+                form.appendChild(hiddenAgendaId);
+            }
+            
+            if (redirectUrl) {
+                const hiddenRedirect = document.createElement('input');
+                hiddenRedirect.type = 'hidden';
+                hiddenRedirect.name = 'redirect_url';
+                hiddenRedirect.value = redirectUrl;
+                form.appendChild(hiddenRedirect);
+            }
+        }
+    }
+});
+</script>
