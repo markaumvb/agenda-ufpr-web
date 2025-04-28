@@ -447,23 +447,21 @@
     </header>
     
     <div class="agenda-actions" style="margin-top: 20px; text-align: center;">
-    <?php if (isset($_SESSION['user_id'])): ?>
-        <!-- Usuário já logado -->
-        <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" 
-           class="btn btn-primary" 
-           id="createCompromissoBtn" 
-           data-agenda-id="<?= $agenda['id'] ?>">
-            <i class="fas fa-plus"></i> Criar Compromisso na Agenda
-        </a>
-    <?php else: ?>
-        <!-- Usuário não logado -->
-        <a href="<?= PUBLIC_URL ?>/login?redirect=public-agenda/<?= $agenda['public_hash'] ?>" 
-           class="btn btn-primary" 
-           id="createCompromissoBtn" 
-           data-agenda-id="<?= $agenda['id'] ?>">
-            <i class="fas fa-plus"></i> Criar Compromisso na Agenda
-        </a>
-    <?php endif; ?>
+    <?php if (!isset($_SESSION['user_id'])): ?>
+    <!-- Usuário não logado -->
+    <a href="<?= PUBLIC_URL ?>/login?agenda_hash=<?= $agenda['public_hash'] ?>&redirect_to=compromissos/new&public=1" 
+       class="btn btn-primary" 
+       id="createCompromissoBtn">
+        <i class="fas fa-plus"></i> Criar Compromisso na Agenda
+    </a>
+<?php else: ?>
+    <!-- Mantém o link direto para criar compromisso quando já está logado -->
+    <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" 
+       class="btn btn-primary" 
+       id="createCompromissoBtn">
+        <i class="fas fa-plus"></i> Criar Compromisso na Agenda
+    </a>
+<?php endif; ?> 
 </div>
     <main class="container">
         <!-- Opções de visualização do calendário -->
@@ -894,9 +892,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (createBtn) {
         createBtn.addEventListener('click', function(e) {
             <?php if (!isset($_SESSION['user_id'])): ?>
-            // Se não estiver logado, armazenar a ID da agenda no sessionStorage
+            // Store both the agenda ID and the intended redirect URL
             sessionStorage.setItem('pendingCompromissoAgendaId', this.getAttribute('data-agenda-id'));
-            sessionStorage.setItem('pendingCompromissoPublic', '1');
+            sessionStorage.setItem('redirectAfterLogin', '<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1');
             <?php endif; ?>
         });
     }

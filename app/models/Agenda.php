@@ -734,7 +734,7 @@ class Agenda {
      */
     public function getByPublicHash($hash) {
         try {
-            $query = "SELECT * FROM agendas WHERE public_hash = :hash LIMIT 1";
+            $query = "SELECT * FROM agendas WHERE public_hash = :hash AND is_active = 1 LIMIT 1";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':hash', $hash, PDO::PARAM_STR);
             $stmt->execute();
@@ -759,5 +759,6 @@ class Agenda {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
     }
-    
+
+   
 }
