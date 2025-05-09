@@ -189,22 +189,23 @@ public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPa
             FROM agenda_shares s
             INNER JOIN agendas a ON s.agenda_id = a.id
             INNER JOIN users u ON a.user_id = u.id
-            WHERE s.user_id = ?";
+            WHERE s.user_id = :user_id";
     
     if ($activeOnly) {
         $sql .= " AND a.is_active = 1";
     }
     
     $sql .= " ORDER BY a.title
-              LIMIT ? OFFSET ?";
+              LIMIT :limit OFFSET :offset";
     
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param('iii', $userId, $perPage, $offset);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
     
     $agendas = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $row['is_owner'] = false;
         $row['compromissos'] = [
             'pendentes' => $row['pendentes'],
@@ -218,6 +219,7 @@ public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPa
     return $agendas;
 }
 
+
 /**
  * Conta o número de agendas compartilhadas com o usuário
  */
@@ -225,17 +227,16 @@ public function countSharedWithUser($userId, $activeOnly = true) {
     $sql = "SELECT COUNT(*) as total 
             FROM agenda_shares s
             INNER JOIN agendas a ON s.agenda_id = a.id
-            WHERE s.user_id = ?";
+            WHERE s.user_id = :user_id";
     
     if ($activeOnly) {
         $sql .= " AND a.is_active = 1";
     }
     
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param('i', $userId);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     
     return $row['total'];
 }

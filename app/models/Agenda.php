@@ -39,22 +39,23 @@ public function getAllByUser($userId, $activeOnly = true, $page = 1, $perPage = 
             (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
             (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
             FROM agendas a
-            WHERE a.user_id = ?";
+            WHERE a.user_id = :user_id";
     
     if ($activeOnly) {
         $sql .= " AND a.is_active = 1";
     }
     
     $sql .= " ORDER BY a.title
-              LIMIT ? OFFSET ?";
+              LIMIT :limit OFFSET :offset";
     
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param('iii', $userId, $perPage, $offset);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
     
     $agendas = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $row['is_owner'] = true;
         $row['can_edit'] = true;
         $row['compromissos'] = [
@@ -74,17 +75,16 @@ public function getAllByUser($userId, $activeOnly = true, $page = 1, $perPage = 
 }
 
 public function countByUser($userId, $activeOnly = true) {
-    $sql = "SELECT COUNT(*) as total FROM agendas WHERE user_id = ?";
+    $sql = "SELECT COUNT(*) as total FROM agendas WHERE user_id = :user_id";
     
     if ($activeOnly) {
         $sql .= " AND is_active = 1";
     }
     
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param('i', $userId);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     
     return $row['total'];
 }
@@ -709,7 +709,7 @@ public function countByUser($userId, $activeOnly = true) {
         return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
     }
 
-public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPage = 10) {
+    public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPage = 10) {
     $offset = ($page - 1) * $perPage;
     
     $sql = "SELECT a.*, 
@@ -721,9 +721,9 @@ public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPag
             FROM agendas a
             INNER JOIN users u ON a.user_id = u.id
             WHERE a.is_public = 1 
-              AND a.user_id != ?
+              AND a.user_id != :user_id
               AND a.id NOT IN (
-                  SELECT agenda_id FROM agenda_shares WHERE user_id = ?
+                  SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
               )";
     
     if ($activeOnly) {
@@ -731,15 +731,17 @@ public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPag
     }
     
     $sql .= " ORDER BY a.title
-              LIMIT ? OFFSET ?";
+              LIMIT :limit OFFSET :offset";
     
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param('iiii', $userId, $userId, $perPage, $offset);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
     
     $agendas = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $row['is_owner'] = false;
         $row['can_edit'] = false;
         $row['compromissos'] = [
@@ -758,9 +760,9 @@ public function countPublicAgendas($userId, $activeOnly = true) {
     $sql = "SELECT COUNT(*) as total 
             FROM agendas a
             WHERE a.is_public = 1 
-              AND a.user_id != ?
+              AND a.user_id != :user_id
               AND a.id NOT IN (
-                  SELECT agenda_id FROM agenda_shares WHERE user_id = ?
+                  SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
               )";
     
     if ($activeOnly) {
@@ -768,10 +770,10 @@ public function countPublicAgendas($userId, $activeOnly = true) {
     }
     
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param('ii', $userId, $userId);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     
     return $row['total'];
 }
