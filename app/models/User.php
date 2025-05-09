@@ -7,12 +7,6 @@ class User {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    /**
-     * Busca um usuário pelo nome de usuário
-     * 
-     * @param string $username Nome de usuário
-     * @return array|false Dados do usuário ou false se não encontrado
-     */
     public function findByEmail($email) {
         try {
             $query = "SELECT * FROM users WHERE email = :email LIMIT 1";
@@ -27,20 +21,8 @@ class User {
         }
     }
     
-public function updateLastLogin($id) {
+    public function updateLastLogin($id) {
     try {
-        // Verificar se a coluna last_login existe na tabela
-        $checkQuery = "SHOW COLUMNS FROM users LIKE 'last_login'";
-        $checkStmt = $this->db->prepare($checkQuery);
-        $checkStmt->execute();
-        
-        // Se a coluna não existir, vamos criá-la
-        if ($checkStmt->rowCount() === 0) {
-            $alterQuery = "ALTER TABLE users ADD COLUMN last_login DATETIME NULL";
-            $alterStmt = $this->db->prepare($alterQuery);
-            $alterStmt->execute();
-        }
-        
         // Atualizar a data do último login
         $query = "UPDATE users SET last_login = NOW() WHERE id = :id";
         $stmt = $this->db->prepare($query);
@@ -53,12 +35,7 @@ public function updateLastLogin($id) {
     }
 }
 
-/**
- * Verifica se o usuário completou o registro
- * 
- * @param int $id ID do usuário
- * @return bool Se o usuário completou o registro
- */
+
 public function isRegistrationComplete($id) {
     try {
         $query = "SELECT first_access FROM users WHERE id = :id LIMIT 1";
@@ -75,13 +52,7 @@ public function isRegistrationComplete($id) {
         return false;
     }
 }
-    
-    /**
-     * Cria um novo usuário
-     * 
-     * @param array $data Dados do usuário
-     * @return bool Resultado da operação
-     */
+
     public function create($data) {
         try {
             $query = "INSERT INTO users (username, name, email, created_at) 
@@ -98,21 +69,10 @@ public function isRegistrationComplete($id) {
             return false;
         }
     }
-    
-    /**
-     * Atualiza os dados de um usuário
-     * 
-     * @param int $id ID do usuário
-     * @param array $data Dados a serem atualizados
-     * @return bool Resultado da operação
-     */
+
     public function update($id, $data) {
         try {
-            $query = "UPDATE users SET 
-                        name = :name,
-                        email = :email,
-                        updated_at = NOW()
-                      WHERE id = :id";
+            $query = "UPDATE users SET name = :name, email = :email, updated_at = NOW() WHERE id = :id";
             
             $stmt = $this->db->prepare($query);
             return $stmt->execute([
@@ -126,12 +86,6 @@ public function isRegistrationComplete($id) {
         }
     }
     
-    /**
-     * Marca o usuário como já tendo feito o primeiro acesso
-     * 
-     * @param int $id ID do usuário
-     * @return bool Resultado da operação
-     */
     public function markFirstAccessComplete($id) {
         try {
             $query = "UPDATE users SET first_access = 0 WHERE id = :id";
@@ -192,12 +146,6 @@ public function isRegistrationComplete($id) {
         }
     }
 
-    /**
- * Busca um usuário pelo nome de usuário
- * 
- * @param string $username Nome de usuário
- * @return array|false Dados do usuário ou false se não encontrado
- */
 public function findByUsername($username) {
     try {
         $query = "SELECT * FROM users WHERE username = :username LIMIT 1";
