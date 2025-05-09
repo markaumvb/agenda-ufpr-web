@@ -90,7 +90,7 @@
                         <li><a href="<?= PUBLIC_URL ?>/agendas">Minhas Agendas</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/meuscompromissos">Meus Compromissos</a></li>
                         <li><a href="<?= PUBLIC_URL ?>/shares/shared">Agendas Compartilhadas</a></li>
-                        <li><a href="<?= PUBLIC_URL ?>/logout">Sair</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/agendas/all">Todas as Agendas</a></li>
                     <?php else: ?>
                         <li><a href="<?= PUBLIC_URL ?>/login">Entrar</a></li>
                     <?php endif; ?>

@@ -165,157 +165,168 @@ public function create() {
  * Processa o formulário de criação de compromisso
  */
 public function store() {
-    // Verificar se é um POST
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Location: ' . PUBLIC_URL . '/agendas');
+    // Verificar se o usuário está logado
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: " . PUBLIC_URL . "/login");
         exit;
     }
     
-    // Verificar se o usuário está logado
-    if (!isset($_SESSION['user_id'])) {
-        header('Location: ' . PUBLIC_URL . '/login');
-        exit;
-    }
+    $userId = $_SESSION['user_id'];
     
     // Obter dados do formulário
     $agendaId = isset($_POST['agenda_id']) ? (int)$_POST['agenda_id'] : 0;
-    $isPublic = isset($_POST['public']) && $_POST['public'] == 1;
-    $userId = $_SESSION['user_id'];
+    $title = isset($_POST['title']) ? trim($_POST['title']) : '';
+    $description = isset($_POST['description']) ? trim($_POST['description']) : '';
+    $startDatetime = isset($_POST['start_datetime']) ? $_POST['start_datetime'] : '';
+    $endDatetime = isset($_POST['end_datetime']) ? $_POST['end_datetime'] : '';
+    $location = isset($_POST['location']) ? trim($_POST['location']) : '';
+    $repeatType = isset($_POST['repeat_type']) ? $_POST['repeat_type'] : 'none';
+    $repeatUntil = isset($_POST['repeat_until']) ? $_POST['repeat_until'] : '';
+    $repeatDays = isset($_POST['repeat_days']) ? $_POST['repeat_days'] : [];
     
-    // Validar campos obrigatórios
+    // Validar dados
     $errors = [];
-    if (empty($_POST['title'])) {
-        $errors[] = 'O título do compromisso é obrigatório';
+    
+    if (empty($agendaId)) {
+        $errors[] = 'A agenda é obrigatória';
     }
-    if (empty($_POST['start_datetime'])) {
+    
+    if (empty($title)) {
+        $errors[] = 'O título é obrigatório';
+    }
+    
+    if (empty($startDatetime)) {
         $errors[] = 'A data e hora de início são obrigatórias';
     }
-    if (empty($_POST['end_datetime'])) {
+    
+    if (empty($endDatetime)) {
         $errors[] = 'A data e hora de término são obrigatórias';
     }
     
-    // Verificar se a data de término é posterior à data de início
-    if (!empty($_POST['start_datetime']) && !empty($_POST['end_datetime'])) {
-        $startDateTime = new DateTime($_POST['start_datetime']);
-        $endDateTime = new DateTime($_POST['end_datetime']);
+    // Verificar se a data final é maior que a inicial
+    if (!empty($startDatetime) && !empty($endDatetime)) {
+        $start = new DateTime($startDatetime);
+        $end = new DateTime($endDatetime);
         
-        if ($endDateTime <= $startDateTime) {
+        if ($end <= $start) {
             $errors[] = 'A data e hora de término deve ser posterior à data e hora de início';
         }
     }
     
-    // Verificar tipo de repetição
-    $repeatType = $_POST['repeat_type'] ?? 'none';
-    if ($repeatType !== 'none') {
-        if (empty($_POST['repeat_until'])) {
-            $errors[] = 'Para eventos recorrentes, é necessário definir uma data final';
-        }
-        
-        if ($repeatType === 'specific_days' && (!isset($_POST['repeat_days']) || empty($_POST['repeat_days']))) {
-            $errors[] = 'Selecione pelo menos um dia da semana para a recorrência';
-        }
-    }
-    
-    // Se houver erros, voltar para o formulário
-    if (!empty($errors)) {
-        $_SESSION['validation_errors'] = $errors;
-        $_SESSION['form_data'] = $_POST;
-        header('Location: ' . PUBLIC_URL . '/compromissos/new?agenda_id=' . $agendaId);
-        exit;
-    }
-    
-    // Verificar permissões e determinar status final
-    $authService = new AuthorizationService();
+    // Verificar se a agenda existe
+    require_once __DIR__ . '/../models/Agenda.php';
     $agendaModel = new Agenda();
     $agenda = $agendaModel->getById($agendaId);
     
     if (!$agenda) {
-        $_SESSION['flash_message'] = 'Agenda não encontrada';
-        $_SESSION['flash_type'] = 'danger';
-        header('Location: ' . PUBLIC_URL . '/agendas');
-        exit;
+        $errors[] = 'Agenda não encontrada';
+    } else if (!$agenda['is_active']) {
+        $errors[] = 'Esta agenda está desativada e não pode receber novos compromissos';
     }
     
-    // Verificar se o usuário pode criar compromissos nesta agenda
-    $canAccess = $authService->canAccessAgenda($agendaId, $userId);
-    if (!$canAccess) {
-        $_SESSION['flash_message'] = 'Você não tem permissão para acessar esta agenda';
-        $_SESSION['flash_type'] = 'danger';
-        header('Location: ' . PUBLIC_URL . '/agendas');
-        exit;
-    }
-    
-    // Verificar se a agenda está ativa
-    if (!$agenda['is_active']) {
-        $_SESSION['flash_message'] = 'Esta agenda está desativada. Não é possível criar novos compromissos.';
-        $_SESSION['flash_type'] = 'danger';
-        header('Location: ' . PUBLIC_URL . '/agendas');
-        exit;
-    }
-    
-    // Determinar status final do compromisso
-    $status = 'pendente'; // Status padrão
-    
-    if ($isPublic) {
-        if ($agenda['user_id'] == $userId) {
-            // Proprietário pode criar normalmente
-            $status = 'pendente';
-        } else if ($authService->canEditAgenda($agendaId, $userId)) {
-            // Compartilhado com permissão de edição
-            $status = 'pendente';
-        } else {
-            // Acesso público ou compartilhado sem permissão de edição
-            $status = 'aguardando_aprovacao';
+    // Verificar recorrência
+    if ($repeatType !== 'none') {
+        if (empty($repeatUntil)) {
+            $errors[] = 'Para eventos recorrentes, é necessário definir uma data final';
+        }
+        
+        if ($repeatType === 'specific_days' && empty($repeatDays)) {
+            $errors[] = 'Selecione pelo menos um dia da semana para a recorrência';
         }
     }
     
-    // Preparar dados do compromisso para salvar
-    $compromissoData = [
-        'agenda_id' => $agendaId,
-        'title' => $_POST['title'],
-        'description' => $_POST['description'] ?? '',
-        'location' => $_POST['location'] ?? '',
-        'start_datetime' => $_POST['start_datetime'],
-        'end_datetime' => $_POST['end_datetime'],
-        'repeat_type' => $repeatType,
-        'repeat_until' => $repeatType !== 'none' ? $_POST['repeat_until'] : null,
-        'repeat_days' => ($repeatType === 'specific_days' && isset($_POST['repeat_days'])) ? implode(',', $_POST['repeat_days']) : null,
-        'status' => $status,
-        'created_by' => $userId
-    ];
-    
-    // Salvar compromisso
-    $compromissoModel = new Compromisso();
-    $compromissoId = $compromissoModel->create($compromissoData);
-    
-    if (!$compromissoId) {
-        $_SESSION['flash_message'] = 'Erro ao criar compromisso. Por favor, tente novamente.';
-        $_SESSION['flash_type'] = 'danger';
-        header('Location: ' . PUBLIC_URL . '/compromissos/new?agenda_id=' . $agendaId);
+    // Se houver erros, redirecionar de volta ao formulário
+    if (!empty($errors)) {
+        $_SESSION['validation_errors'] = $errors;
+        $_SESSION['form_data'] = $_POST;
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
         exit;
     }
     
-    // Enviar notificações se for um compromisso aguardando aprovação
-    if ($status === 'aguardando_aprovacao') {
-        // Notificar o proprietário da agenda
-        $notificationModel = new Notification();
-        $notificationModel->create([
-            'user_id' => $agenda['user_id'],
-            'type' => 'approval_needed',
-            'message' => 'Novo compromisso aguardando sua aprovação na agenda "' . $agenda['title'] . '"',
-            'agenda_id' => $agendaId,
-            'compromisso_id' => $compromissoId
-        ]);
+    // Verificar permissões
+    $isOwner = ($agenda['user_id'] == $userId);
+    $canEdit = $isOwner;
+    $isPublic = isset($_POST['public']) && $_POST['public'] == '1';
+    
+    // Status padrão para o compromisso
+    $status = 'pendente';
+    
+    // Se não for o dono, verificar se tem permissão via compartilhamento
+    if (!$isOwner) {
+        require_once __DIR__ . '/../models/AgendaShare.php';
+        $shareModel = new AgendaShare();
+        $shared = $shareModel->checkAccess($agendaId, $userId);
         
-        $_SESSION['flash_message'] = 'Compromisso criado com sucesso e enviado para aprovação do proprietário da agenda.';
-    } else {
-        $_SESSION['flash_message'] = 'Compromisso criado com sucesso.';
+        if ($shared) {
+            $canEdit = $shared['can_edit'];
+            // Status para usuário com agenda compartilhada: pendente
+            $status = 'pendente';
+        } elseif ($agenda['is_public']) {
+            // Status para usuário sem acesso à agenda, mas é pública: aguardando aprovação
+            $status = 'aguardando_aprovacao';
+        } else {
+            // Se não for compartilhada e não for pública, não tem acesso
+            $_SESSION['flash_message'] = 'Você não tem permissão para acessar esta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header("Location: " . PUBLIC_URL . "/agendas");
+            exit;
+        }
     }
     
+    // Verificar conflitos de horário (opcional)
+    // Esta verificação pode ser implementada de acordo com as regras do sistema
+    
+    // Criar o compromisso
+    $data = [
+        'agenda_id' => $agendaId,
+        'title' => $title,
+        'description' => $description,
+        'start_datetime' => $startDatetime,
+        'end_datetime' => $endDatetime,
+        'location' => $location,
+        'status' => $status,
+        'created_by' => $userId,
+        'repeat_type' => $repeatType,
+        'repeat_days' => is_array($repeatDays) ? implode(',', $repeatDays) : '',
+        'repeat_until' => $repeatUntil
+    ];
+    
+    // Salvar o compromisso
+    $compromissoId = $this->model->create($data);
+    
+    if (!$compromissoId) {
+        $_SESSION['flash_message'] = 'Erro ao criar o compromisso';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+        exit;
+    }
+    
+    // Se for recorrente, criar o grupo e gerar as ocorrências
+    if ($repeatType !== 'none') {
+        // Gerar um ID de grupo (pode ser o ID do primeiro compromisso)
+        $groupId = 'group_' . $compromissoId;
+        
+        // Atualizar o primeiro compromisso com o ID do grupo
+        $this->model->update($compromissoId, ['group_id' => $groupId]);
+        
+        // Gerar ocorrências recorrentes
+        $this->generateRecurrences($compromissoId, $data, $groupId);
+    }
+    
+    // Enviar notificação ao dono da agenda se não for ele mesmo
+    if (!$isOwner) {
+        $this->notifyAgendaOwner($agenda, $data, $userId);
+    }
+    
+    // Mostrar mensagem de sucesso e redirecionar
+    $_SESSION['flash_message'] = 'Compromisso criado com sucesso';
     $_SESSION['flash_type'] = 'success';
     
-    // Redirecionar para a página de compromissos da agenda
-    header('Location: ' . PUBLIC_URL . '/compromissos?agenda_id=' . $agendaId);
+    if ($status === 'aguardando_aprovacao') {
+        $_SESSION['flash_message'] = 'Compromisso criado e está aguardando aprovação do dono da agenda';
+    }
+    
+    header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
     exit;
 }
     
@@ -870,6 +881,162 @@ public function newPublic() {
     // Se já estiver logado, redirecionar para o formulário normal
     header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
     exit;
+}
+
+private function generateRecurrences($originalId, $data, $groupId) {
+    // Definir data de início da primeira ocorrência (já criada)
+    $startDate = new DateTime($data['start_datetime']);
+    $endDate = new DateTime($data['end_datetime']);
+    $duration = $startDate->diff($endDate);
+    
+    // Definir data final do período de recorrência
+    $untilDate = new DateTime($data['repeat_until']);
+    $untilDate->setTime(23, 59, 59); // Fim do dia
+    
+    // Definir intervalo baseado no tipo de recorrência
+    switch ($data['repeat_type']) {
+        case 'daily':
+            $interval = new DateInterval('P1D'); // 1 dia
+            break;
+            
+        case 'weekly':
+            $interval = new DateInterval('P7D'); // 7 dias
+            break;
+            
+        case 'specific_days':
+            // Dias específicos são tratados separadamente
+            $repeatDays = explode(',', $data['repeat_days']);
+            $this->generateSpecificDaysRecurrences($originalId, $data, $groupId, $repeatDays, $duration, $untilDate);
+            return;
+            
+        default:
+            return; // Tipo de recorrência não suportado
+    }
+    
+    // Avançar para o próximo dia para começar a gerar ocorrências
+    $currentStart = clone $startDate;
+    $currentStart->add($interval);
+    
+    // Gerar ocorrências até a data final
+    while ($currentStart <= $untilDate) {
+        // Calcular data de término da ocorrência
+        $currentEnd = clone $currentStart;
+        $currentEnd->add($duration);
+        
+        // Criar nova ocorrência
+        $occurrenceData = $data;
+        $occurrenceData['start_datetime'] = $currentStart->format('Y-m-d H:i:s');
+        $occurrenceData['end_datetime'] = $currentEnd->format('Y-m-d H:i:s');
+        $occurrenceData['group_id'] = $groupId;
+        $occurrenceData['is_recurrence'] = 1;
+        
+        // Salvar ocorrência
+        $this->model->create($occurrenceData);
+        
+        // Avançar para a próxima data
+        $currentStart->add($interval);
+    }
+}
+
+private function generateSpecificDaysRecurrences($originalId, $data, $groupId, $repeatDays, $duration, $untilDate) {
+    // Converter dias da semana para valores numéricos (0 = Domingo, 6 = Sábado)
+    $repeatDays = array_map('intval', $repeatDays);
+    
+    // Obter dia da semana da primeira ocorrência
+    $startDate = new DateTime($data['start_datetime']);
+    $originalDayOfWeek = (int)$startDate->format('w'); // Dia da semana (0-6)
+    
+    // Remover o dia original da lista se estiver presente, pois já foi criado
+    $key = array_search($originalDayOfWeek, $repeatDays);
+    if ($key !== false) {
+        unset($repeatDays[$key]);
+        $repeatDays = array_values($repeatDays); // Reindexar array
+    }
+    
+    // Hora de início e duração
+    $startTime = $startDate->format('H:i:s');
+    
+    // Gerar primeira semana (dias restantes da semana atual)
+    $currentDate = clone $startDate;
+    
+    // Processar cada dia da semana na recorrência
+    foreach ($repeatDays as $dayOfWeek) {
+        // Calcular diferença de dias
+        $diff = ($dayOfWeek - $originalDayOfWeek + 7) % 7;
+        if ($diff === 0) $diff = 7; // Para evitar duplicar o mesmo dia
+        
+        // Avançar para o dia da semana
+        $currentStart = clone $startDate;
+        $currentStart->add(new DateInterval("P{$diff}D"));
+        
+        // Definir mesma hora de início
+        $currentStart->setTime(
+            (int)$startDate->format('H'),
+            (int)$startDate->format('i'),
+            (int)$startDate->format('s')
+        );
+        
+        // Continuar até a data final
+        while ($currentStart <= $untilDate) {
+            // Calcular data de término
+            $currentEnd = clone $currentStart;
+            $currentEnd->add($duration);
+            
+            // Criar ocorrência
+            $occurrenceData = $data;
+            $occurrenceData['start_datetime'] = $currentStart->format('Y-m-d H:i:s');
+            $occurrenceData['end_datetime'] = $currentEnd->format('Y-m-d H:i:s');
+            $occurrenceData['group_id'] = $groupId;
+            $occurrenceData['is_recurrence'] = 1;
+            
+            // Salvar ocorrência
+            $this->model->create($occurrenceData);
+            
+            // Avançar para a próxima semana
+            $currentStart->add(new DateInterval('P7D'));
+        }
+    }
+}
+
+private function notifyAgendaOwner($agenda, $data, $createdById) {
+    // Se o sistema tiver um módulo de notificações implementado
+    if (class_exists('NotificationModel')) {
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $creator = $userModel->getById($createdById);
+        
+        $notificationText = "";
+        if ($data['status'] === 'aguardando_aprovacao') {
+            $notificationText = "{$creator['name']} adicionou um compromisso que está aguardando sua aprovação na agenda '{$agenda['title']}'";
+        } else {
+            $notificationText = "{$creator['name']} adicionou um novo compromisso na agenda '{$agenda['title']}'";
+        }
+        
+        require_once __DIR__ . '/../models/Notification.php';
+        $notificationModel = new Notification();
+        $notificationModel->create([
+            'user_id' => $agenda['user_id'],
+            'message' => $notificationText,
+            'type' => 'compromisso',
+            'reference_id' => $data['id'],
+            'is_read' => 0
+        ]);
+    }
+    
+    // Se o sistema tiver um módulo de e-mail implementado
+    if (class_exists('EmailService')) {
+        require_once __DIR__ . '/../services/EmailService.php';
+        $emailService = new EmailService();
+        
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $owner = $userModel->getById($agenda['user_id']);
+        $creator = $userModel->getById($createdById);
+        
+        if ($owner && $creator) {
+            $emailService->sendNewCompromissoNotification($owner, $data, $agenda);
+        }
+    }
 }
 
 }

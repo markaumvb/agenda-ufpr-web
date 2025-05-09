@@ -34,6 +34,20 @@
             <?php endif; ?>
         </div>
         
+        <?php
+        // Adicionar campos ocultos para redirecionamento se presentes na URL
+        if (isset($_GET['agenda_hash'])): ?>
+            <input type="hidden" name="agenda_hash" value="<?= htmlspecialchars($_GET['agenda_hash']) ?>">
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['redirect_to'])): ?>
+            <input type="hidden" name="redirect_to" value="<?= htmlspecialchars($_GET['redirect_to']) ?>">
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['public'])): ?>
+            <input type="hidden" name="public" value="<?= htmlspecialchars($_GET['public']) ?>">
+        <?php endif; ?>
+        
         <div class="form-group form-actions">
             <button type="submit" class="btn btn-primary">Entrar</button>
         </div>
@@ -48,38 +62,3 @@
 // Limpar possíveis mensagens de erro específicas de campo
 unset($_SESSION['error_fields']);
 ?>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar parâmetros da URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const agendaHash = urlParams.get('agenda_hash');
-    const redirectTo = urlParams.get('redirect_to');
-    const isPublic = urlParams.get('public');
-    
-    if (agendaHash && redirectTo) {
-        // Adicionar campos ocultos ao formulário
-        const form = document.querySelector('.login-form');
-        if (form) {
-            const hiddenHash = document.createElement('input');
-            hiddenHash.type = 'hidden';
-            hiddenHash.name = 'agenda_hash';
-            hiddenHash.value = agendaHash;
-            form.appendChild(hiddenHash);
-            
-            const hiddenRedirect = document.createElement('input');
-            hiddenRedirect.type = 'hidden';
-            hiddenRedirect.name = 'redirect_to';
-            hiddenRedirect.value = redirectTo;
-            form.appendChild(hiddenRedirect);
-            
-            if (isPublic) {
-                const hiddenPublic = document.createElement('input');
-                hiddenPublic.type = 'hidden';
-                hiddenPublic.name = 'public';
-                hiddenPublic.value = isPublic;
-                form.appendChild(hiddenPublic);
-            }
-        }
-    }
-});
-</script>

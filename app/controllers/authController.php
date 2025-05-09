@@ -28,6 +28,8 @@ public function login() {
         exit;
     }
     
+    DebugHelper::log("Tentativa de login - POST", $_POST);
+    
     // Obter dados do formulário
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
@@ -41,21 +43,26 @@ public function login() {
         $errors['password'] = 'A senha é obrigatória';
     }
     
-    // Se houver erros, redirecionar de volta ao formulário
+    // Se houver erros, redirecionar de volta ao formulário com os parâmetros originais
     if (!empty($errors)) {
         $_SESSION['error_fields'] = $errors;
         $_SESSION['flash_message'] = 'Por favor, corrija os erros no formulário';
         $_SESSION['flash_type'] = 'danger';
-        header("Location: " . PUBLIC_URL . "/login");
+        
+        // Manter os parâmetros de redirecionamento na URL
+        $redirectParams = [];
+        if (isset($_POST['agenda_hash'])) $redirectParams['agenda_hash'] = $_POST['agenda_hash'];
+        if (isset($_POST['redirect_to'])) $redirectParams['redirect_to'] = $_POST['redirect_to'];
+        if (isset($_POST['public'])) $redirectParams['public'] = $_POST['public'];
+        
+        $redirectUrl = PUBLIC_URL . "/login";
+        if (!empty($redirectParams)) {
+            $redirectUrl .= "?" . http_build_query($redirectParams);
+        }
+        
+        header("Location: " . $redirectUrl);
         exit;
     }
-    
-    // Registrar dados de depuração
-    require_once __DIR__ . '/../helpers/DebugHelper.php';
-    DebugHelper::log("Tentativa de login", [
-        'username' => $username,
-        'POST' => $_POST
-    ]);
     
     // Tentar autenticar o usuário
     require_once __DIR__ . '/../services/RadiusService.php';
@@ -66,7 +73,19 @@ public function login() {
     if (!$authenticated) {
         $_SESSION['flash_message'] = 'Usuário ou senha inválidos';
         $_SESSION['flash_type'] = 'danger';
-        header("Location: " . PUBLIC_URL . "/login");
+        
+        // Manter os parâmetros de redirecionamento na URL em caso de falha
+        $redirectParams = [];
+        if (isset($_POST['agenda_hash'])) $redirectParams['agenda_hash'] = $_POST['agenda_hash'];
+        if (isset($_POST['redirect_to'])) $redirectParams['redirect_to'] = $_POST['redirect_to'];
+        if (isset($_POST['public'])) $redirectParams['public'] = $_POST['public'];
+        
+        $redirectUrl = PUBLIC_URL . "/login";
+        if (!empty($redirectParams)) {
+            $redirectUrl .= "?" . http_build_query($redirectParams);
+        }
+        
+        header("Location: " . $redirectUrl);
         exit;
     }
     
@@ -87,57 +106,54 @@ public function login() {
     $_SESSION['username'] = $user['username'];
     $_SESSION['name'] = $user['name'];
     
-    // Verificar se há redirecionamento pendente de agenda pública
-    DebugHelper::log("Verificando parâmetros de redirecionamento", $_POST);
+    DebugHelper::log("Login bem-sucedido - verificando redirecionamento", [
+        'POST' => $_POST,
+        'SESSION' => $_SESSION
+    ]);
     
+    // ABORDAGEM 1: Verificar parâmetros diretos para criação de compromisso
     if (isset($_POST['agenda_hash']) && !empty($_POST['agenda_hash']) && 
         isset($_POST['redirect_to']) && $_POST['redirect_to'] === 'compromissos/new') {
         
-        DebugHelper::log("Redirecionamento de compromisso detectado", [
-            'agenda_hash' => $_POST['agenda_hash'],
-            'redirect_to' => $_POST['redirect_to']
+        DebugHelper::log("Detectado redirecionamento para compromissos/new", [
+            'agenda_hash' => $_POST['agenda_hash']
         ]);
         
-        // Buscar a agenda pelo hash
         require_once __DIR__ . '/../models/Agenda.php';
         $agendaModel = new Agenda();
         $agenda = $agendaModel->getByPublicHash($_POST['agenda_hash']);
         
         if ($agenda) {
-            // Redirecionar para a tela de criação de compromisso
             $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agenda['id'];
-            if (isset($_POST['public']) && $_POST['public']) {
+            if (isset($_POST['public']) && $_POST['public'] == '1') {
                 $redirectUrl .= "&public=1";
             }
             
-            DebugHelper::log("Redirecionando para criar compromisso", $redirectUrl);
+            DebugHelper::log("Redirecionando para compromisso", $redirectUrl);
+            header("Location: " . $redirectUrl);
+            exit;
+        } else {
+            DebugHelper::log("Agenda não encontrada com hash", $_POST['agenda_hash']);
+        }
+    }
+    
+    // ABORDAGEM ALTERNATIVA - Redirecionar para uma página intermediária
+    if (isset($_POST['agenda_hash']) || isset($_POST['redirect_to'])) {
+        $redirectParams = [];
+        if (isset($_POST['agenda_hash'])) $redirectParams['agenda_hash'] = $_POST['agenda_hash'];
+        if (isset($_POST['redirect_to'])) $redirectParams['redirect_to'] = $_POST['redirect_to'];
+        if (isset($_POST['public'])) $redirectParams['public'] = $_POST['public'];
+        
+        if (!empty($redirectParams)) {
+            $redirectUrl = PUBLIC_URL . "/redirect-from-login?" . http_build_query($redirectParams);
+            DebugHelper::log("Redirecionando para intermediária", $redirectUrl);
             header("Location: " . $redirectUrl);
             exit;
         }
     }
     
-    // Verificar outros parâmetros de redirecionamento
-    if (isset($_POST['redirect_url']) && !empty($_POST['redirect_url'])) {
-        $redirectUrl = $_POST['redirect_url'];
-        DebugHelper::log("Redirecionando para URL especificada", $redirectUrl);
-        header("Location: " . $redirectUrl);
-        exit;
-    }
-    
-    // Verificar se há ID de agenda pendente
-    if (isset($_POST['pending_agenda_id']) && !empty($_POST['pending_agenda_id'])) {
-        $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $_POST['pending_agenda_id'];
-        if (isset($_POST['public']) && $_POST['public']) {
-            $redirectUrl .= "&public=1";
-        }
-        
-        DebugHelper::log("Redirecionando para agenda pendente", $redirectUrl);
-        header("Location: " . $redirectUrl);
-        exit;
-    }
-    
-    // Redirecionamento padrão se nenhum redirecionamento específico for fornecido
-    DebugHelper::log("Redirecionando para página padrão (agendas)");
+    // Redirecionamento padrão
+    DebugHelper::log("Nenhum redirecionamento especial, indo para agendas");
     header("Location: " . PUBLIC_URL . "/agendas");
     exit;
 }
@@ -246,28 +262,35 @@ public function login() {
      * Redireciona o usuário após o login quando vindo de uma página específica
      */
     public function redirectFromLogin() {
-        // Verificar se o usuário está logado
+        // Verificação de segurança - usuário deve estar logado
         if (!isset($_SESSION['user_id'])) {
-            header('Location: ' . PUBLIC_URL . '/login');
+            header("Location: " . PUBLIC_URL . "/login");
             exit;
         }
         
-        // Verificar parâmetros
-        $hash = isset($_GET['hash']) ? $_GET['hash'] : null;
-        $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : null;
+        DebugHelper::log("Função redirectFromLogin chamada", $_GET);
         
-        if ($hash) {
-            // Redirecionar para a agenda pública
-            header('Location: ' . PUBLIC_URL . '/public-agenda/' . $hash);
-            exit;
-        } else if ($agendaId) {
-            // Redirecionar para criar compromisso
-            header('Location: ' . PUBLIC_URL . '/compromissos/new?agenda_id=' . $agendaId . '&public=1');
-            exit;
+        if (isset($_GET['agenda_hash']) && !empty($_GET['agenda_hash'])) {
+            // Buscar agenda pelo hash
+            require_once __DIR__ . '/../models/Agenda.php';
+            $agendaModel = new Agenda();
+            $agenda = $agendaModel->getByPublicHash($_GET['agenda_hash']);
+            
+            if ($agenda) {
+                $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agenda['id'];
+                
+                if (isset($_GET['public']) && $_GET['public'] == '1') {
+                    $redirectUrl .= "&public=1";
+                }
+                
+                DebugHelper::log("Redirecionando para", $redirectUrl);
+                header("Location: " . $redirectUrl);
+                exit;
+            }
         }
         
         // Redirecionamento padrão
-        header('Location: ' . PUBLIC_URL . '/agendas');
+        header("Location: " . PUBLIC_URL . "/agendas");
         exit;
     }
 }

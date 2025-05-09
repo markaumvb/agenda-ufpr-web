@@ -175,4 +175,68 @@ class AgendaShare {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$agendaId]);
     }
+
+    public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10) {
+    $offset = ($page - 1) * $perPage;
+    
+    $sql = "SELECT a.*, 
+                   s.can_edit,
+                   u.name as owner_name,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+            FROM agenda_shares s
+            INNER JOIN agendas a ON s.agenda_id = a.id
+            INNER JOIN users u ON a.user_id = u.id
+            WHERE s.user_id = ?";
+    
+    if ($activeOnly) {
+        $sql .= " AND a.is_active = 1";
+    }
+    
+    $sql .= " ORDER BY a.title
+              LIMIT ? OFFSET ?";
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param('iii', $userId, $perPage, $offset);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $agendas = [];
+    while ($row = $result->fetch_assoc()) {
+        $row['is_owner'] = false;
+        $row['compromissos'] = [
+            'pendentes' => $row['pendentes'],
+            'realizados' => $row['realizados'],
+            'cancelados' => $row['cancelados'],
+            'aguardando_aprovacao' => $row['aguardando_aprovacao']
+        ];
+        $agendas[] = $row;
+    }
+    
+    return $agendas;
+}
+
+/**
+ * Conta o número de agendas compartilhadas com o usuário
+ */
+public function countSharedWithUser($userId, $activeOnly = true) {
+    $sql = "SELECT COUNT(*) as total 
+            FROM agenda_shares s
+            INNER JOIN agendas a ON s.agenda_id = a.id
+            WHERE s.user_id = ?";
+    
+    if ($activeOnly) {
+        $sql .= " AND a.is_active = 1";
+    }
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    return $row['total'];
+}
 }

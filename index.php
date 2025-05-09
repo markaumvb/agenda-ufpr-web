@@ -285,6 +285,11 @@ $routes = [
     'action' => 'redirectFromLogin',
     'method' => 'GET'
 ],
+'/agendas/all' => [
+    'controller' => 'AgendaController',
+    'action' => 'allAgendas',
+    'method' => 'GET'
+],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública

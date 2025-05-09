@@ -445,23 +445,7 @@
             </div>
         </div>
     </header>
-    
-    <div class="agenda-actions" style="margin-top: 20px; text-align: center;">
-    <?php if (!isset($_SESSION['user_id'])): ?>
-    <!-- Usuário não logado -->
-    <a href="<?= PUBLIC_URL ?>/login?agenda_hash=<?= $agenda['public_hash'] ?>&redirect_to=compromissos/new&public=1" 
-       class="btn btn-primary" 
-       id="createCompromissoBtn">
-        <i class="fas fa-plus"></i> Criar Compromisso na Agenda
-    </a>
-<?php else: ?>
-    <!-- Mantém o link direto para criar compromisso quando já está logado -->
-    <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" 
-       class="btn btn-primary" 
-       id="createCompromissoBtn">
-        <i class="fas fa-plus"></i> Criar Compromisso na Agenda
-    </a>
-<?php endif; ?> 
+
 </div>
     <main class="container">
         <!-- Opções de visualização do calendário -->
