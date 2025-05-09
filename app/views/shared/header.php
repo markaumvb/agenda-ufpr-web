@@ -12,60 +12,100 @@
 
     <title><?= APP_NAME ?></title>
 
-    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/approval-modal.css">
-
-    
     <!-- CSS Principal - Mantenha esses sempre carregados para o layout básico funcionar -->
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/style.css">
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/component.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/approval-modal.css">
     
-    <!-- CSS específicos por módulo -->
+    <!-- CSS específicos por módulo - SIMPLIFICADO -->
     <?php 
-    // Identificar a página atual para carregar apenas o CSS necessário
+    // Identificar a página atual
     $currentUri = $_SERVER['REQUEST_URI'];
     
-    // Identificar se é uma página de formulário
-    $isFormPage = (
-        strpos($currentUri, '/new') !== false || 
+    // Páginas de compromissos e formulários
+    if (strpos($currentUri, '/compromissos') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
+        
+        // Páginas de formulário recebem estilo de formulário
+        if (strpos($currentUri, '/new') !== false || strpos($currentUri, '/edit') !== false) {
+            echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
+        }
+    }
+    
+    // Carrega CSS de formulário para todas essas páginas
+    if (strpos($currentUri, '/new') !== false || 
         strpos($currentUri, '/edit') !== false || 
         strpos($currentUri, '/create') !== false || 
         strpos($currentUri, '/login') !== false || 
-        strpos($currentUri, '/register') !== false ||
-        (strpos($currentUri, 'public=1') !== false && strpos($currentUri, '/compromissos') !== false)
-    );
-
-    // Carregar CSS para formulários
-    if ($isFormPage) {
+        strpos($currentUri, '/register') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
     }
     
-    // Carregar CSS para autenticação
+    // Autenticação
     if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth/login.css">';
     }
     
-    // Carregar CSS para agendas
+    // Agendas
     if (strpos($currentUri, '/agendas') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
     }
     
-    // Carregar CSS para compromissos
-    if (strpos($currentUri, '/compromissos') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
-    }
-    
-    // Carregar CSS para compartilhamentos
-    if (strpos($currentUri, '/shares') !== false || 
-        strpos($currentUri, '/public-agenda') !== false || 
-        (strpos($currentUri, '/compromissos') !== false && strpos($currentUri, 'public=1') !== false)) {
+    // Compartilhamentos
+    if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
     }
-
-    // Carregar CSS para a página de Meus Compromissos
+    
+    // Meus Compromissos
     if (strpos($currentUri, '/meuscompromissos') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/meuscompromissos.css">';
     }
+    
+    // Página com parâmetro public=1
+    if (strpos($currentUri, 'public=1') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
+    }
     ?>
+    
+    <!-- CSS para eventos do calendário -->
+    <style>
+    /* Estilos para eventos do calendário - sempre incluídos */
+    .fc-event {
+        border: none;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+
+    .fc-event-main {
+        padding: 2px;
+    }
+
+    /* Status específicos */
+    .fc-event.pendente, 
+    .fc-event[data-status="pendente"] {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+    }
+
+    .fc-event.realizado, 
+    .fc-event[data-status="realizado"] {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+
+    .fc-event.cancelado, 
+    .fc-event[data-status="cancelado"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        text-decoration: line-through;
+    }
+
+    .fc-event.aguardando_aprovacao, 
+    .fc-event[data-status="aguardando_aprovacao"] {
+        background-color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+    }
+    </style>
 </head>
 <body>
     <header>

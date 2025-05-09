@@ -5,10 +5,10 @@
 <div class="form-container">
     <div class="form-header">
         <h1>Novo Compromisso</h1>
-        <a href="<?= BASE_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-link">Voltar</a>
+        <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-link">Voltar</a>
     </div>
     
-    <form action="<?= BASE_URL ?>/compromissos/save" method="post">
+    <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post">
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
         
         <div class="form-group">
@@ -25,13 +25,13 @@
             <div class="form-group form-group-half">
                 <label for="start_datetime">Data e Hora de Início *</label>
                 <input type="datetime-local" id="start_datetime" name="start_datetime" required class="form-control"
-                       value="<?= htmlspecialchars($defaultStartDateTime) ?>">
+                       value="<?= htmlspecialchars($defaultStartDateTime ?? '') ?>">
             </div>
             
             <div class="form-group form-group-half">
                 <label for="end_datetime">Data e Hora de Término *</label>
                 <input type="datetime-local" id="end_datetime" name="end_datetime" required class="form-control"
-                       value="<?= htmlspecialchars($defaultEndDateTime) ?>">
+                       value="<?= htmlspecialchars($defaultEndDateTime ?? '') ?>">
             </div>
         </div>
         
@@ -41,23 +41,18 @@
         </div>
         
         <?php
-            $isFromPublic = isset($_GET['public']) || isset($_POST['public']); ;
+            $isFromPublic = isset($_GET['public']) || isset($_POST['public']);
         ?>
-
 
         <div class="form-group">
             <label for="status-display">Status</label>
             <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
         </div>
         <input type="hidden" name="status" value="pendente">
+        
         <?php if ($isFromPublic): ?>
             <input type="hidden" name="public" value="1">
         <?php endif; ?>
-
-        <div class="form-group">
-            <label for="status-display">Status</label>
-            <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
-        </div>
         
         <div class="form-group">
             <label>Recorrência</label>
@@ -143,8 +138,41 @@
         
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar</button>
-            <a href="<?= BASE_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-secondary">Cancelar</a>
+            <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-secondary">Cancelar</a>
         </div>
     </form>
 </div>
+
+<!-- Script para funções de formulário -->
+<script>
+// Função que mostra/esconde as opções de recorrência
+function toggleRepeatOptions() {
+    const repeatType = document.querySelector('input[name="repeat_type"]:checked').value;
+    const repeatUntilContainer = document.getElementById('repeat_until_container');
+    const repeatDaysContainer = document.getElementById('repeat_days_container');
+    
+    // Mostrar/esconder container de "repetir até"
+    if (repeatType === 'none') {
+        repeatUntilContainer.style.display = 'none';
+        repeatDaysContainer.style.display = 'none';
+    } else {
+        repeatUntilContainer.style.display = 'block';
+        
+        // Mostrar/esconder container de dias específicos
+        if (repeatType === 'specific_days') {
+            repeatDaysContainer.style.display = 'block';
+        } else {
+            repeatDaysContainer.style.display = 'none';
+        }
+    }
+}
+
+// Inicializar as opções de recorrência
+document.addEventListener('DOMContentLoaded', function() {
+    toggleRepeatOptions();
+});
+</script>
+
+<?php if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/agenda_ufpr/app/assets/js/compromissos/form.js')): ?>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
+<?php endif; ?>
