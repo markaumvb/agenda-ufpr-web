@@ -157,8 +157,10 @@ public function create() {
     $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
     $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
     
-    // Passar para a view
+    // Exibir a view - AQUI ESTÁ A CORREÇÃO
+    require_once __DIR__ . '/../views/shared/header.php';
     require_once __DIR__ . '/../views/compromissos/create.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
 }
 
 /**

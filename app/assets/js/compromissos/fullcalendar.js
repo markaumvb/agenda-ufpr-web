@@ -23,162 +23,98 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Preparar eventos para o calendário
-  const events = [];
-  document.querySelectorAll(".event-card").forEach((card) => {
-    const id = card.dataset.id;
-    const title = card.querySelector(".event-title").textContent.trim();
-    const status = card.dataset.status;
-    const dateStart = card
-      .querySelector(".event-datetime .event-date")
-      .textContent.trim();
-    const timeElement = card.querySelector(".event-datetime .event-time");
-    const time = timeElement ? timeElement.textContent.trim() : "";
+  let events = [];
 
-    const location = card.querySelector(".event-location")
-      ? card.querySelector(".event-location").textContent.trim()
-      : "";
+  // Se temos compromissos disponíveis na variável global, usá-los
+  if (window.allCompromissos && Array.isArray(window.allCompromissos)) {
+    window.allCompromissos.forEach((compromisso) => {
+      const event = {
+        id: compromisso.id,
+        title: compromisso.title,
+        start: compromisso.start_datetime,
+        end: compromisso.end_datetime,
+        allDay: false,
+        extendedProps: {
+          status: compromisso.status,
+          description: compromisso.description || "",
+          location: compromisso.location || "",
+        },
+        backgroundColor: statusColors[compromisso.status] || "#3788d8",
+        borderColor: statusColors[compromisso.status] || "#3788d8",
+        textColor: "#fff",
+      };
 
-    const description = card.querySelector(".event-description")
-      ? card.querySelector(".event-description").textContent.trim()
-      : "";
+      // Para eventos cancelados, adicionar estilo visual
+      if (compromisso.status === "cancelado") {
+        event.textDecoration = "line-through";
+        event.backgroundColor = "rgba(220, 53, 69, 0.6)";
+        event.borderColor = "#dc3545";
+      }
 
-    // Extrair a data e hora de início e fim do texto
-    const startDateStr = card.dataset.date;
-    const allDay = !time || time.indexOf("às") === -1;
+      events.push(event);
+    });
+  } else {
+    // Fallback: extrair dados dos cards HTML se a variável global não estiver disponível
+    document.querySelectorAll(".event-card").forEach((card) => {
+      const id = card.dataset.id;
+      const title = card.querySelector(".event-title").textContent.trim();
+      const status = card.dataset.status;
+      const dateStart = card
+        .querySelector(".event-datetime .event-date")
+        .textContent.trim();
+      const timeElement = card.querySelector(".event-datetime .event-time");
+      const time = timeElement ? timeElement.textContent.trim() : "";
 
-    let startTime, endTime;
-    if (!allDay && time) {
-      const timeParts = time
-        .replace(/[^\d:]/g, " ")
-        .trim()
-        .split(/\s+/);
-      startTime = timeParts[0];
-      endTime = timeParts.length > 1 ? timeParts[1] : "";
-    }
+      const location = card.querySelector(".event-location")
+        ? card.querySelector(".event-location").textContent.trim()
+        : "";
 
-    const event = {
-      id: id,
-      title: title,
-      start: startDateStr + (startTime ? "T" + startTime + ":00" : ""),
-      allDay: allDay,
-      extendedProps: {
-        status: status,
-        description: description,
-        location: location,
-      },
-      backgroundColor: statusColors[status] || "#3788d8",
-      borderColor: statusColors[status] || "#3788d8",
-      textColor: "#fff",
-    };
+      const description = card.querySelector(".event-description")
+        ? card.querySelector(".event-description").textContent.trim()
+        : "";
 
-    if (endTime) {
-      event.end = startDateStr + "T" + endTime + ":00";
-    }
+      // Extrair a data e hora de início e fim do texto
+      const startDateStr = card.dataset.date;
+      const allDay = !time || time.indexOf("às") === -1;
 
-    // Para eventos cancelados, adicionar estilo visual
-    if (status === "cancelado") {
-      event.textDecoration = "line-through";
-      event.backgroundColor = "rgba(220, 53, 69, 0.6)";
-      event.borderColor = "#dc3545";
-    }
+      let startTime, endTime;
+      if (!allDay && time) {
+        const timeParts = time
+          .replace(/[^\d:]/g, " ")
+          .trim()
+          .split(/\s+/);
+        startTime = timeParts[0];
+        endTime = timeParts.length > 1 ? timeParts[1] : "";
+      }
 
-    events.push(event);
-  });
+      const event = {
+        id: id,
+        title: title,
+        start: startDateStr + (startTime ? "T" + startTime + ":00" : ""),
+        allDay: allDay,
+        extendedProps: {
+          status: status,
+          description: description,
+          location: location,
+        },
+        backgroundColor: statusColors[status] || "#3788d8",
+        borderColor: statusColors[status] || "#3788d8",
+        textColor: "#fff",
+      };
 
-  // Função para atualizar a data de um evento
-  function updateEventDate(eventId, startDate, endDate) {
-    // Formatar as datas
-    const start = startDate ? startDate.toISOString() : "";
-    const end = endDate ? endDate.toISOString() : "";
+      if (endTime) {
+        event.end = startDateStr + "T" + endTime + ":00";
+      }
 
-    // Criar FormData
-    const formData = new FormData();
-    formData.append("id", eventId);
-    formData.append("start", start);
-    formData.append("end", end);
+      // Para eventos cancelados, adicionar estilo visual
+      if (status === "cancelado") {
+        event.textDecoration = "line-through";
+        event.backgroundColor = "rgba(220, 53, 69, 0.6)";
+        event.borderColor = "#dc3545";
+      }
 
-    // Enviar requisição
-    fetch(`${baseUrl}/compromissos/update-date`, {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          console.log("Evento atualizado com sucesso");
-        } else {
-          console.error("Erro ao atualizar evento:", data.message);
-          alert("Erro ao atualizar o compromisso: " + data.message);
-        }
-      })
-      .catch((error) => {
-        console.error("Erro na requisição:", error);
-        alert("Erro ao comunicar com o servidor");
-      });
-  }
-
-  // Função para filtragem do calendário
-  function setupFilters(calendar, allEvents) {
-    // Obter elementos de filtro
-    const filterStatus = document.getElementById("filter-status");
-    const filterMonth = document.getElementById("filter-month");
-    const filterSearch = document.getElementById("filter-search");
-    const clearFilterBtn = document.getElementById("clear-filters");
-
-    if (!filterStatus && !filterMonth && !filterSearch) return;
-
-    // Aplicar filtros
-    function applyFilters() {
-      const statusValue = filterStatus ? filterStatus.value : "all";
-      const monthValue = filterMonth ? filterMonth.value : "all";
-      const searchValue = filterSearch ? filterSearch.value.toLowerCase() : "";
-
-      // Filtrar os eventos
-      const filteredEvents = allEvents.filter((event) => {
-        // Status
-        const statusMatch =
-          statusValue === "all" || event.extendedProps.status === statusValue;
-
-        // Mês
-        const eventDate = new Date(event.start);
-        const eventMonth = (eventDate.getMonth() + 1).toString();
-        const monthMatch = monthValue === "all" || eventMonth === monthValue;
-
-        // Texto
-        const searchableText = (
-          event.title +
-          " " +
-          (event.extendedProps.description || "") +
-          " " +
-          (event.extendedProps.location || "")
-        ).toLowerCase();
-        const searchMatch =
-          !searchValue || searchableText.includes(searchValue);
-
-        return statusMatch && monthMatch && searchMatch;
-      });
-
-      // Atualizar eventos no calendário
-      calendar.removeAllEvents();
-      calendar.addEventSource(filteredEvents);
-    }
-
-    // Adicionar listeners
-    if (filterStatus) filterStatus.addEventListener("change", applyFilters);
-    if (filterMonth) filterMonth.addEventListener("change", applyFilters);
-    if (filterSearch) filterSearch.addEventListener("input", applyFilters);
-
-    // Configurar botão de limpar
-    if (clearFilterBtn) {
-      clearFilterBtn.addEventListener("click", function () {
-        if (filterStatus) filterStatus.value = "all";
-        if (filterMonth) filterMonth.value = "all";
-        if (filterSearch) filterSearch.value = "";
-
-        calendar.removeAllEvents();
-        calendar.addEventSource(allEvents);
-      });
-    }
+      events.push(event);
+    });
   }
 
   // Inicializar o FullCalendar
@@ -319,6 +255,102 @@ document.addEventListener("DOMContentLoaded", function () {
           modal.style.display = "none";
         }
       };
+    }
+  }
+
+  // Função para atualizar a data de um evento
+  function updateEventDate(eventId, startDate, endDate) {
+    // Formatar as datas
+    const start = startDate ? startDate.toISOString() : "";
+    const end = endDate ? endDate.toISOString() : "";
+
+    // Criar FormData
+    const formData = new FormData();
+    formData.append("id", eventId);
+    formData.append("start", start);
+    formData.append("end", end);
+
+    // Enviar requisição
+    fetch(`${baseUrl}/compromissos/update-date`, {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          console.log("Evento atualizado com sucesso");
+        } else {
+          console.error("Erro ao atualizar evento:", data.message);
+          alert("Erro ao atualizar o compromisso: " + data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Erro na requisição:", error);
+        alert("Erro ao comunicar com o servidor");
+      });
+  }
+
+  // Função para filtragem do calendário
+  function setupFilters(calendar, allEvents) {
+    // Obter elementos de filtro
+    const filterStatus = document.getElementById("filter-status");
+    const filterMonth = document.getElementById("filter-month");
+    const filterSearch = document.getElementById("filter-search");
+    const clearFilterBtn = document.getElementById("clear-filters");
+
+    if (!filterStatus && !filterMonth && !filterSearch) return;
+
+    // Aplicar filtros
+    function applyFilters() {
+      const statusValue = filterStatus ? filterStatus.value : "all";
+      const monthValue = filterMonth ? filterMonth.value : "all";
+      const searchValue = filterSearch ? filterSearch.value.toLowerCase() : "";
+
+      // Filtrar os eventos
+      const filteredEvents = allEvents.filter((event) => {
+        // Status
+        const statusMatch =
+          statusValue === "all" || event.extendedProps.status === statusValue;
+
+        // Mês
+        const eventDate = new Date(event.start);
+        const eventMonth = (eventDate.getMonth() + 1).toString();
+        const monthMatch = monthValue === "all" || eventMonth === monthValue;
+
+        // Texto
+        const searchableText = (
+          event.title +
+          " " +
+          (event.extendedProps.description || "") +
+          " " +
+          (event.extendedProps.location || "")
+        ).toLowerCase();
+        const searchMatch =
+          !searchValue || searchableText.includes(searchValue);
+
+        return statusMatch && monthMatch && searchMatch;
+      });
+
+      // Atualizar eventos no calendário
+      calendar.removeAllEvents();
+      calendar.addEventSource(filteredEvents);
+    }
+
+    // Adicionar listeners
+    if (filterStatus) filterStatus.addEventListener("change", applyFilters);
+    if (filterMonth) filterMonth.addEventListener("change", applyFilters);
+    if (filterSearch) filterSearch.addEventListener("input", applyFilters);
+
+    // Configurar botão de limpar
+    if (clearFilterBtn) {
+      clearFilterBtn.addEventListener("click", function () {
+        if (filterStatus) filterStatus.value = "all";
+        if (filterMonth) filterMonth.value = "all";
+        if (filterSearch) filterSearch.value = "";
+
+        calendar.removeAllEvents();
+        calendar.addEventSource(allEvents);
+      });
     }
   }
 });

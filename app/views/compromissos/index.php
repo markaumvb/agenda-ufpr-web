@@ -44,41 +44,15 @@
 
 <!-- FullCalendar Container -->
 <div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>">
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar o FullCalendar com as cores corretas para os eventos
-    var calendarEl = document.getElementById('calendar');
-    
-    if (calendarEl) {
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-            },
-            locale: 'pt-br',
-            events: JSON.parse('<?= json_encode($allCompromissos) ?>'),
-            eventDidMount: function(info) {
-                // Adicionar classe com base no status
-                if (info.event.extendedProps.status) {
-                    info.el.classList.add(info.event.extendedProps.status);
-                }
-            },
-            eventContent: function(arg) {
-                // Personalizar conteúdo do evento
-                return {
-                    html: '<div class="fc-event-main-inner">' + arg.event.title + '</div>'
-                };
-            }
-        });
-        
-        calendar.render();
-    }
-});
-</script>
     <div id="calendar"></div>
+    
+    <script>
+    // Disponibilizar os dados dos compromissos para o calendário
+    window.allCompromissos = <?= json_encode($allCompromissos) ?>;
+    </script>
 </div>
+</script>
+
 
 <!-- Lista de Compromissos Filtrados -->
 <div class="events-list-container">
