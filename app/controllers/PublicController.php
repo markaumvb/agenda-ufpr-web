@@ -109,14 +109,7 @@ class PublicController {
         }
     }
     
-    /**
-     * Prepara os dados para o calendário
-     * 
-     * @param int $month Mês (1-12)
-     * @param int $year Ano
-     * @param array $compromissos Lista de compromissos
-     * @return array Dados para o calendário
-     */
+
     private function prepareCalendarData($month, $year, $compromissos) {
         // Primeiro dia do mês
         $firstDay = new DateTime("$year-$month-01");
