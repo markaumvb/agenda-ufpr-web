@@ -176,16 +176,16 @@ class AgendaShare {
         return $stmt->execute([$agendaId]);
     }
 
-    public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10) {
+public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10) {
     $offset = ($page - 1) * $perPage;
     
     $sql = "SELECT a.*, 
-                   s.can_edit,
-                   u.name as owner_name,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+           s.can_edit,
+           u.name as owner_name,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
             FROM agenda_shares s
             INNER JOIN agendas a ON s.agenda_id = a.id
             INNER JOIN users u ON a.user_id = u.id

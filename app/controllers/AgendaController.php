@@ -380,23 +380,28 @@ public function allAgendas() {
     
     $userId = $_SESSION['user_id'];
     
+    // Inicializar modelos localmente
+    require_once __DIR__ . '/../models/Agenda.php';
+    $agendaModel = new Agenda();
+    
+    require_once __DIR__ . '/../models/AgendaShare.php';
+    $shareModel = new AgendaShare();
+    
     // Parâmetros de paginação
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $perPage = 12; // 12 agendas por página (3 linhas de 4 cards)
     
     // Buscar agendas do usuário (dono)
-    $myAgendas = $this->model->getAllByUser($userId, true, $page, $perPage);
-    $totalMyAgendas = $this->model->countByUser($userId, true);
+    $myAgendas = $agendaModel->getAllByUser($userId, true, $page, $perPage);
+    $totalMyAgendas = $agendaModel->countByUser($userId, true);
     
     // Buscar agendas compartilhadas com o usuário
-    require_once __DIR__ . '/../models/AgendaShare.php';
-    $shareModel = new AgendaShare();
     $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage);
     $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true);
     
     // Buscar agendas públicas (excluindo as que o usuário já tem acesso)
-    $publicAgendas = $this->model->getPublicAgendas($userId, true, $page, $perPage);
-    $totalPublicAgendas = $this->model->countPublicAgendas($userId, true);
+    $publicAgendas = $agendaModel->getPublicAgendas($userId, true, $page, $perPage);
+    $totalPublicAgendas = $agendaModel->countPublicAgendas($userId, true);
     
     // Carregar view
     require_once __DIR__ . '/../views/shared/header.php';

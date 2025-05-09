@@ -30,14 +30,14 @@ class Agenda {
         }
     }
 
-    public function getAllByUser($userId, $activeOnly = true, $page = 1, $perPage = 10) {
+public function getAllByUser($userId, $activeOnly = true, $page = 1, $perPage = 10) {
     $offset = ($page - 1) * $perPage;
     
-    $sql = "SELECT a.*, 
-                  (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
-                  (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
-                  (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
-                  (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+    $sql = "SELECT a.*,
+            (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+            (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+            (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+            (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
             FROM agendas a
             WHERE a.user_id = ?";
     
@@ -63,6 +63,10 @@ class Agenda {
             'cancelados' => $row['cancelados'],
             'aguardando_aprovacao' => $row['aguardando_aprovacao']
         ];
+        
+        // Verificar se pode ser excluída (não tem compromissos pendentes ou aguardando aprovação)
+        $row['can_be_deleted'] = ($row['pendentes'] == 0 && $row['aguardando_aprovacao'] == 0);
+        
         $agendas[] = $row;
     }
     
@@ -107,13 +111,6 @@ public function countByUser($userId, $activeOnly = true) {
         }
     }
     
-    /**
-     * Verifica se uma agenda pertence a um usuário
-     * 
-     * @param int $agendaId ID da agenda
-     * @param int $userId ID do usuário
-     * @return bool Se a agenda pertence ao usuário
-     */
     public function belongsToUser($agendaId, $userId) {
         try {
             $query = "SELECT COUNT(*) FROM agendas WHERE id = :agenda_id AND user_id = :user_id";
@@ -712,15 +709,15 @@ public function countByUser($userId, $activeOnly = true) {
         return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
     }
 
-   public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPage = 10) {
+public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPage = 10) {
     $offset = ($page - 1) * $perPage;
     
     $sql = "SELECT a.*, 
-                   u.name as owner_name,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
-                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+           u.name as owner_name,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
             FROM agendas a
             INNER JOIN users u ON a.user_id = u.id
             WHERE a.is_public = 1 
@@ -744,7 +741,7 @@ public function countByUser($userId, $activeOnly = true) {
     $agendas = [];
     while ($row = $result->fetch_assoc()) {
         $row['is_owner'] = false;
-        $row['can_edit'] = false; // Apenas visualização para agendas públicas
+        $row['can_edit'] = false;
         $row['compromissos'] = [
             'pendentes' => $row['pendentes'],
             'realizados' => $row['realizados'],
