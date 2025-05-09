@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -25,8 +24,23 @@
     // Identificar a página atual para carregar apenas o CSS necessário
     $currentUri = $_SERVER['REQUEST_URI'];
     
-    if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
+    // Identificar se é uma página de formulário
+    $isFormPage = (
+        strpos($currentUri, '/new') !== false || 
+        strpos($currentUri, '/edit') !== false || 
+        strpos($currentUri, '/create') !== false || 
+        strpos($currentUri, '/login') !== false || 
+        strpos($currentUri, '/register') !== false ||
+        (strpos($currentUri, 'public=1') !== false && strpos($currentUri, '/compromissos') !== false)
+    );
+
+    // Carregar CSS para formulários
+    if ($isFormPage) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
+    }
+    
+    // Carregar CSS para autenticação
+    if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth/login.css">';
     }
     
@@ -41,21 +55,15 @@
     }
     
     // Carregar CSS para compartilhamentos
-    if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
+    if (strpos($currentUri, '/shares') !== false || 
+        strpos($currentUri, '/public-agenda') !== false || 
+        (strpos($currentUri, '/compromissos') !== false && strpos($currentUri, 'public=1') !== false)) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
     }
 
     // Carregar CSS para a página de Meus Compromissos
     if (strpos($currentUri, '/meuscompromissos') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/meuscompromissos.css">';
-    }
-    
-    // Carregar CSS para formulários (criar nova agenda, editar compromisso, etc.)
-    if (strpos($currentUri, '/new') !== false || 
-        strpos($currentUri, '/edit') !== false || 
-        strpos($currentUri, '/login') !== false || 
-        strpos($currentUri, '/register') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
     }
     ?>
 </head>
