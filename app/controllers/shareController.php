@@ -220,14 +220,45 @@ class ShareController extends BaseController {
      * Exibe as agendas compartilhadas com o usuário
      */
     public function shared() {
-        // Obter as agendas compartilhadas com o usuário
-        $sharedAgendas = $this->shareModel->getSharedAgendasByUser($_SESSION['user_id']);
+    $userId = $_SESSION['user_id'];
+    $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+    
+    // Página atual para paginação
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $perPage = 12; // 12 agendas por página
+    
+    // Agendas compartilhadas com o usuário
+    $sharedWithMe = $this->shareModel->getSharedWithUser($userId, true, $page, $perPage);
+    $totalSharedWithMe = $this->shareModel->countSharedWithUser($userId, true);
+    
+    // Agendas que o usuário compartilhou com outros
+    $mySharedAgendas = [];
+    $totalMyShared = 0;
+    
+    // Primeiro, obter as agendas do usuário
+    $myAgendas = $this->agendaModel->getAllByUser($userId, true);
+    
+    foreach ($myAgendas as $agenda) {
+        // Verificar se esta agenda foi compartilhada com alguém
+        $shares = $this->shareModel->getSharesByAgenda($agenda['id']);
         
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/shares/shared.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
+        if (!empty($shares)) {
+            // Esta agenda foi compartilhada
+            $agenda['shared_with'] = $shares;
+            $mySharedAgendas[] = $agenda;
+            $totalMyShared++;
+        }
     }
+    
+    // Calcular total de páginas para cada seção
+    $totalPagesSharedWithMe = ceil($totalSharedWithMe / $perPage);
+    $totalPagesMyShared = ceil($totalMyShared / $perPage);
+    
+    // Exibir a view
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/shares/shared.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
     
     public function generatePublicUrl() {
         // Verificar se é uma requisição POST

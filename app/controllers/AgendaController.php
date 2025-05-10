@@ -16,41 +16,42 @@ class AgendaController extends BaseController {
     
 
     public function index() {
-        $userId = $_SESSION['user_id'];
-        $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
-        $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1;
+    $userId = $_SESSION['user_id'];
+    $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+    $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1;
+    
+    // Página atual para paginação
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $perPage = 12; // 12 agendas por página
+    
+    // Buscar apenas as agendas do usuário (não as compartilhadas ou públicas)
+    $agendas = $this->agendaModel->getAllByUser($userId, $search, $includeInactive, $page, $perPage);
+    $totalAgendas = $this->agendaModel->countByUser($userId, $search, $includeInactive);
+    
+    // Calcular total de páginas
+    $totalPages = ceil($totalAgendas / $perPage);
+    
+    // Para cada agenda, adicionar a contagem de compromissos por status
+    foreach ($agendas as &$agenda) {
+        $stats = $this->agendaModel->countCompromissosByStatus($agenda['id']);
+        $agenda['compromissos'] = $stats ?: [
+            'realizados' => 0,
+            'cancelados' => 0,
+            'pendentes' => 0,
+            'aguardando_aprovacao' => 0,
+            'total' => 0
+        ];
         
-        // Buscar todas as agendas acessíveis pelo usuário
-        $agendas = $this->agendaModel->getAllAccessibleByUser($userId, $search, $includeInactive);
-        
-        // Para cada agenda, adicionar a contagem de compromissos por status
-        foreach ($agendas as &$agenda) {
-            $stats = $this->agendaModel->countCompromissosByStatus($agenda['id']);
-            $agenda['compromissos'] = $stats ?: [
-                'realizados' => 0,
-                'cancelados' => 0,
-                'pendentes' => 0,
-                'aguardando_aprovacao' => 0,
-                'total' => 0
-            ];
-            
-            // Verificar se a agenda pode ser excluída (apenas para agendas próprias)
-            if ($agenda['is_owner'] ?? false) {
-                $agenda['can_be_deleted'] = $this->agendaModel->canBeDeleted($agenda['id']);
-            } else {
-                $agenda['can_be_deleted'] = false;
-            }
-        }
-        
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/agendas/index.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
+        // Verificar se a agenda pode ser excluída (apenas para agendas próprias)
+        $agenda['can_be_deleted'] = $this->agendaModel->canBeDeleted($agenda['id']);
     }
     
-    /**
-     * Exibe o formulário para criar uma nova agenda
-     */
+    // Exibir a view
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/agendas/index.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
+
     public function create() {
         require_once __DIR__ . '/../views/shared/header.php';
         require_once __DIR__ . '/../views/agendas/create.php';

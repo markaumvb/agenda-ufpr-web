@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/style.css">
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/component.css">
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/approval-modal.css">
+    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/sidebar.css">
     
     <!-- CSS específicos por módulo - SIMPLIFICADO -->
     <?php 
@@ -108,18 +109,30 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <nav>
-                <div class="logo">
-                    <h1><?= APP_NAME ?></h1>
-                </div>
-                <ul>
-                <li><a href="<?= PUBLIC_URL ?>/">Início</a></li>
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-logo"><?= APP_NAME ?></h1>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="<?= PUBLIC_URL ?>/" class="sidebar-link">
+                            <i class="fas fa-home"></i>
+                            <span>Início</span>
+                        </a>
+                    </li>
+                    
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <li class="notification-item">
-                            <a href="<?= PUBLIC_URL ?>/meuscompromissos?status=aguardando_aprovacao" class="notification-icon">
-                                <i class="fa fa-bell"></i>
+                        <li class="sidebar-item">
+                            <a href="<?= PUBLIC_URL ?>/meuscompromissos?status=aguardando_aprovacao" class="sidebar-link">
+                                <i class="fas fa-bell"></i>
+                                <span>Notificações</span>
                                 <?php 
                                 // Buscar contagem de compromissos aguardando aprovação
                                 $pendingCount = 0;
@@ -135,25 +148,70 @@
                                 <?php endif; ?>
                             </a>
                         </li>
-                        <li><a href="<?= PUBLIC_URL ?>/agendas">Minhas Agendas</a></li>
-                        <li><a href="<?= PUBLIC_URL ?>/meuscompromissos">Meus Compromissos</a></li>
-                        <li><a href="<?= PUBLIC_URL ?>/shares/shared">Agendas Compartilhadas</a></li>
-                        <li><a href="<?= PUBLIC_URL ?>/agendas/all">Todas as Agendas</a></li>
+                        
+                        <li class="sidebar-item">
+                            <a href="<?= PUBLIC_URL ?>/agendas" class="sidebar-link">
+                                <i class="fas fa-calendar"></i>
+                                <span>Minhas Agendas</span>
+                            </a>
+                        </li>
+                        
+                        <li class="sidebar-item">
+                            <a href="<?= PUBLIC_URL ?>/meuscompromissos" class="sidebar-link">
+                                <i class="fas fa-tasks"></i>
+                                <span>Meus Compromissos</span>
+                            </a>
+                        </li>
+                        
+                        <li class="sidebar-item">
+                            <a href="<?= PUBLIC_URL ?>/shares/shared" class="sidebar-link">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Agendas Compartilhadas</span>
+                            </a>
+                        </li>
+                        
+                        <li class="sidebar-item">
+                            <a href="<?= PUBLIC_URL ?>/agendas/all" class="sidebar-link">
+                                <i class="fas fa-globe"></i>
+                                <span>Todas as Agendas</span>
+                            </a>
+                        </li>
+                        
+                        <li class="sidebar-item sidebar-bottom">
+                            <a href="<?= PUBLIC_URL ?>/logout" class="sidebar-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sair</span>
+                            </a>
+                        </li>
                     <?php else: ?>
-                        <li><a href="<?= PUBLIC_URL ?>/login">Entrar</a></li>
+                        <li class="sidebar-item">
+                            <a href="<?= PUBLIC_URL ?>/login" class="sidebar-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Entrar</span>
+                            </a>
+                        </li>
                     <?php endif; ?>
                 </ul>
-            </nav>
-        </div>
-    </header>
-    
-    <main class="container">
-        <?php
-        // Exibir mensagens de alerta (flash messages)
-        if (isset($_SESSION['flash_message'])) {
-            $type = $_SESSION['flash_type'] ?? 'success';
-            echo '<div class="alert alert-' . $type . '">' . $_SESSION['flash_message'] . '</div>';
-            unset($_SESSION['flash_message']);
-            unset($_SESSION['flash_type']);
-        }
-        ?>
+            </div>
+        </aside>
+        
+        <!-- Adicionar overlay para dispositivos móveis -->
+        <div class="sidebar-overlay"></div>
+        
+        <!-- Botão de menu para dispositivos móveis -->
+        <button class="mobile-menu-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Conteúdo principal -->
+        <main class="main-content">
+            <div class="container">
+                <?php
+                // Exibir mensagens de alerta (flash messages)
+                if (isset($_SESSION['flash_message'])) {
+                    $type = $_SESSION['flash_type'] ?? 'success';
+                    echo '<div class="alert alert-' . $type . '">' . $_SESSION['flash_message'] . '</div>';
+                    unset($_SESSION['flash_message']);
+                    unset($_SESSION['flash_type']);
+                }
+                ?>
