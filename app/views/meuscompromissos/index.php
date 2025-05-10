@@ -175,7 +175,7 @@
                                                 </a>
                                                 <?php else: ?>
                                                     <span class="dropdown-item disabled" style="color: #aaa; cursor: not-allowed;">
-                                                        Excluir (apenas compromissos pendentes)
+                                                        Excluir
                                                     </span>
                                                 <?php endif; ?>
                                             <?php endif; ?>
