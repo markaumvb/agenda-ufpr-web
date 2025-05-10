@@ -314,11 +314,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const start = startDate ? startDate.toISOString() : "";
     const end = endDate ? endDate.toISOString() : "";
 
-    // Criar FormData
+    // Criar FormData com os nomes de campos CORRETOS conforme o controlador PHP
     const formData = new FormData();
     formData.append("id", eventId);
-    formData.append("start", start);
-    formData.append("end", end);
+    formData.append("start", start); // O controller espera 'start', não 'start_datetime'
+    formData.append("end", end); // O controller espera 'end', não 'end_datetime'
 
     // Enviar requisição
     fetch(`${baseUrl}/compromissos/update-date`, {
