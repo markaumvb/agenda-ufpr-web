@@ -1,3 +1,9 @@
+/* 
+ * Estilos consolidados para o calendário e compromissos
+ * Substitua todo o conteúdo do arquivo compromissos.css por este código
+ */
+
+/* Cabeçalho e metadados */
 .page-header {
   margin-bottom: 2rem;
   margin-top: 2rem;
@@ -65,27 +71,31 @@
   border-bottom-right-radius: 4px;
 }
 
-/* Calendário */
+/* Contêiner do calendário */
 .calendar-container {
   border: 2px solid #e0e0e0;
   min-height: 400px;
   margin-bottom: 20px;
   padding: 10px;
   background-color: #f9f9f9;
+  border-radius: 6px;
 }
+
 #calendar {
   border: 1px solid #ccc;
   min-height: 350px;
   background-color: white;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
+/* Barra de ferramentas do FullCalendar */
 .fc-header-toolbar {
   margin-bottom: 10px !important;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
 }
 
-/* Estilização do FullCalendar */
 .fc .fc-toolbar-title {
   font-size: 1.4rem;
   color: #004a8f;
@@ -105,23 +115,180 @@
   background-color: #00346c;
 }
 
+/* Dias e células do calendário */
 .fc-day-today {
   background-color: #e6f7ff !important;
+  border: 2px solid #004a8f !important;
 }
 
-.fc-event {
-  cursor: pointer;
-  border-radius: 3px;
-  padding: 2px 4px;
+.fc-daygrid-day.has-events {
+  background-color: #f7f9ff !important;
 }
 
-.canceled-event {
-  opacity: 0.7;
+.fc-daygrid-day-frame {
+  min-height: 100px !important;
+}
+
+.fc-daygrid-day-events {
+  min-height: 30px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day-events {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.fc-daygrid-event-harness {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Estilos base para todos os eventos */
+.fc-event,
+.fc-daygrid-event {
+  border-radius: 4px !important;
+  border-left-width: 4px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  padding: 3px 4px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  min-height: 22px !important;
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.1),
+    rgba(0, 0, 0, 0.1)
+  ) !important;
+}
+
+/* Estilos para títulos dos eventos */
+.fc-event-title,
+.fc-daygrid-event .fc-event-title {
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-weight: bold !important;
+  font-size: 0.95em !important;
+  line-height: 1.3 !important;
+  padding: 2px 0 !important;
+}
+
+.fc-event-title-container {
+  width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.fc-event-main {
+  display: block !important;
+  padding: 2px !important;
+}
+
+.fc-daygrid-event > .fc-event-main {
+  padding-bottom: 0 !important;
+}
+
+/* Eventos por status */
+.fc-event.event-status-pendente,
+.fc-daygrid-event.event-status-pendente {
+  background-color: #ffc107 !important;
+  border-color: #e0a800 !important;
+  color: #000 !important;
+  cursor: move !important;
+}
+
+.fc-event.event-status-realizado,
+.fc-daygrid-event.event-status-realizado {
+  background-color: #28a745 !important;
+  border-color: #218838 !important;
+  color: #fff !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+.fc-event.event-status-cancelado,
+.fc-daygrid-event.event-status-cancelado {
+  background-color: #dc3545 !important;
+  border-color: #bd2130 !important;
+  text-decoration: line-through !important;
+  color: #fff !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+.fc-event.event-status-aguardando_aprovacao,
+.fc-daygrid-event.event-status-aguardando_aprovacao {
+  background-color: #17a2b8 !important;
+  border-color: #138496 !important;
+  color: #fff !important;
+  cursor: move !important;
+}
+
+/* Configuração específica para títulos de eventos por status */
+.event-status-pendente .fc-event-title {
+  color: #000 !important;
+}
+
+.event-status-realizado .fc-event-title,
+.event-status-cancelado .fc-event-title,
+.event-status-aguardando_aprovacao .fc-event-title {
+  color: #fff !important;
+}
+
+/* Link "mais eventos" */
+.fc-daygrid-more-link {
+  display: inline-block !important;
+  background-color: #004a8f !important;
+  color: white !important;
+  font-weight: bold !important;
+  border-radius: 12px !important;
+  padding: 2px 8px !important;
+  margin-top: 4px !important;
+  text-decoration: none !important;
+}
+
+/* Popover de eventos */
+.fc-popover {
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+}
+
+.fc-popover-header {
+  background-color: #004a8f !important;
+  color: white !important;
+  padding: 8px 10px !important;
+  font-weight: 600 !important;
+}
+
+.fc-popover-body {
+  padding: 10px !important;
+}
+
+.fc-popover .fc-daygrid-event {
+  margin: 3px 0 !important;
+}
+
+/* Visualizações de lista */
+.fc-list-event-title,
+.fc-list-event-time {
+  font-weight: 600 !important;
+}
+
+/* Configuração de altura do calendário */
+.fc-dayGridMonth-view .fc-daygrid-event {
+  height: auto !important;
+  min-height: 22px !important;
+  max-height: none !important;
 }
 
 /* Modal de eventos */
 .event-modal {
-  display: none; /* Oculta o modal por padrão */
+  display: none;
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -158,13 +325,18 @@
   text-decoration: none;
 }
 
-/* Evento cancelado */
-.fc-event.cancelled-event {
-  text-decoration: line-through;
-  opacity: 0.7;
+.event-modal .event-card {
+  border-left-width: 4px;
+  box-shadow: none;
+  border: none;
+  padding: 0;
 }
 
-/* Lista de Compromissos e Filtros */
+.event-modal .event-actions {
+  display: none;
+}
+
+/* Lista de eventos e filtros */
 .events-list-container {
   background-color: #fff;
   border-radius: 8px;
@@ -199,6 +371,7 @@
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 0.9rem;
 }
 
 .filter-input {
@@ -211,12 +384,13 @@
   gap: 1rem;
 }
 
-/* Cards de eventos */
+/* Cards de eventos na lista */
 .event-card {
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
 }
 
 .event-card.event-status-pendente {
@@ -292,6 +466,30 @@
   display: inline;
 }
 
+/* Estado vazio */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+}
+
+/* Botões específicos */
+.btn-block {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
 /* Ícones básicos usando pseudo-elementos */
 .icon-calendar::before {
   content: "📅 ";
@@ -323,41 +521,6 @@
 
 .icon-trash::before {
   content: "🗑";
-}
-
-/* Modal de detalhes do evento (mais estilização) */
-.event-modal .event-card {
-  border-left-width: 4px;
-  box-shadow: none;
-  border: none;
-  padding: 0;
-}
-
-.event-modal .event-actions {
-  display: none; /* Ocultar ações no modal */
-}
-
-.btn-block {
-  display: block;
-  width: 100%;
-  text-align: center;
-}
-
-.mt-3 {
-  margin-top: 1rem;
-}
-
-/* Estado vazio */
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.empty-state p {
-  margin-bottom: 1rem;
 }
 
 /* Responsividade */
@@ -396,185 +559,4 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-}
-
-/* Melhorias finais para o FullCalendar - Garantindo visibilidade total dos eventos e textos */
-
-/* Estilização base para todos os eventos */
-.fc-event,
-.fc-daygrid-event {
-  border-radius: 4px !important;
-  border-left-width: 4px !important;
-  margin-top: 2px !important;
-  margin-bottom: 2px !important;
-  padding: 3px 4px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
-  min-height: 22px !important;
-  cursor: pointer !important;
-}
-
-/* Garantir que os eventos na visualização de mês tenham a altura apropriada */
-.fc-dayGridMonth-view .fc-daygrid-event {
-  height: auto !important;
-  min-height: 22px !important;
-  max-height: none !important; /* Remover qualquer limite de altura */
-}
-
-/* Estilização específica para o título dos eventos */
-.fc-event-title,
-.fc-daygrid-event .fc-event-title {
-  display: block !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  font-weight: bold !important;
-  font-size: 0.95em !important;
-  line-height: 1.3 !important;
-  padding: 2px 0 !important;
-}
-
-/* Garantir que o contêiner do título também tenha a configuração correta */
-.fc-event-title-container {
-  width: 100% !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Estilização por status de evento com cores mais vivas */
-.fc-event.event-status-pendente,
-.fc-daygrid-event.event-status-pendente {
-  background-color: #ffc107 !important;
-  border-color: #e0a800 !important;
-  color: #000 !important;
-}
-
-.fc-event.event-status-realizado,
-.fc-daygrid-event.event-status-realizado {
-  background-color: #28a745 !important;
-  border-color: #218838 !important;
-  color: #fff !important;
-}
-
-.fc-event.event-status-cancelado,
-.fc-daygrid-event.event-status-cancelado {
-  background-color: #dc3545 !important;
-  border-color: #bd2130 !important;
-  text-decoration: line-through !important;
-  color: #fff !important;
-}
-
-.fc-event.event-status-aguardando_aprovacao,
-.fc-daygrid-event.event-status-aguardando_aprovacao {
-  background-color: #17a2b8 !important;
-  border-color: #138496 !important;
-  color: #fff !important;
-}
-
-/* Estilização para o título específico por status */
-.event-status-pendente .fc-event-title {
-  color: #000 !important;
-}
-
-.event-status-realizado .fc-event-title,
-.event-status-cancelado .fc-event-title,
-.event-status-aguardando_aprovacao .fc-event-title {
-  color: #fff !important;
-}
-
-/* Garantir que a área de eventos tenha altura suficiente */
-.fc-daygrid-day-events {
-  min-height: 30px !important;
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-}
-
-/* Estilização para o link "mais" */
-.fc-daygrid-more-link {
-  display: inline-block !important;
-  background-color: #004a8f !important;
-  color: white !important;
-  font-weight: bold !important;
-  border-radius: 12px !important;
-  padding: 2px 8px !important;
-  margin-top: 4px !important;
-  text-decoration: none !important;
-}
-
-/* Estilização para dias com eventos */
-.fc-daygrid-day.has-events {
-  background-color: #f7f9ff !important;
-}
-
-/* Destacar dia atual */
-.fc-day-today {
-  background-color: #e6f7ff !important;
-  border: 2px solid #004a8f !important;
-}
-
-/* Garantir que a altura mínima do dia seja adequada */
-.fc-daygrid-day-frame {
-  min-height: 100px !important;
-}
-
-/* Melhorias para o popover de mais eventos */
-.fc-popover {
-  border: none !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-  overflow: hidden !important;
-}
-
-.fc-popover-header {
-  background-color: #004a8f !important;
-  color: white !important;
-  padding: 8px 10px !important;
-  font-weight: 600 !important;
-}
-
-.fc-popover-body {
-  padding: 10px !important;
-}
-
-/* Estilos para eventos dentro do popover */
-.fc-popover .fc-daygrid-event {
-  margin: 3px 0 !important;
-}
-
-/* Mostrar o conteúdo dos eventos claramente em todas as visualizações */
-.fc-list-event-title,
-.fc-list-event-time {
-  font-weight: 600 !important;
-}
-
-/* Melhorar o contraste dos eventos com um gradiente sutil */
-.fc-daygrid-event {
-  background-image: linear-gradient(
-    rgba(255, 255, 255, 0.1),
-    rgba(0, 0, 0, 0.1)
-  ) !important;
-}
-
-/* Remover borda inferior que poderia cortar o texto */
-.fc-daygrid-event > .fc-event-main {
-  padding-bottom: 0 !important;
-}
-
-/* Força a exibição do corpo do evento */
-.fc-event-main {
-  display: block !important;
-  padding: 2px !important;
-}
-
-/* Corrige a exibição específica para a visualização de mês */
-.fc-dayGridMonth-view .fc-daygrid-day-events {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-}
-
-/* Força que o evento seja visível mesmo em espaços pequenos */
-.fc-daygrid-event-harness {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
 }

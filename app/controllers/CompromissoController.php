@@ -578,9 +578,7 @@ class CompromissoController extends BaseController {
         exit;
     }
     
-    /**
-     * Exclui um compromisso
-     */
+
     public function delete() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -652,9 +650,6 @@ class CompromissoController extends BaseController {
         exit;
     }
 
-    /**
-     * Cancela eventos futuros de uma série recorrente
-     */
     public function cancelFuture() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -725,9 +720,6 @@ class CompromissoController extends BaseController {
         exit;
     }
 
-    /**
-     * Alterar o status de um compromisso
-     */
     public function changeStatus() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -803,9 +795,6 @@ class CompromissoController extends BaseController {
         exit;
     }
 
-    /**
-     * Verifica se há conflito de horário (usado via AJAX)
-     */
     public function checkConflict() {
         // Obter parâmetros da requisição
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
@@ -842,7 +831,6 @@ class CompromissoController extends BaseController {
         // Verificar se há conflito
         $hasConflict = $this->compromissoModel->hasTimeConflict($agendaId, $startDatetime, $endDatetime, $compromissoId);
         
-        // Retornar resultado em JSON
         echo json_encode(['conflict' => $hasConflict]);
         exit;
     }
@@ -873,13 +861,6 @@ class CompromissoController extends BaseController {
         exit;
     }
 
-    /**
-     * Valida os dados de um compromisso
-     * 
-     * @param array $data Dados do compromisso a serem validados
-     * @param int|null $compromissoId ID do compromisso (para edição) ou null (para criação)
-     * @return array Lista de erros ou array vazio se não houver erros
-     */
     private function validateCompromissoData($data, $compromissoId = null) {
         $errors = [];
         

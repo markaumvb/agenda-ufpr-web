@@ -43,6 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
         borderColor: statusColors[compromisso.status] || "#3788d8",
         textColor: compromisso.status === "pendente" ? "#000" : "#fff",
         classNames: ["event-status-" + compromisso.status],
+        // IMPORTANTE: Só permitir edição de eventos pendentes ou aguardando aprovação
+        editable: !["cancelado", "realizado"].includes(compromisso.status),
       };
 
       // Para eventos cancelados, adicionar estilo visual
@@ -93,6 +95,8 @@ document.addEventListener("DOMContentLoaded", function () {
         borderColor: statusColors[status] || "#3788d8",
         textColor: status === "pendente" ? "#000" : "#fff",
         classNames: ["event-status-" + status],
+        // IMPORTANTE: Só permitir edição de eventos pendentes ou aguardando aprovação
+        editable: !["cancelado", "realizado"].includes(status),
       };
 
       // Para eventos cancelados, adicionar estilo visual
@@ -117,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     weekNumbers: false,
     navLinks: true, // Permite clicar nos nomes de dias/semanas para navegar
-    editable: canEdit,
+    editable: canEdit, // Só permite edição se o usuário tiver permissão
     selectable: canEdit,
     dayMaxEvents: false, // Importante! Permite que os eventos sejam exibidos completamente
     eventMaxStack: 6, // Limitar número de eventos visíveis por dia antes do link "mais"
@@ -183,8 +187,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     },
 
-    // Callback quando um evento é arrastado e reposicionado (se edição estiver ativada)
+    // Callback quando um evento é arrastado e reposicionado
     eventDrop: function (info) {
+      // Verificar o status do evento
+      const status = info.event.extendedProps.status || "pendente";
+
+      // Se for cancelado ou realizado, reverter e alertar (isso é uma defesa adicional,
+      // mesmo que a edição já esteja desabilitada para esses eventos via propriedade editable)
+      if (["cancelado", "realizado"].includes(status)) {
+        info.revert();
+        alert(
+          "Não é possível alterar a data de compromissos cancelados ou realizados."
+        );
+        return;
+      }
+
+      // Continuar normalmente para eventos que podem ser editados
       if (canEdit && confirm("Confirma alterar a data do compromisso?")) {
         updateEventDate(info.event.id, info.event.start, info.event.end);
       } else {
@@ -192,8 +210,21 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     },
 
-    // Callback quando um evento é redimensionado (se edição estiver ativada)
+    // Callback quando um evento é redimensionado
     eventResize: function (info) {
+      // Verificar o status do evento
+      const status = info.event.extendedProps.status || "pendente";
+
+      // Se for cancelado ou realizado, reverter e alertar
+      if (["cancelado", "realizado"].includes(status)) {
+        info.revert();
+        alert(
+          "Não é possível alterar a duração de compromissos cancelados ou realizados."
+        );
+        return;
+      }
+
+      // Continuar normalmente
       if (canEdit && confirm("Confirma alterar a duração do compromisso?")) {
         updateEventDate(info.event.id, info.event.start, info.event.end);
       } else {
@@ -234,6 +265,27 @@ document.addEventListener("DOMContentLoaded", function () {
       el.style.fontWeight = "bold";
       el.style.display = "block";
       el.style.fontSize = "0.9em";
+    });
+
+    // Destacar visualmente quais eventos são arrastáveis
+    document.querySelectorAll(".fc-event").forEach(function (eventEl) {
+      // Verificar status do evento
+      const status = eventEl.classList.contains("event-status-cancelado")
+        ? "cancelado"
+        : eventEl.classList.contains("event-status-realizado")
+        ? "realizado"
+        : null;
+
+      if (status === "cancelado" || status === "realizado") {
+        eventEl.style.cursor = "not-allowed";
+        eventEl.style.opacity = "0.7";
+
+        // Adicionar título explicativo
+        eventEl.title = `Compromisso ${status} - não pode ser movido`;
+      } else {
+        eventEl.style.cursor = "move";
+        eventEl.title = "Arraste para alterar a data";
+      }
     });
   }, 500);
 
@@ -310,7 +362,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Função para atualizar a data de um evento
   function updateEventDate(eventId, startDate, endDate) {
-    // Formatar as datas
     const start = startDate ? startDate.toISOString() : "";
     const end = endDate ? endDate.toISOString() : "";
 
@@ -325,18 +376,33 @@ document.addEventListener("DOMContentLoaded", function () {
       method: "POST",
       body: formData,
     })
-      .then((response) => response.json())
+      .then((response) => {
+        // Verificar status da resposta
+        if (!response.ok) {
+          console.error("Status HTTP:", response.status);
+          return response.text().then((text) => {
+            console.error("Resposta completa:", text);
+            throw new Error(`Erro HTTP: ${response.status}`);
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
+        console.log("Resposta do servidor:", data);
         if (data.success) {
           console.log("Evento atualizado com sucesso");
         } else {
           console.error("Erro ao atualizar evento:", data.message);
           alert("Erro ao atualizar o compromisso: " + data.message);
+          // Recarregar eventos para restaurar estado original
+          calendar.refetchEvents();
         }
       })
       .catch((error) => {
         console.error("Erro na requisição:", error);
-        alert("Erro ao comunicar com o servidor");
+        alert("Erro ao comunicar com o servidor: " + error.message);
+        // Recarregar eventos para restaurar estado original
+        calendar.refetchEvents();
       });
   }
 
@@ -384,6 +450,27 @@ document.addEventListener("DOMContentLoaded", function () {
       // Atualizar eventos no calendário
       calendar.removeAllEvents();
       calendar.addEventSource(filteredEvents);
+
+      // Após adicionar os eventos filtrados, aplicar os estilos novamente
+      setTimeout(function () {
+        document.querySelectorAll(".fc-event").forEach(function (eventEl) {
+          // Verificar status do evento
+          const status = eventEl.classList.contains("event-status-cancelado")
+            ? "cancelado"
+            : eventEl.classList.contains("event-status-realizado")
+            ? "realizado"
+            : null;
+
+          if (status === "cancelado" || status === "realizado") {
+            eventEl.style.cursor = "not-allowed";
+            eventEl.style.opacity = "0.7";
+            eventEl.title = `Compromisso ${status} - não pode ser movido`;
+          } else {
+            eventEl.style.cursor = "move";
+            eventEl.title = "Arraste para alterar a data";
+          }
+        });
+      }, 200);
     }
 
     // Adicionar listeners
@@ -400,6 +487,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
         calendar.removeAllEvents();
         calendar.addEventSource(allEvents);
+
+        // Reaplicar estilos após limpar filtros
+        setTimeout(function () {
+          document.querySelectorAll(".fc-event").forEach(function (eventEl) {
+            const status = eventEl.classList.contains("event-status-cancelado")
+              ? "cancelado"
+              : eventEl.classList.contains("event-status-realizado")
+              ? "realizado"
+              : null;
+
+            if (status === "cancelado" || status === "realizado") {
+              eventEl.style.cursor = "not-allowed";
+              eventEl.style.opacity = "0.7";
+              eventEl.title = `Compromisso ${status} - não pode ser movido`;
+            } else {
+              eventEl.style.cursor = "move";
+              eventEl.title = "Arraste para alterar a data";
+            }
+          });
+        }, 200);
       });
     }
   }
