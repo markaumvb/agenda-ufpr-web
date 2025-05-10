@@ -399,11 +399,22 @@ public function allAgendas() {
     $perPage = 12; // 12 agendas por página
     
     // Buscar agendas do usuário (dono)
-    // Adicionamos DISTINCT para evitar duplicação
     $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
+    
+    // ADICIONAR ESTA PARTE: Remover duplicatas usando IDs
+    $uniqueAgendas = [];
+    $uniqueIds = [];
+    foreach ($myAgendas as $agenda) {
+        if (!in_array($agenda['id'], $uniqueIds)) {
+            $uniqueIds[] = $agenda['id'];
+            $uniqueAgendas[] = $agenda;
+        }
+    }
+    $myAgendas = $uniqueAgendas;
+    
     $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
     
-    // Adicionar estatísticas de compromissos e garantir flag is_owner
+    // Adicionar contagem de compromissos para cada agenda
     foreach ($myAgendas as &$agenda) {
         $stats = $agendaModel->countCompromissosByStatus($agenda['id']);
         $agenda['compromissos'] = $stats ?: [
@@ -413,7 +424,6 @@ public function allAgendas() {
             'aguardando_aprovacao' => 0,
             'total' => 0
         ];
-        $agenda['is_owner'] = true; // Marcar explicitamente como dono
     }
     
     // Buscar agendas compartilhadas com o usuário

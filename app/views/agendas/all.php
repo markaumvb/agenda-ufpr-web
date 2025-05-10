@@ -195,28 +195,42 @@
 
 <!-- Seção: Agendas Públicas -->
 <section class="agendas-section">
-    <h2 class="section-title">Agendas Públicas</h2>
+    <h2 class="section-title">Minhas Agendas</h2>
     
-    <?php if (empty($publicAgendas)): ?>
+    <?php if (empty($myAgendas)): ?>
         <div class="empty-state">
-            <p>Nenhuma agenda pública disponível no momento.</p>
+            <p>Você ainda não criou nenhuma agenda.</p>
+            <a href="<?= PUBLIC_URL ?>/agendas/new" class="btn btn-primary">Criar Agenda</a>
         </div>
     <?php else: ?>
         <div class="agenda-grid">
-            <?php foreach ($publicAgendas as $agenda): ?>
+            <?php 
+            // Array para rastrear agendas já exibidas
+            $displayedAgendaIds = [];
+            
+            foreach ($myAgendas as $agenda): 
+                // Pular agendas que já foram exibidas
+                if (in_array($agenda['id'], $displayedAgendaIds)) {
+                    continue;
+                }
+                
+                // Registrar que esta agenda já foi exibida
+                $displayedAgendaIds[] = $agenda['id'];
+            ?>
                 <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
+                    <!-- O resto do código permanece igual -->
                     <div class="agenda-card-header">
                         <h3><?= htmlspecialchars($agenda['title']) ?></h3>
                         <div class="agenda-visibility">
-                            <span class="badge badge-success">Pública</span>
+                            <?php if ($agenda['is_public']): ?>
+                                <span class="badge badge-success">Pública</span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary">Privada</span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     
                     <div class="agenda-card-body">
-                        <div class="agenda-owner">
-                            <p>Proprietário: <?= htmlspecialchars($agenda['owner_name']) ?></p>
-                        </div>
-                        
                         <?php if (!empty($agenda['description'])): ?>
                             <p class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></p>
                         <?php else: ?>
@@ -249,7 +263,7 @@
                                 <i class="fas fa-calendar-alt"></i> Ver Compromissos
                             </a>
                             
-                            <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1" class="btn btn-sm btn-primary">
+                            <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-primary">
                                 <i class="fas fa-plus"></i> Novo Compromisso
                             </a>
                         </div>
@@ -258,16 +272,17 @@
             <?php endforeach; ?>
         </div>
         
-        <?php if ($totalPublicAgendas > $perPage): ?>
+        <?php if ($totalMyAgendas > $perPage): ?>
             <div class="pagination-container">
                 <?php
                 // Criar objeto de paginação
+                require_once __DIR__ . '/../../app/helpers/Pagination.php';
                 $pagination = new Pagination(
-                    $totalPublicAgendas,
+                    $totalMyAgendas,
                     $perPage,
                     $page,
                     PUBLIC_URL . '/agendas/all',
-                    ['section' => 'public']
+                    ['section' => 'my']
                 );
                 echo $pagination->createLinks();
                 ?>

@@ -32,7 +32,7 @@ class Agenda {
 
 public function getAllByUser($userId, $search = null, $includeInactive = false, $page = 1, $perPage = 12) {
     try {
-        // Montar consulta SQL base
+        // Modificado para usar DISTINCT
         $sql = "SELECT DISTINCT a.* FROM agendas a WHERE a.user_id = :user_id";
         
         // Adicionar condição para agendas ativas/inativas
