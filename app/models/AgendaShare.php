@@ -240,4 +240,41 @@ public function countSharedWithUser($userId, $activeOnly = true) {
     
     return $row['total'];
 }
+public function getAgendasSharedByUser($userId) {
+    try {
+        $sql = "SELECT DISTINCT a.*, 
+               u.name as owner_name,
+               1 as can_edit,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+                FROM agenda_shares s
+                JOIN agendas a ON s.agenda_id = a.id
+                JOIN users u ON a.user_id = u.id
+                WHERE a.user_id = :userId
+                ORDER BY a.title";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $agendas = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['is_owner'] = true;
+            $row['compromissos'] = [
+                'pendentes' => $row['pendentes'],
+                'realizados' => $row['realizados'],
+                'cancelados' => $row['cancelados'],
+                'aguardando_aprovacao' => $row['aguardando_aprovacao']
+            ];
+            $agendas[] = $row;
+        }
+        
+        return $agendas;
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar agendas compartilhadas pelo usuário: ' . $e->getMessage());
+        return [];
+    }
+}
 }

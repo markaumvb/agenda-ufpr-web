@@ -32,31 +32,29 @@ class Agenda {
 
 public function getAllByUser($userId, $search = null, $includeInactive = false, $page = 1, $perPage = 12) {
     try {
-        $conn = $this->db->getConnection();
-        
         // Montar consulta SQL base
-        $sql = "SELECT * FROM agendas WHERE user_id = :user_id";
+        $sql = "SELECT DISTINCT a.* FROM agendas a WHERE a.user_id = :user_id";
         
         // Adicionar condição para agendas ativas/inativas
         if (!$includeInactive) {
-            $sql .= " AND is_active = 1";
+            $sql .= " AND a.is_active = 1";
         }
         
         // Adicionar condição de busca se fornecida
         $params = [':user_id' => $userId];
         if ($search !== null && $search !== '') {
-            $sql .= " AND (title LIKE :search OR description LIKE :search)";
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
             $params[':search'] = "%{$search}%";
         }
         
         // Ordenação
-        $sql .= " ORDER BY is_active DESC, title ASC";
+        $sql .= " ORDER BY a.is_active DESC, a.title ASC";
         
         // Paginação
         $offset = ($page - 1) * $perPage;
         $sql .= " LIMIT :limit OFFSET :offset";
         
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         
         // Bind dos parâmetros
         foreach ($params as $key => $value) {
@@ -77,7 +75,8 @@ public function getAllByUser($userId, $search = null, $includeInactive = false, 
 
 public function countByUser($userId, $search = null, $includeInactive = false) {
     try {
-        $conn = $this->db->getConnection();
+        // Remover esta linha:
+        // $conn = $this->db->getConnection();
         
         // Montar consulta SQL base
         $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
@@ -94,7 +93,7 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             $params[':search'] = "%{$search}%";
         }
         
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         
         // Bind dos parâmetros
         foreach ($params as $key => $value) {

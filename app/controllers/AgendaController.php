@@ -17,6 +17,8 @@ class AgendaController extends BaseController {
 
     public function index() {
     $userId = $_SESSION['user_id'];
+    
+    // Correção: Processar parâmetro de busca corretamente
     $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
     $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1;
     
@@ -372,6 +374,7 @@ class AgendaController extends BaseController {
     /**
  * Exibe todas as agendas organizadas por tipo
  */
+
 public function allAgendas() {
     // Verificar se o usuário está logado
     if (!isset($_SESSION['user_id'])) {
@@ -380,6 +383,9 @@ public function allAgendas() {
     }
     
     $userId = $_SESSION['user_id'];
+    
+    // Processar parâmetro de busca
+    $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
     
     // Inicializar modelos localmente
     require_once __DIR__ . '/../models/Agenda.php';
@@ -390,11 +396,25 @@ public function allAgendas() {
     
     // Parâmetros de paginação
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $perPage = 12; // 12 agendas por página (3 linhas de 4 cards)
+    $perPage = 12; // 12 agendas por página
     
     // Buscar agendas do usuário (dono)
-    $myAgendas = $agendaModel->getAllByUser($userId, true, $page, $perPage);
-    $totalMyAgendas = $agendaModel->countByUser($userId, true);
+    // Adicionamos DISTINCT para evitar duplicação
+    $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
+    $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
+    
+    // Adicionar estatísticas de compromissos e garantir flag is_owner
+    foreach ($myAgendas as &$agenda) {
+        $stats = $agendaModel->countCompromissosByStatus($agenda['id']);
+        $agenda['compromissos'] = $stats ?: [
+            'pendentes' => 0,
+            'realizados' => 0,
+            'cancelados' => 0,
+            'aguardando_aprovacao' => 0,
+            'total' => 0
+        ];
+        $agenda['is_owner'] = true; // Marcar explicitamente como dono
+    }
     
     // Buscar agendas compartilhadas com o usuário
     $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage);
