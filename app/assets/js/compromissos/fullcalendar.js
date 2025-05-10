@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     window.allCompromissos.forEach((compromisso) => {
       const event = {
         id: compromisso.id,
-        title: compromisso.title,
+        title: compromisso.title || "Sem título", // Garantir que sempre tenha um título
         start: compromisso.start_datetime,
         end: compromisso.end_datetime,
         allDay: false,
@@ -41,7 +41,8 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         backgroundColor: statusColors[compromisso.status] || "#3788d8",
         borderColor: statusColors[compromisso.status] || "#3788d8",
-        textColor: "#fff",
+        textColor: compromisso.status === "pendente" ? "#000" : "#fff",
+        classNames: ["event-status-" + compromisso.status],
       };
 
       // Para eventos cancelados, adicionar estilo visual
@@ -57,40 +58,31 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fallback: extrair dados dos cards HTML se a variável global não estiver disponível
     document.querySelectorAll(".event-card").forEach((card) => {
       const id = card.dataset.id;
-      const title = card.querySelector(".event-title").textContent.trim();
-      const status = card.dataset.status;
-      const dateStart = card
-        .querySelector(".event-datetime .event-date")
-        .textContent.trim();
-      const timeElement = card.querySelector(".event-datetime .event-time");
-      const time = timeElement ? timeElement.textContent.trim() : "";
+      const title =
+        card.querySelector(".event-title")?.textContent.trim() || "Sem título";
+      const status = card.dataset.status || "pendente";
+      const dateStart = card.dataset.date;
 
-      const location = card.querySelector(".event-location")
-        ? card.querySelector(".event-location").textContent.trim()
-        : "";
+      // Verificar se temos todos os dados necessários
+      if (!id || !dateStart) return;
 
       const description = card.querySelector(".event-description")
         ? card.querySelector(".event-description").textContent.trim()
         : "";
 
+      const location = card.querySelector(".event-location")
+        ? card.querySelector(".event-location").textContent.trim()
+        : "";
+
       // Extrair a data e hora de início e fim do texto
-      const startDateStr = card.dataset.date;
-      const allDay = !time || time.indexOf("às") === -1;
+      const startDateStr = dateStart;
+      const allDay = true; // Definir como true por padrão, a menos que tenhamos hora específica
 
-      let startTime, endTime;
-      if (!allDay && time) {
-        const timeParts = time
-          .replace(/[^\d:]/g, " ")
-          .trim()
-          .split(/\s+/);
-        startTime = timeParts[0];
-        endTime = timeParts.length > 1 ? timeParts[1] : "";
-      }
-
+      // Criar o evento com propriedades apropriadas
       const event = {
         id: id,
         title: title,
-        start: startDateStr + (startTime ? "T" + startTime + ":00" : ""),
+        start: startDateStr,
         allDay: allDay,
         extendedProps: {
           status: status,
@@ -99,12 +91,9 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         backgroundColor: statusColors[status] || "#3788d8",
         borderColor: statusColors[status] || "#3788d8",
-        textColor: "#fff",
+        textColor: status === "pendente" ? "#000" : "#fff",
+        classNames: ["event-status-" + status],
       };
-
-      if (endTime) {
-        event.end = startDateStr + "T" + endTime + ":00";
-      }
 
       // Para eventos cancelados, adicionar estilo visual
       if (status === "cancelado") {
@@ -117,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Inicializar o FullCalendar
+  // Inicializar o FullCalendar com opções otimizadas
   const calendar = new FullCalendar.Calendar(calendarEl, {
     locale: "pt-br",
     initialView: "dayGridMonth",
@@ -130,23 +119,52 @@ document.addEventListener("DOMContentLoaded", function () {
     navLinks: true, // Permite clicar nos nomes de dias/semanas para navegar
     editable: canEdit,
     selectable: canEdit,
-    dayMaxEvents: true, // Limitar número de eventos visíveis por dia
+    dayMaxEvents: false, // Importante! Permite que os eventos sejam exibidos completamente
+    eventMaxStack: 6, // Limitar número de eventos visíveis por dia antes do link "mais"
     height: "auto",
     events: events,
 
-    // Personalização de eventos
-    eventContent: function (info) {
-      const status = info.event.extendedProps.status;
+    // Estas opções são cruciais para exibir adequadamente os eventos
+    eventTimeFormat: {
+      hour: "2-digit",
+      minute: "2-digit",
+      meridiem: false,
+    },
 
-      // Personalizar visualmente eventos cancelados
+    // Personalização de eventos - esta é a chave para garantir que títulos sejam exibidos
+    eventContent: function (info) {
+      const status = info.event.extendedProps.status || "pendente";
+
+      // Para eventos cancelados, aplicar estilo especial
       if (status === "cancelado") {
-        const eventEl = document.createElement("div");
-        eventEl.classList.add("fc-event-content", "canceled-event");
-        eventEl.innerHTML = `<div class="fc-event-title" style="text-decoration: line-through;">${info.event.title}</div>`;
-        return { domNodes: [eventEl] };
+        const wrapper = document.createElement("div");
+        wrapper.classList.add(
+          "fc-event-main-wrapper",
+          "event-status-" + status
+        );
+
+        const title = document.createElement("div");
+        title.classList.add("fc-event-title-container");
+        title.innerHTML =
+          '<div class="fc-event-title fc-sticky" style="text-decoration: line-through;">' +
+          info.event.title +
+          "</div>";
+
+        wrapper.appendChild(title);
+        return { domNodes: [wrapper] };
       }
 
-      return null; // Usar o padrão para outros status
+      // Para eventos normais, garantir que o título seja exibido
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("fc-event-main-wrapper", "event-status-" + status);
+
+      const title = document.createElement("div");
+      title.classList.add("fc-event-title-container");
+      title.innerHTML =
+        '<div class="fc-event-title fc-sticky">' + info.event.title + "</div>";
+
+      wrapper.appendChild(title);
+      return { domNodes: [wrapper] };
     },
 
     // Callback quando um evento é clicado
@@ -182,10 +200,42 @@ document.addEventListener("DOMContentLoaded", function () {
         info.revert();
       }
     },
+
+    // Garantir que o título seja sempre exibido
+    displayEventTime: false, // Ocultar o horário do evento para dar mais espaço ao título
+
+    // Após o calendário ter sido renderizado, adicionar classes às células
+    viewDidMount: function () {
+      // Adicionar classes para destaque em dias com eventos
+      setTimeout(function () {
+        document
+          .querySelectorAll(".fc-daygrid-day-events")
+          .forEach(function (el) {
+            if (el.children.length > 0) {
+              el.closest(".fc-daygrid-day").classList.add("has-events");
+            }
+          });
+      }, 200);
+    },
   });
+
+  // Expor o calendário globalmente para uso em outros scripts
+  window.calendar = calendar;
 
   // Renderizar o calendário
   calendar.render();
+
+  // Após a renderização, aplicar destaque ao texto dos eventos
+  setTimeout(function () {
+    document.querySelectorAll(".fc-event-title").forEach(function (el) {
+      el.style.whiteSpace = "nowrap";
+      el.style.overflow = "hidden";
+      el.style.textOverflow = "ellipsis";
+      el.style.fontWeight = "bold";
+      el.style.display = "block";
+      el.style.fontSize = "0.9em";
+    });
+  }, 500);
 
   // Configurar botões de visualização
   document.querySelectorAll(".view-option").forEach((button) => {
