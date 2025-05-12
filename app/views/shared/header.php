@@ -1,3 +1,19 @@
+<?php
+// Determinar se estamos em uma página de autenticação
+$current_url = $_SERVER['REQUEST_URI'];
+$auth_pages = ['/login', '/register', '/login-process', '/register-process'];
+$is_auth_page = false;
+
+foreach ($auth_pages as $page) {
+    if (strpos($current_url, $page) !== false) {
+        $is_auth_page = true;
+        break;
+    }
+}
+
+// Adicionar classe específica ao body para páginas de autenticação
+$body_class = $is_auth_page ? 'auth-page' : '';
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -108,7 +124,9 @@
     }
     </style>
 </head>
-<body>
+<body class="<?php echo $body_class; ?>">
+    <?php if (!$is_auth_page): ?>
+    <!-- Layout com sidebar apenas para páginas que não sejam de autenticação -->
     <div class="layout-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -205,6 +223,10 @@
         
         <!-- Conteúdo principal -->
         <main class="main-content">
+    <?php else: ?>
+        <!-- Layout simplificado sem sidebar para páginas de autenticação -->
+        <main class="main-content full-width">
+    <?php endif; ?>
             <div class="container">
                 <?php
                 // Exibir mensagens de alerta (flash messages)

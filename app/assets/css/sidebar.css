@@ -9,6 +9,23 @@
   --transition-speed: 0.3s;
 }
 
+/* Estilos específicos para páginas de autenticação */
+body.auth-page .sidebar,
+body.auth-page .mobile-menu-toggle,
+body.auth-page .sidebar-overlay {
+  display: none !important;
+}
+
+body.auth-page .main-content {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+body.auth-page .main-content.full-width {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
 .layout-container {
   display: flex;
   min-height: 100vh;
@@ -160,6 +177,11 @@
   width: calc(100% - var(--sidebar-collapsed-width));
 }
 
+.main-content.full-width {
+  margin-left: 0;
+  width: 100%;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .sidebar {
@@ -170,6 +192,14 @@
   .sidebar.mobile-visible {
     width: var(--sidebar-width);
     transform: translateX(0);
+  }
+
+  .sidebar.mobile-visible .sidebar-link span {
+    display: inline-block;
+  }
+
+  .sidebar.mobile-visible .sidebar-logo {
+    display: block;
   }
 
   .main-content {
