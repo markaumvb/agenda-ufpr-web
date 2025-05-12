@@ -175,59 +175,66 @@ class AgendaShare {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$agendaId]);
     }
-public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10, $search = null) {
-    $offset = ($page - 1) * $perPage;
-    
-    $sql = "SELECT a.*, 
-           s.can_edit,
-           u.name as owner_name,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
-            FROM agenda_shares s
-            INNER JOIN agendas a ON s.agenda_id = a.id
-            INNER JOIN users u ON a.user_id = u.id
-            WHERE s.user_id = :user_id";
-    
-    if ($activeOnly) {
-        $sql .= " AND a.is_active = 1";
+
+    public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10, $search = null) {
+    try {
+        $offset = ($page - 1) * $perPage;
+        
+        $sql = "SELECT a.*, 
+               s.can_edit,
+               u.name as owner_name,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+                FROM agenda_shares s
+                INNER JOIN agendas a ON s.agenda_id = a.id
+                INNER JOIN users u ON a.user_id = u.id
+                WHERE s.user_id = :user_id";
+        
+        if ($activeOnly) {
+            $sql .= " AND a.is_active = 1";
+        }
+        
+        // Adicionar filtro de busca
+        if ($search) {
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
+        }
+        
+        $sql .= " ORDER BY a.title
+                  LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        
+        if ($search) {
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+        }
+        
+        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $agendas = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['is_owner'] = false;
+            $row['compromissos'] = [
+                'pendentes' => (int)$row['pendentes'],
+                'realizados' => (int)$row['realizados'],
+                'cancelados' => (int)$row['cancelados'],
+                'aguardando_aprovacao' => (int)$row['aguardando_aprovacao']
+            ];
+            $agendas[] = $row;
+        }
+        
+        return $agendas;
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar agendas compartilhadas com o usuário: ' . $e->getMessage());
+        return [];
     }
-    
-    // Adicionar filtro de busca
-    if ($search) {
-        $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
-    }
-    
-    $sql .= " ORDER BY a.title
-              LIMIT :limit OFFSET :offset";
-    
-    $stmt = $this->db->prepare($sql);
-    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-    
-    if ($search) {
-        $searchParam = "%{$search}%";
-        $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-    }
-    
-    $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    
-    $agendas = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $row['is_owner'] = false;
-        $row['compromissos'] = [
-            'pendentes' => $row['pendentes'],
-            'realizados' => $row['realizados'],
-            'cancelados' => $row['cancelados'],
-            'aguardando_aprovacao' => $row['aguardando_aprovacao']
-        ];
-        $agendas[] = $row;
-    }
-    
-    return $agendas;
 }
+
 
 public function countSharedWithUser($userId, $activeOnly = true, $search = null) {
     $sql = "SELECT COUNT(*) as total 
@@ -260,6 +267,7 @@ public function countSharedWithUser($userId, $activeOnly = true, $search = null)
 
 public function getAgendasSharedByUser($userId, $search = null) {
     try {
+        // Modificada para buscar agendas onde o usuário é o dono E que foram compartilhadas com outros
         $sql = "SELECT DISTINCT a.*, 
                u.name as owner_name,
                1 as can_edit,
@@ -269,11 +277,12 @@ public function getAgendasSharedByUser($userId, $search = null) {
                (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
                 FROM agendas a
                 JOIN users u ON a.user_id = u.id
-                JOIN agenda_shares s ON a.id = s.agenda_id
-                WHERE a.user_id = :userId";
+                LEFT JOIN agenda_shares s ON a.id = s.agenda_id
+                WHERE a.user_id = :userId 
+                AND EXISTS (SELECT 1 FROM agenda_shares WHERE agenda_id = a.id)";
         
         if ($search) {
-            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
         }
         
         $sql .= " ORDER BY a.title";

@@ -211,3 +211,4 @@
         <?php endif; ?>
     <?php endif; ?>
 </div>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/shares/shared.js"></script>
