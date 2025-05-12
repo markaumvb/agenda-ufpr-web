@@ -175,7 +175,6 @@ class AgendaShare {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$agendaId]);
     }
-
 public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10, $search = null) {
     $offset = ($page - 1) * $perPage;
     
@@ -229,7 +228,6 @@ public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPa
     
     return $agendas;
 }
-
 
 public function countSharedWithUser($userId, $activeOnly = true, $search = null) {
     $sql = "SELECT COUNT(*) as total 
@@ -308,6 +306,4 @@ public function getAgendasSharedByUser($userId, $search = null) {
         return [];
     }
 }
-
-
 }
