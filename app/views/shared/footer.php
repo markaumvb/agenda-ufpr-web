@@ -7,6 +7,15 @@
         <p><?= date('Y') ?> - <?= APP_NAME ?> v<?= APP_VERSION ?></p>
     </div>
 </footer>
+<?php 
+// Identificar a página atual
+$currentUri = $_SERVER['REQUEST_URI'];
+
+// Página inicial - adicionar JS das agendas públicas
+if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
+    echo '<script src="' . PUBLIC_URL . '/app/assets/js/public-agendas.js"></script>';
+}
+?>
 
 <style>
     footer {

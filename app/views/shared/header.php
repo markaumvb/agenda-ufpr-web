@@ -77,6 +77,10 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     if (strpos($currentUri, '/meuscompromissos') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/meuscompromissos.css">';
     }
+
+    if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
+    echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/public-agendas.css">';
+}
     
     // Página com parâmetro public=1
     if (strpos($currentUri, 'public=1') !== false) {
