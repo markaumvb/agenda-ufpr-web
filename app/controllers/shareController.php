@@ -216,23 +216,28 @@ class ShareController extends BaseController {
         exit;
     }
     
-    /**
-     * Exibe as agendas compartilhadas com o usuário
-     */
-    public function shared() {
+public function shared() {
     $userId = $_SESSION['user_id'];
     
     // Processar parâmetro de busca
     $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
     
+    // Parâmetros de paginação
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $perPage = 10; // Número de itens por página
+    
     // Verificar se o usuário está logado
     $this->checkAuth();
     
-    // Buscar agendas compartilhadas com o usuário
-    $sharedWithMe = $this->shareModel->getSharedWithUser($userId);
+    // Buscar agendas compartilhadas com o usuário (com paginação e busca)
+    $sharedWithMe = $this->shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
+    $totalSharedWithMe = $this->shareModel->countSharedWithUser($userId, true, $search);
     
-    // Buscar agendas que o usuário compartilhou
-    $mySharedAgendas = $this->shareModel->getAgendasSharedByUser($userId);
+    // Buscar agendas que o usuário compartilhou (com busca)
+    $mySharedAgendas = $this->shareModel->getAgendasSharedByUser($userId, $search);
+    
+    // Calcular número total de páginas para paginação
+    $totalPages = ceil($totalSharedWithMe / $perPage);
     
     // Carregar view
     require_once __DIR__ . '/../views/shared/header.php';
