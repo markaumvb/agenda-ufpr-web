@@ -215,7 +215,7 @@ class ShareController extends BaseController {
         header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
-    public function shared() {
+   public function shared() {
     $userId = $_SESSION['user_id'];
     
     // Log para depuração
@@ -399,7 +399,7 @@ class ShareController extends BaseController {
         exit;
     }
 
-    public function diagnostico() {
+ public function diagnostico() {
     // Garantir que apenas usuários logados possam acessar
     $this->checkAuth();
     
@@ -416,15 +416,18 @@ class ShareController extends BaseController {
     ];
     
     try {
+        // Obter a conexão do banco de dados dos modelos
+        $db = Database::getInstance()->getConnection();
+        
         // 1. Verificar dados do usuário
         $sql = "SELECT id, username, name, email FROM users WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
         $resultado['dados_usuario'] = $stmt->fetch(PDO::FETCH_ASSOC);
         
         // 2. Verificar agendas próprias do usuário
         $sql = "SELECT id, title, description, is_active FROM agendas WHERE user_id = ?";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
         $resultado['agendas_proprias'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -435,7 +438,7 @@ class ShareController extends BaseController {
                 JOIN users u ON a.user_id = u.id
                 WHERE s.user_id = ?";
         
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
         $resultado['compartilhados_comigo'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -446,13 +449,13 @@ class ShareController extends BaseController {
                 JOIN users u ON s.user_id = u.id
                 WHERE a.user_id = ?";
         
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
         $resultado['compartilhados_por_mim'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // 5. Verificar todos os registros na tabela agenda_shares
         $sql = "SELECT COUNT(*) FROM agenda_shares";
-        $stmt = $this->db->query($sql);
+        $stmt = $db->query($sql);
         $resultado['total_registros_shares'] = $stmt->fetchColumn();
         
     } catch (PDOException $e) {

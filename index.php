@@ -285,11 +285,11 @@ $routes = [
     'action' => 'allAgendas',
     'method' => 'GET'
 ],
-'/debug-log' => [
-    'controller' => 'DebugController',
-    'action' => 'log',
-    'method' => 'POST'
-],
+   '/shares/diagnostico' => [
+        'controller' => 'ShareController',
+        'action' => 'snostico',
+        'method' => 'GET'
+    ],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública
