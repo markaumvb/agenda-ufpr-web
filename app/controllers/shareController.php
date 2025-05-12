@@ -399,40 +399,105 @@ class ShareController extends BaseController {
         exit;
     }
 
- public function diagnostico() {
-    // Garantir que apenas usuários logados possam acessar
+ // Adicione este método ao arquivo ShareController.php
+// Certifique-se de adicionar DENTRO da classe ShareController
+
+/**
+ * Página de diagnóstico separada para depuração
+ */
+public function diagnostico() {
+    // Verificar se o usuário está logado
     $this->checkAuth();
     
+    // Exibir informações de diagnóstico
     $userId = $_SESSION['user_id'];
     
-    // Resultado do diagnóstico
-    $resultado = [
-        'user_id' => $userId,
-        'timestamp' => date('Y-m-d H:i:s'),
-        'dados_usuario' => [],
-        'agendas_proprias' => [],
-        'compartilhados_comigo' => [],
-        'compartilhados_por_mim' => []
-    ];
-    
+    echo "<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Diagnóstico de Compartilhamentos</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1, h2 { color: #004a8f; }
+            .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f8f9fa; }
+            .empty { color: #999; font-style: italic; }
+            pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow: auto; }
+        </style>
+    </head>
+    <body>
+        <h1>Diagnóstico de Compartilhamentos</h1>
+        <p>Usuário atual: ID $userId</p>
+        
+        <div class='section'>
+            <h2>Verificação de Tabela</h2>";
+            
     try {
-        // Obter a conexão do banco de dados dos modelos
+        // Obter conexão direta com o banco
         $db = Database::getInstance()->getConnection();
         
-        // 1. Verificar dados do usuário
-        $sql = "SELECT id, username, name, email FROM users WHERE id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$userId]);
-        $resultado['dados_usuario'] = $stmt->fetch(PDO::FETCH_ASSOC);
+        // 1. Verificar se a tabela agenda_shares existe
+        $result = $db->query("SHOW TABLES LIKE 'agenda_shares'");
+        if ($result->rowCount() > 0) {
+            echo "<p style='color:green'>✓ Tabela agenda_shares existe</p>";
+            
+            // 2. Verificar registros na tabela
+            $result = $db->query("SELECT COUNT(*) FROM agenda_shares");
+            $totalShares = $result->fetchColumn();
+            echo "<p>Total de registros na tabela: $totalShares</p>";
+            
+            if ($totalShares > 0) {
+                // 3. Exibir alguns registros de exemplo
+                $sql = "SELECT s.id, s.agenda_id, s.user_id, s.can_edit, 
+                               a.title AS agenda_title, 
+                               u1.name AS owner_name,
+                               u2.name AS shared_with_name
+                        FROM agenda_shares s
+                        JOIN agendas a ON s.agenda_id = a.id
+                        JOIN users u1 ON a.user_id = u1.id
+                        JOIN users u2 ON s.user_id = u2.id
+                        LIMIT 10";
+                
+                $stmt = $db->query($sql);
+                $shares = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                echo "<h3>Amostra de registros de compartilhamento:</h3>";
+                echo "<table>
+                      <tr>
+                        <th>ID</th>
+                        <th>Agenda ID</th>
+                        <th>Agenda</th>
+                        <th>Dono</th>
+                        <th>Compartilhado com</th>
+                        <th>Pode Editar</th>
+                      </tr>";
+                
+                foreach ($shares as $share) {
+                    echo "<tr>
+                          <td>{$share['id']}</td>
+                          <td>{$share['agenda_id']}</td>
+                          <td>" . htmlspecialchars($share['agenda_title']) . "</td>
+                          <td>" . htmlspecialchars($share['owner_name']) . "</td>
+                          <td>" . htmlspecialchars($share['shared_with_name']) . "</td>
+                          <td>" . ($share['can_edit'] ? 'Sim' : 'Não') . "</td>
+                          </tr>";
+                }
+                
+                echo "</table>";
+            } else {
+                echo "<p style='color:red'>× Não há registros na tabela agenda_shares</p>";
+            }
+        } else {
+            echo "<p style='color:red'>× Tabela agenda_shares não existe!</p>";
+        }
         
-        // 2. Verificar agendas próprias do usuário
-        $sql = "SELECT id, title, description, is_active FROM agendas WHERE user_id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$userId]);
-        $resultado['agendas_proprias'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // 4. Verificar compartilhamentos específicos para o usuário
+        echo "<h2>Compartilhamentos deste usuário (ID: $userId)</h2>";
         
-        // 3. Verificar agendas compartilhadas COM o usuário
-        $sql = "SELECT s.*, a.title as agenda_title, a.is_active, u.name as owner_name 
+        // Compartilhados com este usuário
+        $sql = "SELECT s.*, a.title, u.name as owner_name
                 FROM agenda_shares s
                 JOIN agendas a ON s.agenda_id = a.id
                 JOIN users u ON a.user_id = u.id
@@ -440,10 +505,36 @@ class ShareController extends BaseController {
         
         $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
-        $resultado['compartilhados_comigo'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sharedWithMe = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // 4. Verificar agendas que o usuário compartilhou com outros
-        $sql = "SELECT s.*, a.title as agenda_title, a.is_active, u.name as shared_with_name 
+        if (count($sharedWithMe) > 0) {
+            echo "<h3>Agendas compartilhadas comigo:</h3>";
+            echo "<table>
+                  <tr>
+                    <th>ID</th>
+                    <th>Agenda ID</th>
+                    <th>Título</th>
+                    <th>Dono</th>
+                    <th>Pode Editar</th>
+                  </tr>";
+            
+            foreach ($sharedWithMe as $share) {
+                echo "<tr>
+                      <td>{$share['id']}</td>
+                      <td>{$share['agenda_id']}</td>
+                      <td>" . htmlspecialchars($share['title']) . "</td>
+                      <td>" . htmlspecialchars($share['owner_name']) . "</td>
+                      <td>" . ($share['can_edit'] ? 'Sim' : 'Não') . "</td>
+                      </tr>";
+            }
+            
+            echo "</table>";
+        } else {
+            echo "<p>Nenhuma agenda compartilhada com você.</p>";
+        }
+        
+        // Compartilhados por este usuário
+        $sql = "SELECT s.*, a.title, u.name as shared_with_name
                 FROM agenda_shares s
                 JOIN agendas a ON s.agenda_id = a.id
                 JOIN users u ON s.user_id = u.id
@@ -451,122 +542,49 @@ class ShareController extends BaseController {
         
         $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
-        $resultado['compartilhados_por_mim'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sharedByMe = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // 5. Verificar todos os registros na tabela agenda_shares
-        $sql = "SELECT COUNT(*) FROM agenda_shares";
-        $stmt = $db->query($sql);
-        $resultado['total_registros_shares'] = $stmt->fetchColumn();
+        if (count($sharedByMe) > 0) {
+            echo "<h3>Agendas que compartilhei:</h3>";
+            echo "<table>
+                  <tr>
+                    <th>ID</th>
+                    <th>Agenda ID</th>
+                    <th>Título</th>
+                    <th>Compartilhado com</th>
+                    <th>Pode Editar</th>
+                  </tr>";
+            
+            foreach ($sharedByMe as $share) {
+                echo "<tr>
+                      <td>{$share['id']}</td>
+                      <td>{$share['agenda_id']}</td>
+                      <td>" . htmlspecialchars($share['title']) . "</td>
+                      <td>" . htmlspecialchars($share['shared_with_name']) . "</td>
+                      <td>" . ($share['can_edit'] ? 'Sim' : 'Não') . "</td>
+                      </tr>";
+            }
+            
+            echo "</table>";
+        } else {
+            echo "<p>Você não compartilhou agendas com ninguém.</p>";
+        }
         
     } catch (PDOException $e) {
-        $resultado['erro'] = $e->getMessage();
+        echo "<p style='color:red'>Erro no banco de dados: " . $e->getMessage() . "</p>";
     }
     
-    // Exibir resultados
-    echo '<html><head><title>Diagnóstico de Compartilhamentos</title>';
-    echo '<style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1, h2 { color: #004a8f; }
-        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f8f9fa; }
-        .empty { color: #999; font-style: italic; }
-    </style>';
-    echo '</head><body>';
+    echo "</div>
+        
+        <div class='section'>
+            <h2>Links Úteis</h2>
+            <p><a href='" . BASE_URL . "/shares/shared'>Ir para Agendas Compartilhadas</a></p>
+            <p><a href='" . BASE_URL . "/agendas'>Voltar para Minhas Agendas</a></p>
+        </div>
+        
+    </body>
+    </html>";
     
-    echo '<h1>Diagnóstico de Compartilhamentos</h1>';
-    echo '<p>Data/hora: ' . $resultado['timestamp'] . '</p>';
-    
-    echo '<div class="section">';
-    echo '<h2>Dados do Usuário</h2>';
-    if ($resultado['dados_usuario']) {
-        echo '<table>';
-        echo '<tr><th>ID</th><td>' . $resultado['dados_usuario']['id'] . '</td></tr>';
-        echo '<tr><th>Username</th><td>' . htmlspecialchars($resultado['dados_usuario']['username']) . '</td></tr>';
-        echo '<tr><th>Nome</th><td>' . htmlspecialchars($resultado['dados_usuario']['name']) . '</td></tr>';
-        echo '<tr><th>Email</th><td>' . htmlspecialchars($resultado['dados_usuario']['email']) . '</td></tr>';
-        echo '</table>';
-    } else {
-        echo '<p class="empty">Nenhum dado de usuário encontrado.</p>';
-    }
-    echo '</div>';
-    
-    echo '<div class="section">';
-    echo '<h2>Agendas Próprias (' . count($resultado['agendas_proprias']) . ')</h2>';
-    if (!empty($resultado['agendas_proprias'])) {
-        echo '<table>';
-        echo '<tr><th>ID</th><th>Título</th><th>Ativa</th></tr>';
-        foreach ($resultado['agendas_proprias'] as $agenda) {
-            echo '<tr>';
-            echo '<td>' . $agenda['id'] . '</td>';
-            echo '<td>' . htmlspecialchars($agenda['title']) . '</td>';
-            echo '<td>' . ($agenda['is_active'] ? 'Sim' : 'Não') . '</td>';
-            echo '</tr>';
-        }
-        echo '</table>';
-    } else {
-        echo '<p class="empty">Nenhuma agenda própria encontrada.</p>';
-    }
-    echo '</div>';
-    
-    echo '<div class="section">';
-    echo '<h2>Agendas Compartilhadas Comigo (' . count($resultado['compartilhados_comigo']) . ')</h2>';
-    if (!empty($resultado['compartilhados_comigo'])) {
-        echo '<table>';
-        echo '<tr><th>ID</th><th>Agenda ID</th><th>Título</th><th>Dono</th><th>Ativa</th><th>Pode Editar</th></tr>';
-        foreach ($resultado['compartilhados_comigo'] as $share) {
-            echo '<tr>';
-            echo '<td>' . $share['id'] . '</td>';
-            echo '<td>' . $share['agenda_id'] . '</td>';
-            echo '<td>' . htmlspecialchars($share['agenda_title']) . '</td>';
-            echo '<td>' . htmlspecialchars($share['owner_name']) . '</td>';
-            echo '<td>' . ($share['is_active'] ? 'Sim' : 'Não') . '</td>';
-            echo '<td>' . ($share['can_edit'] ? 'Sim' : 'Não') . '</td>';
-            echo '</tr>';
-        }
-        echo '</table>';
-    } else {
-        echo '<p class="empty">Nenhuma agenda compartilhada comigo encontrada.</p>';
-    }
-    echo '</div>';
-    
-    echo '<div class="section">';
-    echo '<h2>Agendas Compartilhadas Por Mim (' . count($resultado['compartilhados_por_mim']) . ')</h2>';
-    if (!empty($resultado['compartilhados_por_mim'])) {
-        echo '<table>';
-        echo '<tr><th>ID</th><th>Agenda ID</th><th>Título</th><th>Compartilhada Com</th><th>Ativa</th><th>Pode Editar</th></tr>';
-        foreach ($resultado['compartilhados_por_mim'] as $share) {
-            echo '<tr>';
-            echo '<td>' . $share['id'] . '</td>';
-            echo '<td>' . $share['agenda_id'] . '</td>';
-            echo '<td>' . htmlspecialchars($share['agenda_title']) . '</td>';
-            echo '<td>' . htmlspecialchars($share['shared_with_name']) . '</td>';
-            echo '<td>' . ($share['is_active'] ? 'Sim' : 'Não') . '</td>';
-            echo '<td>' . ($share['can_edit'] ? 'Sim' : 'Não') . '</td>';
-            echo '</tr>';
-        }
-        echo '</table>';
-    } else {
-        echo '<p class="empty">Nenhuma agenda compartilhada por mim encontrada.</p>';
-    }
-    echo '</div>';
-    
-    echo '<div class="section">';
-    echo '<h2>Informações Adicionais</h2>';
-    echo '<p>Total de registros na tabela agenda_shares: ' . $resultado['total_registros_shares'] . '</p>';
-    if (isset($resultado['erro'])) {
-        echo '<p style="color: red;">Erro: ' . $resultado['erro'] . '</p>';
-    }
-    echo '</div>';
-    
-    echo '<div class="section">';
-    echo '<h2>Links Úteis</h2>';
-    echo '<p><a href="' . BASE_URL . '/shares/shared">Voltar para Agendas Compartilhadas</a></p>';
-    echo '<p><a href="' . BASE_URL . '/agendas">Voltar para Minhas Agendas</a></p>';
-    echo '</div>';
-    
-    echo '</body></html>';
     exit;
 }
 }

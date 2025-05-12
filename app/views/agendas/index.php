@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/agendas/index.php
-?>
-
 <div class="page-header">
     <div class="header-container">
         <h1>Minhas Agendas</h1>

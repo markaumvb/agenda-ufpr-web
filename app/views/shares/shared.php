@@ -1,5 +1,6 @@
-<!-- app/views/shares/shared.php -->
+
 <div class="page-header">
+
     <?php if (isset($mostraDiagnostico) && $mostraDiagnostico): ?>
 <!-- Bloco de diagnóstico - ajuda a identificar problemas -->
 <div class="diagnostic-block" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 5px;">

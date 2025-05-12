@@ -230,67 +230,67 @@ $routes = [
         'method' => 'POST'
     ],
     '/compromissos/update-date' => [
-    'controller' => 'CompromissoController',
-    'action' => 'updateDate',
-    'method' => 'POST'
-],
-
-'/meuscompromissos' => [
-    'controller' => 'MeusCompromissosController',
-    'action' => 'index',
-    'method' => 'GET'
-],
-'/meuscompromissos/cancel' => [
-    'controller' => 'MeusCompromissosController',
-    'action' => 'cancelCompromisso',
-    'method' => 'POST'
-],
-'/meuscompromissos/edit' => [
-    'controller' => 'MeusCompromissosController',
-    'action' => 'editCompromisso',
-    'method' => 'POST'
-],
-'/meuscompromissos/approve' => [
-    'controller' => 'MeusCompromissosController',
-    'action' => 'approveCompromisso',
-    'method' => 'POST'
-],
-'/meuscompromissos/reject' => [
-    'controller' => 'MeusCompromissosController',
-    'action' => 'rejectCompromisso',
-    'method' => 'POST'
-],
-'/agendas/toggle-active' => [
-    'controller' => 'AgendaController',
-    'action' => 'toggleActive',
-    'method' => 'POST'
-],
-'/api/pending-approvals' => [
-    'controller' => 'ApiController',
-    'action' => 'getPendingApprovals',
-    'method' => 'GET'
-],
-'/compromissos/new-public' => [
-    'controller' => 'CompromissoController',
-    'action' => 'newPublic',
-    'method' => 'GET'
-],
-'/redirect-from-login' => [
-    'controller' => 'AuthController',
-    'action' => 'redirectFromLogin',
-    'method' => 'GET'
-],
-'/agendas/all' => [
-    'controller' => 'AgendaController',
-    'action' => 'allAgendas',
-    'method' => 'GET'
-],
-'/shares/diagnostico' => [
-    'controller' => 'ShareController',
-    'action' => 'diagnostico', // Nome correto do método
-    'method' => 'GET'
-],
+        'controller' => 'CompromissoController',
+        'action' => 'updateDate',
+        'method' => 'POST'
+    ],
+    '/meuscompromissos' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'index',
+        'method' => 'GET'
+    ],
+    '/meuscompromissos/cancel' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'cancelCompromisso',
+        'method' => 'POST'
+    ],
+    '/meuscompromissos/edit' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'editCompromisso',
+        'method' => 'POST'
+    ],
+    '/meuscompromissos/approve' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'approveCompromisso',
+        'method' => 'POST'
+    ],
+    '/meuscompromissos/reject' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'rejectCompromisso',
+        'method' => 'POST'
+    ],
+    '/agendas/toggle-active' => [
+        'controller' => 'AgendaController',
+        'action' => 'toggleActive',
+        'method' => 'POST'
+    ],
+    '/api/pending-approvals' => [
+        'controller' => 'ApiController',
+        'action' => 'getPendingApprovals',
+        'method' => 'GET'
+    ],
+    '/compromissos/new-public' => [
+        'controller' => 'CompromissoController',
+        'action' => 'newPublic',
+        'method' => 'GET'
+    ],
+    '/redirect-from-login' => [
+        'controller' => 'AuthController',
+        'action' => 'redirectFromLogin',
+        'method' => 'GET'
+    ],
+    '/agendas/all' => [
+        'controller' => 'AgendaController',
+        'action' => 'allAgendas',
+        'method' => 'GET'
+    ],
+    '/shares/diagnostico' => [
+        'controller' => 'ShareController',
+        'action' => 'diagnostico',
+        'method' => 'GET'
+    ],
 ];
+
 
 // Verificar se a rota corresponde a um padrão de agenda pública
 if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uri, $matches)) {

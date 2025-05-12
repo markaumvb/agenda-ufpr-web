@@ -1,9 +1,6 @@
 <div class="page-header">
     <div class="header-container">
         <h1>Meus Compromissos</h1>
-        <div class="header-actions">
-            <a href="<?= BASE_URL ?>/agendas" class="btn btn-secondary">Minhas Agendas</a>
-        </div>
     </div>
 </div>
 
@@ -141,10 +138,7 @@
                                     Ações
                                 </button>
                                 <div class="dropdown-menu">
-                                    <a href="<?= BASE_URL ?>/compromissos/view?id=<?= $compromisso['id'] ?>" class="dropdown-item">
-                                        Ver Detalhes
-                                    </a>
-                                    
+                                     
                                     <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
                                         <a href="#" class="dropdown-item approve-btn" data-id="<?= $compromisso['id'] ?>">
                                             Aprovar
