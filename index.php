@@ -275,11 +275,6 @@ $routes = [
     'action' => 'newPublic',
     'method' => 'GET'
 ],
-'/debug-log' => [
-    'controller' => 'DebugController',
-    'action' => 'log',
-    'method' => 'POST'
-],
 '/redirect-from-login' => [
     'controller' => 'AuthController',
     'action' => 'redirectFromLogin',
@@ -289,6 +284,11 @@ $routes = [
     'controller' => 'AgendaController',
     'action' => 'allAgendas',
     'method' => 'GET'
+],
+'/debug-log' => [
+    'controller' => 'DebugController',
+    'action' => 'log',
+    'method' => 'POST'
 ],
 ];
 
