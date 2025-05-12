@@ -229,15 +229,30 @@ public function shared() {
     // Verificar se o usuário está logado
     $this->checkAuth();
     
+    error_log("Iniciando busca de agendas compartilhadas para usuário ID: $userId");
+    
     // Buscar agendas compartilhadas com o usuário (com paginação e busca)
     $sharedWithMe = $this->shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
     $totalSharedWithMe = $this->shareModel->countSharedWithUser($userId, true, $search);
     
+    error_log("Encontradas " . count($sharedWithMe) . " agendas compartilhadas com o usuário $userId");
+    
     // Buscar agendas que o usuário compartilhou (com busca)
     $mySharedAgendas = $this->shareModel->getAgendasSharedByUser($userId, $search);
     
+    error_log("Encontradas " . count($mySharedAgendas) . " agendas compartilhadas pelo usuário $userId");
+    
     // Calcular número total de páginas para paginação
     $totalPages = ceil($totalSharedWithMe / $perPage);
+    
+    // Depuração dos resultados
+    if (empty($sharedWithMe)) {
+        error_log("AVISO: Nenhuma agenda compartilhada COM o usuário $userId foi encontrada");
+    }
+    
+    if (empty($mySharedAgendas)) {
+        error_log("AVISO: Nenhuma agenda compartilhada PELO usuário $userId foi encontrada");
+    }
     
     // Carregar view
     require_once __DIR__ . '/../views/shared/header.php';
