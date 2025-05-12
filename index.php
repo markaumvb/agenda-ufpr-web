@@ -284,11 +284,6 @@ $routes = [
         'action' => 'allAgendas',
         'method' => 'GET'
     ],
-    '/shares/diagnostico' => [
-        'controller' => 'ShareController',
-        'action' => 'diagnostico',
-        'method' => 'GET'
-    ],
 ];
 
 
