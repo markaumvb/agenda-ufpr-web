@@ -259,4 +259,3 @@
 <!-- Incluir o novo JavaScript do calendário -->
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/fullcalendar.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/index.js"></script>
-<script src="<?= PUBLIC_URL ?>/assets/js/compromissos/calendar-enhancements.js"></script>

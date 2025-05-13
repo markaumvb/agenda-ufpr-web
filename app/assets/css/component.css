@@ -496,4 +496,52 @@ input:checked + .toggle-slider:before {
     flex-direction: column;
     gap: 1rem;
   }
+
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+  }
+
+  /* Status específicos - consolidados aqui */
+  .badge-pendente,
+  .badge-warning {
+    background-color: #fff9e6;
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+  }
+
+  .badge-realizado,
+  .badge-success {
+    background-color: #e6f4ea;
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+  }
+
+  .badge-cancelado,
+  .badge-danger {
+    background-color: #f8e6e6;
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+  }
+
+  .badge-aguardando_aprovacao,
+  .badge-info {
+    background-color: #e6f7fa;
+    color: #17a2b8;
+    border: 1px solid rgba(23, 162, 184, 0.2);
+  }
+
+  .badge-secondary {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+  }
 }
