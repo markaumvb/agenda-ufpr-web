@@ -26,75 +26,40 @@ class NotificationController extends BaseController {
      * Exibe a lista de notificações do usuário
      */
     public function index() {
-        $userId = $_SESSION['user_id'];
-        
-        // Obter parâmetros de filtro e paginação
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $onlyUnread = isset($_GET['unread']) && $_GET['unread'] == '1';
-        $itemsPerPage = 20;
-        
-        // Calcular offset para paginação
-        $offset = ($page - 1) * $itemsPerPage;
-        
-        // Obter total de notificações para paginação
-        $totalNotifications = $this->notificationModel->countByUser($userId, $onlyUnread);
-        
-        // Obter notificações paginadas
-        $notifications = $this->notificationModel->getAllByUser($userId, $offset, $itemsPerPage, $onlyUnread);
-        
-        // Calcular informações de paginação
-        $totalPages = ceil($totalNotifications / $itemsPerPage);
-        if ($page > $totalPages && $totalPages > 0) $page = $totalPages;
-        
-        $startRecord = ($page - 1) * $itemsPerPage + 1;
-        $endRecord = min($startRecord + $itemsPerPage - 1, $totalNotifications);
-        
-        // Preparar parâmetros de query para links de paginação
-        $queryParams = $onlyUnread ? 'unread=1' : '';
-        
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/notifications/index.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
-    }
+    $userId = $_SESSION['user_id'];
     
-    /**
-     * Exibe detalhes de uma notificação específica
-     */
-    public function view() {
-        $userId = $_SESSION['user_id'];
-        
-        // Obter o ID da notificação
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        
-        if (!$id) {
-            $_SESSION['flash_message'] = 'Notificação não especificada';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Buscar a notificação, incluindo dados relacionados
-        $notification = $this->getNotificationDetails($id, $userId);
-        
-        if (!$notification) {
-            $_SESSION['flash_message'] = 'Notificação não encontrada ou você não tem permissão para visualizá-la';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Marcar a notificação como lida se ainda não estiver
-        if (!$notification['is_read']) {
-            $this->notificationModel->markAsRead($id, $userId);
-            $notification['is_read'] = 1; // Atualizar o status na visualização
-        }
-        
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/notifications/view.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
-    }
+    // Obter parâmetros de filtro e paginação
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $onlyUnread = isset($_GET['unread']) && $_GET['unread'] == '1';
+    $itemsPerPage = 20;
+    
+    // Calcular offset para paginação
+    $offset = ($page - 1) * $itemsPerPage;
+    
+    // Obter total de notificações para paginação
+    $totalNotifications = $this->notificationModel->countByUser($userId, $onlyUnread);
+    
+    // Obter notificações paginadas
+    $notifications = $this->notificationModel->getAllByUser($userId, $offset, $itemsPerPage, $onlyUnread);
+    
+    // Calcular informações de paginação
+    $totalPages = ceil($totalNotifications / $itemsPerPage);
+    if ($page > $totalPages && $totalPages > 0) $page = $totalPages;
+    
+    $startRecord = $totalNotifications > 0 ? ($page - 1) * $itemsPerPage + 1 : 0;
+    $endRecord = min($startRecord + $itemsPerPage - 1, $totalNotifications);
+    
+    // Preparar parâmetros de query para links de paginação
+    $queryParams = $onlyUnread ? 'unread=1' : '';
+    
+    // Depuração - exibir valor do filtro (temporário)
+    echo "<!-- Debug: onlyUnread = " . ($onlyUnread ? 'true' : 'false') . " -->";
+    
+    // Exibir a view
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/notifications/index.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
     
     /**
      * Marca uma notificação como lida

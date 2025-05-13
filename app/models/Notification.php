@@ -60,65 +60,59 @@ class Notification {
     }
     
 
-    public function getAllByUser($userId, $offset = 0, $limit = 10) {
-        try {
-            $query = "
-                SELECT n.*, c.title as compromisso_title, c.start_datetime, c.agenda_id,
-                       a.title as agenda_title
-                FROM notifications n
-                LEFT JOIN compromissos c ON n.compromisso_id = c.id
-                LEFT JOIN agendas a ON c.agenda_id = a.id
-                WHERE n.user_id = :user_id
-                ORDER BY n.created_at DESC
-                LIMIT :offset, :limit
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            return $stmt->fetchAll();
-        } catch (PDOException $e) {
-            error_log('Erro ao buscar notificações: ' . $e->getMessage());
-            return [];
+public function getAllByUser($userId, $offset = 0, $limit = 20, $onlyUnread = false) {
+    try {
+        $query = "
+            SELECT n.*, c.title as compromisso_title, c.start_datetime, c.agenda_id,
+                   a.title as agenda_title
+            FROM notifications n
+            LEFT JOIN compromissos c ON n.compromisso_id = c.id
+            LEFT JOIN agendas a ON c.agenda_id = a.id
+            WHERE n.user_id = :user_id
+        ";
+        
+        // Adicionar filtro para notificações não lidas, se solicitado
+        if ($onlyUnread) {
+            $query .= " AND n.is_read = 0";
         }
+        
+        $query .= " ORDER BY n.created_at DESC LIMIT :offset, :limit";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar notificações: ' . $e->getMessage());
+        return [];
     }
+}
     
-    /**
-     * Conta o total de notificações de um usuário
-     * 
-     * @param int $userId ID do usuário
-     * @param bool $onlyUnread Se deve contar apenas não lidas
-     * @return int Total de notificações
-     */
-    public function countByUser($userId, $onlyUnread = false) {
-        try {
-            $query = "SELECT COUNT(*) FROM notifications WHERE user_id = :user_id";
-            
-            if ($onlyUnread) {
-                $query .= " AND is_read = 0";
-            }
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            return (int)$stmt->fetchColumn();
-        } catch (PDOException $e) {
-            error_log('Erro ao contar notificações: ' . $e->getMessage());
-            return 0;
+
+public function countByUser($userId, $onlyUnread = false) {
+    try {
+        $query = "SELECT COUNT(*) FROM notifications WHERE user_id = :user_id";
+        
+        // Adicionar filtro para notificações não lidas, se solicitado
+        if ($onlyUnread) {
+            $query .= " AND is_read = 0";
         }
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return (int) $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log('Erro ao contar notificações: ' . $e->getMessage());
+        return 0;
     }
+}
     
-    /**
-     * Marca uma notificação como lida
-     * 
-     * @param int $id ID da notificação
-     * @param int $userId ID do usuário (para verificação)
-     * @return bool Resultado da operação
-     */
+
     public function markAsRead($id, $userId) {
         try {
             $query = "UPDATE notifications SET is_read = 1 WHERE id = :id AND user_id = :user_id";
