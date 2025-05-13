@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/agendas/edit.php
-?>
-
 <div class="form-container">
     <div class="form-header">
         <h1>Editar Agenda</h1>
@@ -27,6 +23,18 @@
             <input type="color" id="color" name="color" class="form-control color-picker" 
                    value="<?= htmlspecialchars($agenda['color']) ?>">
             <small class="form-text">Escolha uma cor para identificar esta agenda</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="min_time_before">Antecedência mínima para compromissos</label>
+            <select id="min_time_before" name="min_time_before" class="form-control">
+                <option value="0" <?= $agenda['min_time_before'] == 0 ? 'selected' : '' ?>>Sem antecedência mínima</option>
+                <option value="12" <?= $agenda['min_time_before'] == 12 ? 'selected' : '' ?>>12 horas</option>
+                <option value="24" <?= $agenda['min_time_before'] == 24 ? 'selected' : '' ?>>24 horas</option>
+                <option value="36" <?= $agenda['min_time_before'] == 36 ? 'selected' : '' ?>>36 horas</option>
+                <option value="48" <?= $agenda['min_time_before'] == 48 ? 'selected' : '' ?>>48 horas</option>
+            </select>
+            <small class="form-text">Define quanto tempo de antecedência é necessário para criar compromissos nesta agenda</small>
         </div>
         
         <div class="form-group checkbox-group">
@@ -55,6 +63,4 @@
         </div>
     </form>
 </div>
-
-
-<script src="<?= PUBLIC_URL ?>/assets/js/agendas/create.js"></script>
+<script src="<?= PUBLIC_URL ?>/assets/js/agendas/form.js"></script>

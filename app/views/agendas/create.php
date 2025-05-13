@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/agendas/create.php
-?>
-
 <div class="form-container">
     <div class="form-header">
         <h1>Nova Agenda</h1>
@@ -23,6 +19,18 @@
             <label for="color">Cor</label>
             <input type="color" id="color" name="color" value="#3788d8" class="form-control color-picker">
             <small class="form-text">Escolha uma cor para identificar esta agenda</small>
+        </div>
+
+        <div class="form-group">
+            <label for="min_time_before">Antecedência mínima para compromissos</label>
+            <select id="min_time_before" name="min_time_before" class="form-control">
+                <option value="0">Sem antecedência mínima</option>
+                <option value="12">12 horas</option>
+                <option value="24">24 horas</option>
+                <option value="36">36 horas</option>
+                <option value="48">48 horas</option>
+            </select>
+            <small class="form-text">Define quanto tempo de antecedência é necessário para criar compromissos nesta agenda</small>
         </div>
         
         <div class="form-group checkbox-group">

@@ -969,5 +969,58 @@ class Compromisso {
         return (int) $result['count'];
     }
 
+    /**
+     * Valida se a data do compromisso obedece às regras de antecedência mínima
+     * 
+     * @param int $agendaId ID da agenda
+     * @param string $startDatetime Data e hora de início do compromisso
+     * @return array Array vazio se válido, ou array com mensagens de erro
+     */
+    public function validateCompromissoDate($agendaId, $startDatetime) {
+        try {
+            $errors = [];
+            
+            // Obter informações da agenda
+            $query = "SELECT min_time_before FROM agendas WHERE id = :agenda_id LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $agenda = $stmt->fetch();
+            
+            if (!$agenda) {
+                return ['Agenda não encontrada'];
+            }
+            
+            // Converter strings para objetos DateTime
+            $start = new DateTime($startDatetime);
+            $now = new DateTime();
+            
+            // Verifica se a data inicial está no futuro
+            if ($start <= $now) {
+                $errors[] = 'A data e hora de início deve ser no futuro';
+                return $errors;
+            }
+            
+            // Verifica a antecedência mínima, se configurada
+            $minTimeBefore = (int)$agenda['min_time_before'];
+            
+            if ($minTimeBefore > 0) {
+                // Calcular a data mínima permitida
+                $minDate = new DateTime();
+                $minDate->add(new DateInterval("PT{$minTimeBefore}H"));
+                
+                if ($start < $minDate) {
+                    $errors[] = "A data e hora de início deve ter pelo menos {$minTimeBefore} horas de antecedência";
+                }
+            }
+            
+            return $errors;
+        } catch (Exception $e) {
+            error_log('Erro ao validar data do compromisso: ' . $e->getMessage());
+            return ['Erro ao validar data do compromisso'];
+        }
+    }
+
     
 }

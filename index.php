@@ -325,6 +325,11 @@ $routes = [
         'action' => 'rejectCompromisso',
         'method' => 'POST'
     ],
+    '/api/check-min-time-before' => [
+    'controller' => 'ApiController',
+    'action' => 'checkMinTimeBefore',
+    'method' => 'GET'
+],
 ];
 
 

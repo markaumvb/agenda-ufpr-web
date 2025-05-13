@@ -326,4 +326,34 @@ class ApiController {
             $this->jsonResponse(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function checkMinTimeBefore() {
+    // Verificar se o usuário está logado
+    $this->checkAuth();
+    
+    // Obter parâmetros
+    $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
+    $startDatetime = filter_input(INPUT_GET, 'start', FILTER_SANITIZE_STRING);
+    
+    // Validar parâmetros
+    if (!$agendaId || !$startDatetime) {
+        echo json_encode(['error' => 'Parâmetros inválidos']);
+        exit;
+    }
+    
+    // Carregar modelos
+    require_once __DIR__ . '/../models/Compromisso.php';
+    $compromissoModel = new Compromisso();
+    
+    // Validar data
+    $errors = $compromissoModel->validateCompromissoDate($agendaId, $startDatetime);
+    
+    // Retornar resultado
+    if (empty($errors)) {
+        echo json_encode(['valid' => true]);
+    } else {
+        echo json_encode(['error' => implode(', ', $errors)]);
+    }
+    exit;
+}
 }

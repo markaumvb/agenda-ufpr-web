@@ -162,4 +162,6 @@
 </div>
 
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation.js"></script>
+
  

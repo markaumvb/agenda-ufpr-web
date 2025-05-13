@@ -870,49 +870,57 @@ public function store() {
         exit;
     }
 
-    private function validateCompromissoData($data, $compromissoId = null) {
-        $errors = [];
-        
-        // Validar campos obrigatórios
-        if (empty($data['agenda_id'])) {
-            $errors[] = 'A agenda é obrigatória';
-        }
-        
-        if (empty($data['title'])) {
-            $errors[] = 'O título é obrigatório';
-        }
-        
-        if (empty($data['start_datetime'])) {
-            $errors[] = 'A data e hora de início são obrigatórias';
-        }
-        
-        if (empty($data['end_datetime'])) {
-            $errors[] = 'A data e hora de término são obrigatórias';
-        }
-        
-        // Verificar se a data final é maior que a inicial
-        if (!empty($data['start_datetime']) && !empty($data['end_datetime'])) {
-            $start = new DateTime($data['start_datetime']);
-            $end = new DateTime($data['end_datetime']);
-            
-            if ($end <= $start) {
-                $errors[] = 'A data e hora de término deve ser posterior à data e hora de início';
-            }
-        }
-        
-        // Verificar recorrência
-        if (isset($data['repeat_type']) && $data['repeat_type'] !== 'none') {
-            if (empty($data['repeat_until'])) {
-                $errors[] = 'Para eventos recorrentes, é necessário definir uma data final';
-            }
-            
-            if ($data['repeat_type'] === 'specific_days' && empty($data['repeat_days'])) {
-                $errors[] = 'Selecione pelo menos um dia da semana para a recorrência';
-            }
-        }
-        
-        return $errors;
+private function validateCompromissoData($data, $compromissoId = null) {
+    $errors = [];
+    
+    // Validar campos obrigatórios
+    if (empty($data['agenda_id'])) {
+        $errors[] = 'A agenda é obrigatória';
     }
+    
+    if (empty($data['title'])) {
+        $errors[] = 'O título é obrigatório';
+    }
+    
+    if (empty($data['start_datetime'])) {
+        $errors[] = 'A data e hora de início são obrigatórias';
+    }
+    
+    if (empty($data['end_datetime'])) {
+        $errors[] = 'A data e hora de término são obrigatórias';
+    }
+    
+    // Verificar se a data inicial está no futuro e respeita o tempo mínimo
+    if (!empty($data['start_datetime']) && !empty($data['agenda_id'])) {
+        $dateErrors = $this->compromissoModel->validateCompromissoDate($data['agenda_id'], $data['start_datetime']);
+        if (!empty($dateErrors)) {
+            $errors = array_merge($errors, $dateErrors);
+        }
+    }
+    
+    // Verificar se a data final é maior que a inicial
+    if (!empty($data['start_datetime']) && !empty($data['end_datetime'])) {
+        $start = new DateTime($data['start_datetime']);
+        $end = new DateTime($data['end_datetime']);
+        
+        if ($end <= $start) {
+            $errors[] = 'A data e hora de término deve ser posterior à data e hora de início';
+        }
+    }
+    
+    // Verificar recorrência
+    if (isset($data['repeat_type']) && $data['repeat_type'] !== 'none') {
+        if (empty($data['repeat_until'])) {
+            $errors[] = 'Para eventos recorrentes, é necessário definir uma data final';
+        }
+        
+        if ($data['repeat_type'] === 'specific_days' && empty($data['repeat_days'])) {
+            $errors[] = 'Selecione pelo menos um dia da semana para a recorrência';
+        }
+    }
+    
+    return $errors;
+}
 
     private function generateRecurrences($originalId, $data, $groupId) {
         // Definir data de início da primeira ocorrência (já criada)
@@ -1069,4 +1077,5 @@ public function store() {
             }
         }
     }
+    
 }

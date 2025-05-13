@@ -173,10 +173,12 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             
             // Definir is_active com valor padrão se não for fornecido
             $isActive = isset($data['is_active']) ? $data['is_active'] : 1;
+            //   menor tempo para criar compromissos
+            $minTimeBefore = isset($data['min_time_before']) ? $data['min_time_before'] : 0;
             
             $query = "
-                INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash, is_active)
-                VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash, :is_active)
+                INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash, is_active, min_time_before)
+                VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash, :is_active, :min_time_before)
             ";
             
             $stmt = $this->db->prepare($query);
@@ -187,6 +189,7 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
             $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
             $stmt->bindParam(':is_active', $isActive, PDO::PARAM_INT);
+            $stmt->bindParam(':min_time_before', $minTimeBefore, PDO::PARAM_INT);
             
             if ($stmt->execute()) {
                 return $this->db->lastInsertId();
@@ -228,6 +231,7 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
                     color = :color,
                     public_hash = :public_hash,
                     is_active = :is_active,
+                    min_time_before = :min_time_before,
                     updated_at = NOW()
                 WHERE id = :id
             ";
@@ -239,6 +243,7 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
             $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
             $stmt->bindParam(':is_active', $data['is_active'], PDO::PARAM_INT);
+            $stmt->bindParam(':min_time_before', $data['min_time_before'], PDO::PARAM_INT);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             
             return $stmt->execute();

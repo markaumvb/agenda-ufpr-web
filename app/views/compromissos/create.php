@@ -175,4 +175,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/agenda_ufpr/app/assets/js/compromissos/form.js')): ?>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation.js"></script>
+
 <?php endif; ?>
