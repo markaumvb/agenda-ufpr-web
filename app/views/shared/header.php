@@ -73,6 +73,10 @@ $body_class = $is_auth_page ? 'auth-page' : '';
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
     }
     
+    //notifcacao
+    if (strpos($currentUri, '/notifications') !== false) {
+    echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/notifications.css">';
+}
     // Meus Compromissos
     if (strpos($currentUri, '/meuscompromissos') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/meuscompromissos.css">';

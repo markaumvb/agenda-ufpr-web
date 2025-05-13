@@ -40,5 +40,11 @@ if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/age
 <script src="<?= PUBLIC_URL ?>/app/assets/js/sidebar.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/approval-modal.js"></script>
 
+<?php 
+// Carregar JavaScript específico para página de notificações
+if (strpos($currentUri, '/notifications') !== false) {
+    echo '<script src="' . PUBLIC_URL . '/app/assets/js/notifications-page.js"></script>';
+}
+?>
 </body>
 </html>
