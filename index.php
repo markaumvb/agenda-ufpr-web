@@ -290,6 +290,41 @@ $routes = [
         'action' => 'allAgendas',
         'method' => 'GET'
     ],
+    '/notifications' => [
+        'controller' => 'NotificationController',
+        'action' => 'index',
+        'method' => 'GET'
+    ],
+    '/notifications/view' => [
+        'controller' => 'NotificationController',
+        'action' => 'view',
+        'method' => 'GET'
+    ],
+    '/notifications/mark-read' => [
+        'controller' => 'NotificationController',
+        'action' => 'markAsRead',
+        'method' => 'POST'
+    ],
+    '/notifications/mark-all-read' => [
+        'controller' => 'NotificationController',
+        'action' => 'markAllAsRead',
+        'method' => 'POST'
+    ],
+    '/notifications/delete' => [
+        'controller' => 'NotificationController',
+        'action' => 'delete',
+        'method' => 'POST'
+    ],
+    '/notifications/accept-compromisso' => [
+        'controller' => 'NotificationController',
+        'action' => 'acceptCompromisso',
+        'method' => 'POST'
+    ],
+    '/notifications/reject-compromisso' => [
+        'controller' => 'NotificationController',
+        'action' => 'rejectCompromisso',
+        'method' => 'POST'
+    ],
 ];
 
 

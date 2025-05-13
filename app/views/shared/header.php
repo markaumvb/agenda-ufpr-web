@@ -152,24 +152,45 @@ $body_class = $is_auth_page ? 'auth-page' : '';
                     
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="sidebar-item">
-                            <a href="<?= PUBLIC_URL ?>/meuscompromissos?status=aguardando_aprovacao" class="sidebar-link">
-                                <i class="fas fa-bell"></i>
-                                <span>Notificações</span>
-                                <?php 
-                                // Buscar contagem de compromissos aguardando aprovação
-                                $pendingCount = 0;
-                                if (isset($notificationModel)) {
-                                    $pendingCount = $notificationModel->countPendingApprovals($_SESSION['user_id']);
-                                }
-                                
-                                if ($pendingCount > 0): 
-                                ?>
-                                <span class="notification-badge"><?= $pendingCount ?></span>
-                                <?php else: ?>
-                                <span class="notification-badge hidden">0</span>
-                                <?php endif; ?>
-                            </a>
-                        </li>
+                        <a href="<?= PUBLIC_URL ?>/meuscompromissos?status=aguardando_aprovacao" class="sidebar-link">
+                            <i class="fas fa-clock"></i>
+                            <span>Aprovações Pendentes</span>
+                            <?php 
+                            // Buscar contagem de compromissos aguardando aprovação
+                            $pendingCount = 0;
+                            if (isset($notificationModel)) {
+                                $pendingCount = $notificationModel->countPendingApprovals($_SESSION['user_id']);
+                            }
+                            
+                            if ($pendingCount > 0): 
+                            ?>
+                            <span class="notification-badge"><?= $pendingCount ?></span>
+                            <?php else: ?>
+                            <span class="notification-badge hidden">0</span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+
+                    <!-- Adicionar o novo item de notificações -->
+                    <li class="sidebar-item">
+                        <a href="<?= PUBLIC_URL ?>/notifications" class="sidebar-link">
+                            <i class="fas fa-bell"></i>
+                            <span>Notificações</span>
+                            <?php 
+                            // Buscar contagem de notificações não lidas
+                            $unreadCount = 0;
+                            if (isset($notificationModel)) {
+                                $unreadCount = $notificationModel->countByUser($_SESSION['user_id'], true);
+                            }
+                            
+                            if ($unreadCount > 0): 
+                            ?>
+                            <span class="notification-badge"><?= $unreadCount ?></span>
+                            <?php else: ?>
+                            <span class="notification-badge hidden">0</span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                         
                         <li class="sidebar-item">
                             <a href="<?= PUBLIC_URL ?>/agendas" class="sidebar-link">

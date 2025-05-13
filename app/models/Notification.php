@@ -1,9 +1,5 @@
 <?php
-// app/models/Notification.php
 
-/**
- * Modelo para gerenciar notificações do sistema
- */
 class Notification {
     private $db;
     
@@ -14,12 +10,6 @@ class Notification {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    /**
-     * Cria uma nova notificação
-     * 
-     * @param array $data Dados da notificação
-     * @return int|bool ID da notificação criada ou false em caso de erro
-     */
     public function create($data) {
         try {
             $query = "
@@ -44,13 +34,6 @@ class Notification {
         }
     }
     
-    /**
-     * Obtém notificações não lidas de um usuário
-     * 
-     * @param int $userId ID do usuário
-     * @param int $limit Limite de notificações (opcional)
-     * @return array Lista de notificações
-     */
     public function getUnreadByUser($userId, $limit = 10) {
         try {
             $query = "
@@ -76,14 +59,7 @@ class Notification {
         }
     }
     
-    /**
-     * Obtém todas as notificações de um usuário com paginação
-     * 
-     * @param int $userId ID do usuário
-     * @param int $offset Offset para paginação
-     * @param int $limit Limite de notificações por página
-     * @return array Lista de notificações
-     */
+
     public function getAllByUser($userId, $offset = 0, $limit = 10) {
         try {
             $query = "
@@ -157,12 +133,6 @@ class Notification {
         }
     }
     
-    /**
-     * Marca todas as notificações de um usuário como lidas
-     * 
-     * @param int $userId ID do usuário
-     * @return bool Resultado da operação
-     */
     public function markAllAsRead($userId) {
         try {
             $query = "UPDATE notifications SET is_read = 1 WHERE user_id = :user_id AND is_read = 0";
@@ -176,13 +146,6 @@ class Notification {
         }
     }
     
-    /**
-     * Exclui uma notificação
-     * 
-     * @param int $id ID da notificação
-     * @param int $userId ID do usuário (para verificação)
-     * @return bool Resultado da operação
-     */
     public function delete($id, $userId) {
         try {
             $query = "DELETE FROM notifications WHERE id = :id AND user_id = :user_id";
@@ -215,4 +178,28 @@ class Notification {
             return false;
         }
     }
+
+    public function getOne($id, $userId) {
+    try {
+        $query = "
+            SELECT n.*, c.title as compromisso_title, c.start_datetime, c.agenda_id,
+                   a.title as agenda_title
+            FROM notifications n
+            LEFT JOIN compromissos c ON n.compromisso_id = c.id
+            LEFT JOIN agendas a ON c.agenda_id = a.id
+            WHERE n.id = :id AND n.user_id = :user_id
+            LIMIT 1
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar notificação: ' . $e->getMessage());
+        return false;
+    }
+}
 }
