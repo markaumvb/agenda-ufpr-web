@@ -201,6 +201,37 @@
   color: #0288d1;
 }
 
+.title-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.title-main {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Badges adicionais */
+.badge-primary {
+  background-color: #e6f0ff;
+  color: #0066cc;
+}
+
+.badge-secondary {
+  background-color: #f0f0f0;
+  color: #666666;
+}
 /* Linha de descrição expandida */
 .description-cell {
   background-color: #f8f9fa;

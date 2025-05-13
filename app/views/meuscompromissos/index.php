@@ -71,14 +71,9 @@
                     $startDate = new DateTime($compromisso['start_datetime']);
                     $endDate = new DateTime($compromisso['end_datetime']);
                     
-                    // Obter a agenda relacionada
-                    $agendaInfo = null;
-                    foreach ($agendas as $agenda) {
-                        if ($agenda['id'] == $compromisso['agenda_id']) {
-                            $agendaInfo = $agenda;
-                            break;
-                        }
-                    }
+                    // Obter agenda info da propriedade agenda_info do compromisso
+                    $agendaInfo = $compromisso['agenda_info'] ?? null;
+                    
                     // Adicionar classe para linhas zebradas
                     $rowClass = $index % 2 == 0 ? 'even-row' : 'odd-row';
                 ?>
@@ -96,18 +91,28 @@
                         </td>
                         
                         <td class="col-title <?= $compromisso['status'] === 'cancelado' ? 'text-cancelled' : '' ?>">
-                            <?= htmlspecialchars($compromisso['title']) ?>
+                            <div class="title-content">
+                                <div class="title-main"><?= htmlspecialchars($compromisso['title']) ?></div>
                                 <div class="appointment-meta">
-                                <?php if ($compromisso['created_by'] == $_SESSION['user_id']): ?>
-                                    <span class="badge badge-info badge-sm">Criado por você</span>
-                                <?php elseif (isset($compromisso['creator_name'])): ?>
-                                    <span class="badge badge-primary badge-sm">Criado por <?= htmlspecialchars($compromisso['creator_name']) ?></span>
-                                <?php endif; ?>
-                                
-                                <?php if (isset($compromisso['agenda_info']) && $compromisso['agenda_info']['user_id'] != $_SESSION['user_id']): ?>
-                                    <span class="badge badge-secondary badge-sm">Agenda de <?= htmlspecialchars($compromisso['agenda_info']['owner_name']) ?></span>
-                                <?php endif; ?>
+                                    <?php if ($compromisso['created_by'] == $_SESSION['user_id']): ?>
+                                        <span class="badge badge-info badge-sm">Criado por você</span>
+                                    <?php elseif (isset($compromisso['creator_name'])): ?>
+                                        <span class="badge badge-primary badge-sm">Criado por <?= htmlspecialchars($compromisso['creator_name']) ?></span>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($agendaInfo && $agendaInfo['user_id'] != $_SESSION['user_id']): ?>
+                                        <span class="badge badge-secondary badge-sm">Agenda de <?= htmlspecialchars($agendaInfo['owner_name']) ?></span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
+                        </td>
+                        
+                        <td class="col-date">
+                            <?php if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')): ?>
+                                <?= $startDate->format('d/m/Y') ?>
+                            <?php else: ?>
+                                <?= $startDate->format('d/m/Y') ?> a <?= $endDate->format('d/m/Y') ?>
+                            <?php endif; ?>
                         </td>
                         
                         <td class="col-time">
