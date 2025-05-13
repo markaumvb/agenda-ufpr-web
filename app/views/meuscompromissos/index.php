@@ -97,17 +97,17 @@
                         
                         <td class="col-title <?= $compromisso['status'] === 'cancelado' ? 'text-cancelled' : '' ?>">
                             <?= htmlspecialchars($compromisso['title']) ?>
-                            <?php if ($compromisso['created_by'] == $_SESSION['user_id']): ?>
-                                <span class="badge badge-info badge-sm">Criado por você</span>
-                            <?php endif; ?>
-                        </td>
-                        
-                        <td class="col-date">
-                            <?php if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')): ?>
-                                <?= $startDate->format('d/m/Y') ?>
-                            <?php else: ?>
-                                <?= $startDate->format('d/m/Y') ?> a <?= $endDate->format('d/m/Y') ?>
-                            <?php endif; ?>
+                                <div class="appointment-meta">
+                                <?php if ($compromisso['created_by'] == $_SESSION['user_id']): ?>
+                                    <span class="badge badge-info badge-sm">Criado por você</span>
+                                <?php elseif (isset($compromisso['creator_name'])): ?>
+                                    <span class="badge badge-primary badge-sm">Criado por <?= htmlspecialchars($compromisso['creator_name']) ?></span>
+                                <?php endif; ?>
+                                
+                                <?php if (isset($compromisso['agenda_info']) && $compromisso['agenda_info']['user_id'] != $_SESSION['user_id']): ?>
+                                    <span class="badge badge-secondary badge-sm">Agenda de <?= htmlspecialchars($compromisso['agenda_info']['owner_name']) ?></span>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         
                         <td class="col-time">

@@ -8,25 +8,27 @@ class MeusCompromissosController extends BaseController {
     private $agendaModel;
     private $authService;
     private $shareModel;
+    private $userModel;
+    
     
     public function __construct() {
         require_once __DIR__ . '/../models/Database.php';
         require_once __DIR__ . '/../models/Compromisso.php';
         require_once __DIR__ . '/../models/Agenda.php';
         require_once __DIR__ . '/../models/AgendaShare.php';
+        require_once __DIR__ . '/../models/User.php';
         
         $this->compromissoModel = new Compromisso();
         $this->agendaModel = new Agenda();
         $this->authService = new AuthorizationService();
         $this->shareModel = new AgendaShare();
+        $this->userModel = new User();
         
         // Verificar se o usuário está logado
         $this->checkAuth();
     }
     
-    /**
-     * Exibe a página principal com os compromissos do usuário em formato de data grid
-     */
+
     public function index() {
         $userId = $_SESSION['user_id'];
         
@@ -76,37 +78,49 @@ class MeusCompromissosController extends BaseController {
     /**
      * Obtém todos os compromissos do usuário
      */
-    private function getCompromissosData($userId) {
-        // Obter todas as agendas acessíveis pelo usuário
-        $agendas = $this->agendaModel->getAllAccessibleByUser($userId);
+private function getCompromissosData($userId) {
+    // Obter todas as agendas acessíveis pelo usuário
+    $agendas = $this->agendaModel->getAllAccessibleByUser($userId);
+    
+    // Para cada agenda, buscar os compromissos
+    $allCompromissos = [];
+    $processedIds = []; // Para evitar duplicatas
+    
+    foreach ($agendas as $agenda) {
+        // Definir se o usuário é o dono da agenda
+        $isOwner = ($agenda['user_id'] == $userId);
         
-        // Para cada agenda, buscar os compromissos
-        $allCompromissos = [];
-        $processedIds = []; // Para evitar duplicatas
+        // Verificar permissões de edição
+        $canEdit = $isOwner;
+        if (!$isOwner) {
+            $canEdit = $this->shareModel->canEdit($agenda['id'], $userId);
+        }
         
-        foreach ($agendas as $agenda) {
-            // Definir se o usuário é o dono da agenda
-            $isOwner = ($agenda['user_id'] == $userId);
-            
-            // Verificar permissões de edição
-            $canEdit = $isOwner;
-            if (!$isOwner) {
-                $canEdit = $this->shareModel->canEdit($agenda['id'], $userId);
+        // Adicionar informações à agenda
+        $agenda['is_owner'] = $isOwner;
+        $agenda['can_edit'] = $canEdit;
+        
+        // Adicionar nome do dono da agenda
+        $ownerInfo = $this->userModel->getById($agenda['user_id']);
+        $agenda['owner_name'] = $ownerInfo ? $ownerInfo['name'] : 'Desconhecido';
+        
+        // Buscar compromissos da agenda
+        $compromissos = $this->compromissoModel->getAllByAgenda($agenda['id']);
+        
+        foreach ($compromissos as $compromisso) {
+            // Verificar se já foi processado
+            if (in_array($compromisso['id'], $processedIds)) {
+                continue;
             }
             
-            // Adicionar informações à agenda
-            $agenda['is_owner'] = $isOwner;
-            $agenda['can_edit'] = $canEdit;
+            // Adicionar informações do criador do compromisso se não for o usuário atual
+            if ($compromisso['created_by'] != $userId) {
+                $creatorInfo = $this->userModel->getById($compromisso['created_by']);
+                $compromisso['creator_name'] = $creatorInfo ? $creatorInfo['name'] : 'Desconhecido';
+            }
             
-            // Buscar compromissos da agenda
-            $compromissos = $this->compromissoModel->getAllByAgenda($agenda['id']);
-            
-            foreach ($compromissos as $compromisso) {
-                // Verificar se já foi processado
-                if (in_array($compromisso['id'], $processedIds)) {
-                    continue;
-                }
-                if ($compromisso['created_by'] == $userId || $agenda['user_id'] == $userId) {
+            // Incluir apenas se for criado pelo usuário atual OU se a agenda pertencer ao usuário atual
+            if ($compromisso['created_by'] == $userId || $agenda['user_id'] == $userId) {
                 $processedIds[] = $compromisso['id']; // Marcar como processado
                 
                 // Adicionar informações extras
@@ -114,27 +128,25 @@ class MeusCompromissosController extends BaseController {
                 
                 // Adicionar à lista principal
                 $allCompromissos[] = $compromisso;
-                }
             }
         }
-        
-        // Aplicar filtros da URL
-        $filteredCompromissos = $this->applyFilters($allCompromissos);
-        
-        // Ordenar compromissos (por padrão, pela data de início)
-        usort($filteredCompromissos, function($a, $b) {
-            return strtotime($a['start_datetime']) - strtotime($b['start_datetime']);
-        });
-        
-        return [
-            'compromissos' => $filteredCompromissos,
-            'total' => count($filteredCompromissos)
-        ];
     }
     
-    /**
-     * Aplica filtros da URL aos compromissos
-     */
+    // Aplicar filtros da URL
+    $filteredCompromissos = $this->applyFilters($allCompromissos);
+    
+    // Ordenar compromissos (por padrão, pela data de início)
+    usort($filteredCompromissos, function($a, $b) {
+        return strtotime($a['start_datetime']) - strtotime($b['start_datetime']);
+    });
+    
+    return [
+        'compromissos' => $filteredCompromissos,
+        'total' => count($filteredCompromissos)
+    ];
+}
+    
+
     private function applyFilters($compromissos) {
         $filtered = [];
         

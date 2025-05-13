@@ -159,6 +159,23 @@
   margin-left: 0.5rem;
 }
 
+.appointment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.badge-primary {
+  background-color: #e6f0ff;
+  color: #0066cc;
+}
+
+.badge-secondary {
+  background-color: #f0f0f0;
+  color: #666666;
+}
+
 .badge-pendente {
   background-color: #fff9e6;
   color: #ffc107;
