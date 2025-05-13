@@ -106,7 +106,7 @@ class MeusCompromissosController extends BaseController {
                 if (in_array($compromisso['id'], $processedIds)) {
                     continue;
                 }
-                
+                if ($compromisso['created_by'] == $userId || $agenda['user_id'] == $userId) {
                 $processedIds[] = $compromisso['id']; // Marcar como processado
                 
                 // Adicionar informações extras
@@ -114,6 +114,7 @@ class MeusCompromissosController extends BaseController {
                 
                 // Adicionar à lista principal
                 $allCompromissos[] = $compromisso;
+                }
             }
         }
         
