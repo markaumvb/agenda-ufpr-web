@@ -2,8 +2,6 @@
 na visualização pública da agenda, deverá ter um botão de criar compromisso:
 esse botão deverá  abrir a tela de novo compromisso, exatamente como está, mas o status deverá estar fixo em aguardando aprovação (pode sapenas um texto escrito) sem o combo, para criar o evento, o usuário deverá fazer o login no fluxo padrão, e após o login, ele irá para essa tela de compromisso. Em resumo qualquer pessoa pode criar um evento em uma agenda pública, se a pessoa for o dono, o status é pendente, se for outro usuário, deverá ter o status de aguardando a aprovação, e considere que o usuário deverá fazer o login para identificação do usuário que está criando o evento
 
-***** para o dono da agenda no sistema, ele deverá ter uma rotina para aceitar ou cancelar os eventos propostos (status = aguardando aprovação)...
-
 
 
 
@@ -16,3 +14,10 @@ compromissos cancelados, não podem ser editados, nem finalizados... só podem s
 
 
 na agenda, configurar o status padrão do agendamento, e também configurar o time de quando a pessoa pode criar um agendamento, ou seja, quantas horas antes do compromisso ou da data atual pode ser criado um compromisso
+
+
+
+notificações
+Deve ter uma tela para apresentar as notificações recebidas, ou seja uma tabela listando as notificações e um filtro para escolher as notificações que ainda não foram lidas, nessa tela, deve ter um acesso a outra tela apenas para a leitura da notificação
+as notificações serão:
+sempre que alguém criar um compromisso na agenda da pessoa, deverá ser notificada desse compromisso, e esse tipo de notificação deverá ter o botão para aceitar ou cancelar o compromisso, se o compromisso for aceito ele ficará como pendente, se ele for cancelado deverá ficar como cancelado. O mesmo deverá ocorrer caso a pessoa alterar o compromisso, notificando a pessoa dessa alteração. e tendo os 2 botões para controlar o compromisso

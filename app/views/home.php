@@ -29,7 +29,7 @@
                         <tr>
                             <th>Título</th>
                             <th>Descrição</th>
-                            <th>Proprietário</th>
+                            <th>Responsável</th>
                             <th>Ação</th>
                         </tr>
                     </thead>
