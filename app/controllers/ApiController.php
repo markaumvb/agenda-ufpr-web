@@ -328,32 +328,78 @@ class ApiController {
     }
 
     public function checkMinTimeBefore() {
-    // Verificar se o usuário está logado
-    $this->checkAuth();
-    
-    // Obter parâmetros
-    $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
-    $startDatetime = filter_input(INPUT_GET, 'start', FILTER_SANITIZE_STRING);
-    
-    // Validar parâmetros
-    if (!$agendaId || !$startDatetime) {
-        echo json_encode(['error' => 'Parâmetros inválidos']);
+        // Verificar autenticação
+        $this->checkAuth();
+        
+        // Obter parâmetros
+        $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
+        $startDatetime = filter_input(INPUT_GET, 'start', FILTER_SANITIZE_STRING);
+        
+        if (!$agendaId || !$startDatetime) {
+            $response = [
+                'valid' => false,
+                'error' => 'Parâmetros inválidos'
+            ];
+            
+            echo json_encode($response);
+            exit;
+        }
+        
+        // Carregar modelos
+        require_once __DIR__ . '/../models/Agenda.php';
+        require_once __DIR__ . '/../models/Compromisso.php';
+        
+        $agendaModel = new Agenda();
+        $compromissoModel = new Compromisso();
+        
+        // Obter informações da agenda
+        $agenda = $agendaModel->getById($agendaId);
+        
+        if (!$agenda) {
+            $response = [
+                'valid' => false,
+                'error' => 'Agenda não encontrada'
+            ];
+            
+            echo json_encode($response);
+            exit;
+        }
+        
+        // Verificar se o usuário tem acesso à agenda
+        $canAccess = $agenda['user_id'] == $_SESSION['user_id'] || $agenda['is_public'];
+        
+        if (!$canAccess) {
+            require_once __DIR__ . '/../models/AgendaShare.php';
+            $shareModel = new AgendaShare();
+            $canAccess = $shareModel->checkAccess($agendaId, $_SESSION['user_id']);
+        }
+        
+        if (!$canAccess) {
+            $response = [
+                'valid' => false,
+                'error' => 'Sem permissão para acessar esta agenda'
+            ];
+            
+            echo json_encode($response);
+            exit;
+        }
+        
+        // Validar a data
+        $errors = $compromissoModel->validateCompromissoDate($agendaId, $startDatetime);
+        
+        if (empty($errors)) {
+            $response = [
+                'valid' => true,
+                'message' => 'Data válida'
+            ];
+        } else {
+            $response = [
+                'valid' => false,
+                'error' => implode(', ', $errors)
+            ];
+        }
+        
+        echo json_encode($response);
         exit;
     }
-    
-    // Carregar modelos
-    require_once __DIR__ . '/../models/Compromisso.php';
-    $compromissoModel = new Compromisso();
-    
-    // Validar data
-    $errors = $compromissoModel->validateCompromissoDate($agendaId, $startDatetime);
-    
-    // Retornar resultado
-    if (empty($errors)) {
-        echo json_encode(['valid' => true]);
-    } else {
-        echo json_encode(['error' => implode(', ', $errors)]);
-    }
-    exit;
-}
 }

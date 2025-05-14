@@ -256,6 +256,86 @@ document.addEventListener("DOMContentLoaded", function () {
   // Renderizar o calendário
   calendar.render();
 
+  let minTimeBefore = 0;
+  const agendaElement = document.querySelector(".calendar-container");
+
+  if (agendaElement && agendaElement.dataset.minTimeBefore) {
+    minTimeBefore = parseInt(agendaElement.dataset.minTimeBefore) || 0;
+  }
+
+  // Calcular data mínima para seleção
+  const now = new Date();
+  const minDate = new Date(now);
+  if (minTimeBefore > 0) {
+    minDate.setHours(minDate.getHours() + minTimeBefore);
+  }
+
+  // Definir validação de datas selecionáveis
+  calendar.setOption("selectAllow", function (selectInfo) {
+    return selectInfo.start >= minDate;
+  });
+
+  // Desabilitar datas passadas na visualização de mês
+  calendar.setOption("dayCellClassNames", function (arg) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Se a data for anterior à data atual, adicionar classe
+    if (arg.date < today) {
+      return ["fc-day-disabled", "past-day"];
+    }
+
+    // Se a data for anterior ao tempo mínimo de antecedência
+    if (minTimeBefore > 0 && arg.date < minDate) {
+      return ["fc-day-disabled", "min-time-before"];
+    }
+
+    return [];
+  });
+
+  // Adicionar CSS personalizado
+  const style = document.createElement("style");
+  style.textContent = `
+    .fc-day-disabled {
+        background-color: #f5f5f5 !important;
+        opacity: 0.6;
+        cursor: not-allowed !important;
+    }
+    .past-day {
+        text-decoration: line-through;
+        color: #999 !important;
+    }
+    .min-time-before {
+        background-color: #fff3cd !important;
+    }
+`;
+  document.head.appendChild(style);
+
+  // Modificar o comportamento do clique em dia para respeitar as restrições
+  calendar.setOption("dateClick", function (info) {
+    const clickedDate = info.date;
+
+    // Verificar se a data está no passado
+    if (clickedDate < now) {
+      alert("Não é possível criar compromissos em datas passadas.");
+      return;
+    }
+
+    // Verificar tempo mínimo de antecedência
+    if (minTimeBefore > 0 && clickedDate < minDate) {
+      alert(
+        `Esta agenda requer ${minTimeBefore} horas de antecedência para criar compromissos.`
+      );
+      return;
+    }
+
+    // Se passou nas validações, redirecionar para criação
+    const agendaId = agendaElement.dataset.agendaId;
+    const dateStr = info.dateStr;
+
+    window.location.href = `${BASE_URL}/compromissos/new?agenda_id=${agendaId}&date=${dateStr}`;
+  });
+
   // Após a renderização, aplicar destaque ao texto dos eventos
   setTimeout(function () {
     document.querySelectorAll(".fc-event-title").forEach(function (el) {

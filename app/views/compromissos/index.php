@@ -43,7 +43,7 @@
 </div>
 
 <!-- FullCalendar Container -->
-<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>">
+<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>" data-min-time-before="<?= $agenda['min_time_before'] ?? 0 ?>">
     <div id="calendar"></div>
     
     <script>
@@ -51,8 +51,12 @@
     window.allCompromissos = <?= json_encode($allCompromissos) ?>;
     </script>
 </div>
-</script>
-
+<!-- Adicionar um aviso sobre o tempo mínimo de antecedência, se existir -->
+<?php if (isset($agenda['min_time_before']) && $agenda['min_time_before'] > 0): ?>
+<div class="alert alert-info mt-3">
+    <strong>Aviso:</strong> Esta agenda requer <?= $agenda['min_time_before'] ?> horas de antecedência para a criação de novos compromissos.
+</div>
+<?php endif; ?>
 
 <!-- Lista de Compromissos Filtrados -->
 <div class="events-list-container">
@@ -209,28 +213,29 @@
                     <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
                         <div class="event-actions">
                             <?php if ($compromisso['status'] !== 'realizado'): ?>
-                                <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <input type="hidden" name="status" value="realizado">
-                                    <button type="submit" class="btn btn-sm btn-success" title="Marcar como realizado">
-                                        <i class="icon-check"></i>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            
-                            <?php if ($compromisso['status'] === 'pendente'): ?>
-                                <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <input type="hidden" name="status" value="cancelado">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Cancelar compromisso">
-                                        <i class="icon-cancel"></i>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            
-                            <a href="<?= PUBLIC_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-secondary" title="Editar compromisso">
-                                <i class="icon-edit"></i>
-                            </a>
+                                <?php if ($compromisso['status'] !== 'realizado'): ?>
+                                    <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
+                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                        <input type="hidden" name="status" value="realizado">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Marcar como realizado">
+                                            <i class="icon-check"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                                                            
+                        <?php if ($compromisso['status'] === 'pendente'): ?>
+                                    <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
+                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                        <input type="hidden" name="status" value="cancelado">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Cancelar compromisso">
+                                            <i class="icon-cancel"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                
+                                <a href="<?= PUBLIC_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-secondary" title="Editar compromisso">
+                                    <i class="icon-edit"></i>
+                                </a>
                             
                             <?php if ($compromisso['status'] === 'pendente'): ?>
                                 <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
