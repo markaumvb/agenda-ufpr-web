@@ -1062,30 +1062,29 @@ private function validateCompromissoData($data, $compromissoId = null) {
         }
     }
 
-    private function notifyAgendaOwner($agenda, $data, $createdById) {
-        // Se o sistema tiver um módulo de notificações implementado
-        if (class_exists('NotificationModel')) {
-            require_once __DIR__ . '/../models/User.php';
-            $userModel = new User();
-            $creator = $userModel->getById($createdById);
-            
-            $notificationText = "";
-            if ($data['status'] === 'aguardando_aprovacao') {
-                $notificationText = "{$creator['name']} adicionou um compromisso que está aguardando sua aprovação na agenda '{$agenda['title']}'";
-            } else {
-                $notificationText = "{$creator['name']} adicionou um novo compromisso na agenda '{$agenda['title']}'";
-            }
-            
-            require_once __DIR__ . '/../models/Notification.php';
-            $notificationModel = new Notification();
-            $notificationModel->create([
-                'user_id' => $agenda['user_id'],
-                'message' => $notificationText,
-                'type' => 'compromisso',
-                'reference_id' => $data['id'],
-                'is_read' => 0
-            ]);
+private function notifyAgendaOwner($agenda, $data, $createdById) {
+    // Se o sistema tiver um módulo de notificações implementado
+    if (class_exists('Notification')) {  // Mudado de 'NotificationModel' para 'Notification'
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $creator = $userModel->getById($createdById);
+        
+        $notificationText = "";
+        if ($data['status'] === 'aguardando_aprovacao') {
+            $notificationText = "{$creator['name']} adicionou um compromisso que está aguardando sua aprovação na agenda '{$agenda['title']}'";
+        } else {
+            $notificationText = "{$creator['name']} adicionou um novo compromisso na agenda '{$agenda['title']}'";
         }
+        
+        require_once __DIR__ . '/../models/Notification.php';
+        $notificationModel = new Notification();
+        $notificationModel->create([
+            'user_id' => $agenda['user_id'],
+            'compromisso_id' => $data['id'],
+            'message' => $notificationText,
+            'is_read' => 0
+        ]);
+    }
         
         // Se o sistema tiver um módulo de e-mail implementado
         if (class_exists('EmailService')) {
