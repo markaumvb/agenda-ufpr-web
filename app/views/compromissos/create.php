@@ -58,10 +58,15 @@
 
         <div class="form-group">
             <label for="status-display">Status</label>
-            <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+            <?php if ($isFromPublic): ?>
+                <input type="text" id="status-display" class="form-control" value="Aguardando Aprovação" readonly>
+                <!-- Não definimos o status aqui para permitir que a lógica do controller o faça -->
+            <?php else: ?>
+                <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+                <input type="hidden" name="status" value="pendente">
+            <?php endif; ?>
         </div>
-        <input type="hidden" name="status" value="pendente">
-        
+
         <?php if ($isFromPublic): ?>
             <input type="hidden" name="public" value="1">
         <?php endif; ?>
