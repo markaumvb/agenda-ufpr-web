@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/compromissos/index.php
-?>
-
 <div class="page-header">
 <div class="header-container">
     <h1><?= htmlspecialchars($agenda['title']) ?></h1>
@@ -51,6 +47,7 @@
     window.allCompromissos = <?= json_encode($allCompromissos) ?>;
     </script>
 </div>
+
 <!-- Adicionar um aviso sobre o tempo mínimo de antecedência, se existir -->
 <?php if (isset($agenda['min_time_before']) && $agenda['min_time_before'] > 0): ?>
 <div class="alert alert-info mt-3">
@@ -223,7 +220,7 @@
                                     </form>
                                 <?php endif; ?>
                                                                             
-                        <?php if ($compromisso['status'] === 'pendente'): ?>
+                                <?php if ($compromisso['status'] === 'pendente'): ?>
                                     <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
                                         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                                         <input type="hidden" name="status" value="cancelado">
@@ -237,13 +234,14 @@
                                     <i class="icon-edit"></i>
                                 </a>
                             
-                            <?php if ($compromisso['status'] === 'pendente'): ?>
-                                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
-                                        <i class="icon-trash"></i>
-                                    </button>
-                                </form>
+                                <?php if ($compromisso['status'] === 'pendente'): ?>
+                                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
+                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
+                                            <i class="icon-trash"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
