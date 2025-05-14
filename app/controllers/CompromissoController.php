@@ -915,7 +915,9 @@ private function validateCompromissoData($data, $compromissoId = null) {
     
     // Verificar se a data inicial está no futuro e respeita o tempo mínimo
     if (!empty($data['start_datetime']) && !empty($data['agenda_id'])) {
-        $dateErrors = $this->compromissoModel->validateCompromissoDate($data['agenda_id'], $data['start_datetime']);
+        // Determinar se é uma edição ou criação
+        $isEditing = ($compromissoId !== null);
+        $dateErrors = $this->compromissoModel->validateCompromissoDate($data['agenda_id'], $data['start_datetime'], $isEditing);
         if (!empty($dateErrors)) {
             $errors = array_merge($errors, $dateErrors);
         }
