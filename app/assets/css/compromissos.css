@@ -482,6 +482,23 @@
 .no-results p {
   margin-bottom: 1rem;
 }
+/* botões de ação de meus compromissos */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.action-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.action-buttons .btn i {
+  font-size: 0.9em;
+}
 
 /* Recorrência de compromissos */
 .repeat-option {

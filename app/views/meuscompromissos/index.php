@@ -138,50 +138,46 @@
                         </td>
                         
                         <td class="col-actions">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button">
-                                    Ações
+                        <div class="action-buttons">
+                            <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
+                                <!-- Botões para Compromissos aguardando aprovação (dono da agenda) -->
+                                <button class="btn btn-sm btn-success approve-btn" data-id="<?= $compromisso['id'] ?>" title="Aprovar">
+                                    <i class="fas fa-check"></i> Aprovar
                                 </button>
-                                <div class="dropdown-menu">
-                                     
-                                    <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
-                                        <a href="#" class="dropdown-item approve-btn" data-id="<?= $compromisso['id'] ?>">
-                                            Aprovar
-                                        </a>
-                                        <a href="#" class="dropdown-item reject-btn" data-id="<?= $compromisso['id'] ?>">
-                                            Rejeitar
-                                        </a>
-                                    <?php else: ?>
-                                        <?php if ($compromisso['status'] === 'pendente' && 
-                                            (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id'])): ?>
-                                            <a href="#" class="dropdown-item cancel-btn" data-id="<?= $compromisso['id'] ?>">
-                                                Cancelar
-                                            </a>
-                                        <?php endif; ?>
+                                <button class="btn btn-sm btn-danger reject-btn" data-id="<?= $compromisso['id'] ?>" title="Rejeitar">
+                                    <i class="fas fa-times"></i> Rejeitar
+                                </button>
+                            <?php else: ?>
+                                <!-- Botões para outros status -->
+                                <?php if ($compromisso['status'] === 'pendente'): ?>
+                                    <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id']): ?>
+                                        <!-- Botão Cancelar (apenas para pendentes) -->
+                                        <button class="btn btn-sm btn-warning cancel-btn" data-id="<?= $compromisso['id'] ?>" title="Cancelar">
+                                            <i class="fas fa-ban"></i> Cancelar
+                                        </button>
                                         
-                                        <?php if ($compromisso['status'] !== 'cancelado' && 
-                                              (isset($agendaInfo['is_owner']) && ($agendaInfo['is_owner'] || isset($agendaInfo['can_edit']) && $agendaInfo['can_edit']) || 
-                                               $compromisso['created_by'] == $_SESSION['user_id'])): ?>
-                                            <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="dropdown-item">
-                                                Editar
-                                            </a>
-                                        <?php endif; ?>
+                                        <!-- Botão Editar (apenas para pendentes) -->
+                                        <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-primary" title="Editar">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
                                         
                                         <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
-                                            <?php if ($compromisso['status'] === 'pendente'): ?>
-                                                <a href="#" class="dropdown-item delete-btn" data-id="<?= $compromisso['id'] ?>">
-                                                    Excluir
-                                                </a>
-                                                <?php else: ?>
-                                                    <span class="dropdown-item disabled" style="color: #aaa; cursor: not-allowed;">
-                                                        Excluir
-                                                    </span>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
+                                            <!-- Botão Excluir (apenas para pendentes, apenas para dono) -->
+                                            <button class="btn btn-sm btn-danger delete-btn" data-id="<?= $compromisso['id'] ?>" title="Excluir">
+                                                <i class="fas fa-trash"></i> Excluir
+                                            </button>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                </div>
-                            </div>
-                        </td>
+                                <?php elseif ($compromisso['status'] === 'realizado'): ?>
+                                    <!-- Nenhuma ação disponível para compromissos realizados -->
+                                    <span class="text-muted"><i class="fas fa-check-circle"></i> Realizado</span>
+                                <?php elseif ($compromisso['status'] === 'cancelado'): ?>
+                                    <!-- Nenhuma ação disponível para compromissos cancelados -->
+                                    <span class="text-muted"><i class="fas fa-ban"></i> Cancelado</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                    </td>
                     </tr>
                     
                     <!-- Linha para descrição (expandida ao clicar) -->

@@ -350,66 +350,74 @@ public function store() {
 }
     
 
-    public function edit() {
-        // Obter o ID do compromisso da URL
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        
-        if (!$id) {
-            $_SESSION['flash_message'] = 'Compromisso não especificado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
-            exit;
-        }
-        
-        // Buscar o compromisso
-        $compromisso = $this->compromissoModel->getById($id);
-        
-        if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas');
-            exit;
-        }
-        
-        // Buscar a agenda do compromisso
-        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
-        
-        // Verificar se o usuário é o dono da agenda ou tem permissão para editar
-        $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
-        $canEdit = $isOwner;
-        
-        if (!$isOwner) {
-            require_once __DIR__ . '/../models/AgendaShare.php';
-            $shareModel = new AgendaShare();
-            $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
-        }
-        
-        if (!$canEdit) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para editar este compromisso';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
-            exit;
-        }
-        
-        // Formatar datas para o formulário HTML5
-        $compromisso['start_datetime'] = (new DateTime($compromisso['start_datetime']))->format('Y-m-d\TH:i');
-        $compromisso['end_datetime'] = (new DateTime($compromisso['end_datetime']))->format('Y-m-d\TH:i');
-        
-        if ($compromisso['repeat_until']) {
-            $compromisso['repeat_until'] = (new DateTime($compromisso['repeat_until']))->format('Y-m-d');
-        }
-        
-        // Array de dias da semana para repetição específica
-        $repeatDays = $compromisso['repeat_days'] ? explode(',', $compromisso['repeat_days']) : [];
-        
-        // Verificar se é parte de um evento recorrente
-        $isRecurring = !empty($compromisso['group_id']);
-        
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/compromissos/edit.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
+public function edit() {
+    // Obter o ID do compromisso da URL
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    
+    if (!$id) {
+        $_SESSION['flash_message'] = 'Compromisso não especificado';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/agendas');
+        exit;
     }
+    
+    // Buscar o compromisso
+    $compromisso = $this->compromissoModel->getById($id);
+    
+    if (!$compromisso) {
+        $_SESSION['flash_message'] = 'Compromisso não encontrado';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/agendas');
+        exit;
+    }
+    
+    // NOVA VERIFICAÇÃO: Apenas compromissos pendentes podem ser editados
+    if ($compromisso['status'] !== 'pendente') {
+        $_SESSION['flash_message'] = 'Apenas compromissos com status pendente podem ser editados';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/meuscompromissos');
+        exit;
+    }
+    
+    // Buscar a agenda do compromisso
+    $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+    
+    // Verificar se o usuário é o dono da agenda ou tem permissão para editar
+    $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
+    $canEdit = $isOwner;
+    
+    if (!$isOwner) {
+        require_once __DIR__ . '/../models/AgendaShare.php';
+        $shareModel = new AgendaShare();
+        $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
+    }
+    
+    if (!$canEdit) {
+        $_SESSION['flash_message'] = 'Você não tem permissão para editar este compromisso';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
+        exit;
+    }
+    
+    // Formatar datas para o formulário HTML5
+    $compromisso['start_datetime'] = (new DateTime($compromisso['start_datetime']))->format('Y-m-d\TH:i');
+    $compromisso['end_datetime'] = (new DateTime($compromisso['end_datetime']))->format('Y-m-d\TH:i');
+    
+    if ($compromisso['repeat_until']) {
+        $compromisso['repeat_until'] = (new DateTime($compromisso['repeat_until']))->format('Y-m-d');
+    }
+    
+    // Array de dias da semana para repetição específica
+    $repeatDays = $compromisso['repeat_days'] ? explode(',', $compromisso['repeat_days']) : [];
+    
+    // Verificar se é parte de um evento recorrente
+    $isRecurring = !empty($compromisso['group_id']);
+    
+    // Exibir a view
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/compromissos/edit.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
     
     /**
      * Atualiza um compromisso existente
