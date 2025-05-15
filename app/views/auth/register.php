@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/auth/register.php
-?>
-
 <div class="form-container">
     <h2>Complete seu Cadastro</h2>
     

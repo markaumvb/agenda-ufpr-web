@@ -1,0 +1,141 @@
+/* 
+ * Arquivo: app/assets/css/shares.css
+ * Estilos específicos para o módulo de Compartilhamento de Agendas
+ */
+
+/* URL pública */
+.public-url-container {
+  margin-top: var(--spacing-md);
+}
+
+.input-group {
+  display: flex;
+}
+
+.input-group .form-control {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Formulário de compartilhamento */
+.share-form {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Agendas compartilhadas */
+.agenda-owner {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.agenda-permission {
+  margin-top: var(--spacing-md);
+}
+
+/* Estilos específicos para a página pública de agendas */
+.public-agendas-section {
+  margin-top: 3rem;
+  background-color: #fff;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  padding: var(--spacing-xl);
+}
+
+.public-agendas-section h2 {
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+  font-size: 1.5rem;
+}
+
+.public-agendas-section p {
+  color: #666;
+  margin-bottom: var(--spacing-lg);
+}
+
+.public-agendas-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.public-agendas-table th {
+  background-color: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  padding: 0.75rem var(--spacing-md);
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+}
+
+.public-agendas-table td {
+  padding: var(--spacing-md);
+  vertical-align: middle;
+  border-top: 1px solid #eee;
+}
+
+.public-agendas-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.public-agendas-table tr:hover {
+  background-color: #f5f9ff;
+}
+
+/* Cor da borda à esquerda é definida inline com base na cor da agenda */
+.public-agendas-table tr {
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.public-agendas-table .btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Responsividade */
+@media (max-width: var(--breakpoint-sm)) {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-group-large,
+  .form-group-small {
+    width: 100%;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-group .form-control,
+  .input-group .btn {
+    width: 100%;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .public-agendas-table th:nth-child(2),
+  .public-agendas-table td:nth-child(2) {
+    display: none; /* Esconde a coluna de descrição em telas pequenas */
+  }
+}
+
+@media (max-width: var(--breakpoint-xs)) {
+  .public-agendas-table th:nth-child(3),
+  .public-agendas-table td:nth-child(3) {
+    display: none; /* Esconde a coluna de proprietário em telas muito pequenas */
+  }
+
+  .public-agendas-section {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}

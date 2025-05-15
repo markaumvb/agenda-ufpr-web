@@ -1,0 +1,36 @@
+/* 
+ * Estilos para as páginas de autenticação (login e registro)
+ */
+
+.form-container {
+  background-color: #fff;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-xl);
+  max-width: 500px;
+  margin: var(--spacing-xl) auto;
+}
+
+.form-container h2 {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  color: var(--primary-color);
+  font-size: 1.8rem;
+}
+
+.auth-info {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-md);
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Responsividade */
+@media (max-width: var(--breakpoint-sm)) {
+  .form-container {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md) var(--spacing-sm);
+  }
+}

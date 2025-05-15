@@ -1,48 +1,37 @@
 /* 
- * Estilos consolidados para o calendário e compromissos
- * Substitua todo o conteúdo do arquivo compromissos.css por este código
+ * Estilos consolidados para o módulo de compromissos
+ * Inclui calendário, lista de compromissos e formulários específicos
  */
 
 /* Cabeçalho e metadados */
-.page-header {
-  margin-bottom: 2rem;
-  margin-top: 2rem;
-}
-
-.header-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .agenda-meta {
+  margin-top: var(--spacing-md);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.agenda-meta h2 {
+  margin: 0;
+  font-size: 1.25rem;
 }
 
 /* Opções de visualização do calendário */
 .view-options {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .view-options .btn-group {
   display: flex;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   overflow: hidden;
 }
 
 .view-option {
-  padding: 0.5rem 1rem;
+  padding: var(--spacing-sm) var(--spacing-md);
   background-color: #f8f9fa;
   border: 1px solid #ddd;
   cursor: pointer;
@@ -56,19 +45,19 @@
 }
 
 .view-option.active {
-  background-color: #004a8f;
+  background-color: var(--primary-color);
   color: white;
-  border-color: #004a8f;
+  border-color: var(--primary-color);
 }
 
 .view-option:first-child {
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
+  border-top-left-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
 }
 
 .view-option:last-child {
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
 }
 
 /* Contêiner do calendário */
@@ -78,18 +67,18 @@
   margin-bottom: 20px;
   padding: 10px;
   background-color: #f9f9f9;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 
 #calendar {
   border: 1px solid #ccc;
   min-height: 350px;
   background-color: white;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   overflow: hidden;
 }
 
-/* Barra de ferramentas do FullCalendar */
+/* Estilos do FullCalendar */
 .fc-header-toolbar {
   margin-bottom: 10px !important;
   border-bottom: 1px solid #eee;
@@ -98,11 +87,11 @@
 
 .fc .fc-toolbar-title {
   font-size: 1.4rem;
-  color: #004a8f;
+  color: var(--primary-color);
 }
 
 .fc .fc-button-primary {
-  background-color: #004a8f;
+  background-color: var(--primary-color);
   border-color: #003d75;
 }
 
@@ -118,7 +107,7 @@
 /* Dias e células do calendário */
 .fc-day-today {
   background-color: #e6f7ff !important;
-  border: 2px solid #004a8f !important;
+  border: 2px solid var(--primary-color) !important;
 }
 
 .fc-daygrid-day.has-events {
@@ -135,21 +124,10 @@
   padding-bottom: 2px !important;
 }
 
-.fc-dayGridMonth-view .fc-daygrid-day-events {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-}
-
-.fc-daygrid-event-harness {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-/* Estilos base para todos os eventos */
+/* Eventos do calendário */
 .fc-event,
 .fc-daygrid-event {
-  border-radius: 4px !important;
+  border-radius: var(--border-radius) !important;
   border-left-width: 4px !important;
   margin-top: 2px !important;
   margin-bottom: 2px !important;
@@ -162,7 +140,6 @@
   ) !important;
 }
 
-/* Estilos para títulos dos eventos */
 .fc-event-title,
 .fc-daygrid-event .fc-event-title {
   display: block !important;
@@ -175,26 +152,10 @@
   padding: 2px 0 !important;
 }
 
-.fc-event-title-container {
-  width: 100% !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.fc-event-main {
-  display: block !important;
-  padding: 2px !important;
-}
-
-.fc-daygrid-event > .fc-event-main {
-  padding-bottom: 0 !important;
-}
-
 /* Eventos por status */
 .fc-event.event-status-pendente,
 .fc-daygrid-event.event-status-pendente {
-  background-color: #ffc107 !important;
+  background-color: var(--warning-color) !important;
   border-color: #e0a800 !important;
   color: #000 !important;
   cursor: move !important;
@@ -202,7 +163,7 @@
 
 .fc-event.event-status-realizado,
 .fc-daygrid-event.event-status-realizado {
-  background-color: #28a745 !important;
+  background-color: var(--success-color) !important;
   border-color: #218838 !important;
   color: #fff !important;
   cursor: not-allowed !important;
@@ -211,7 +172,7 @@
 
 .fc-event.event-status-cancelado,
 .fc-daygrid-event.event-status-cancelado {
-  background-color: #dc3545 !important;
+  background-color: var(--danger-color) !important;
   border-color: #bd2130 !important;
   text-decoration: line-through !important;
   color: #fff !important;
@@ -221,156 +182,53 @@
 
 .fc-event.event-status-aguardando_aprovacao,
 .fc-daygrid-event.event-status-aguardando_aprovacao {
-  background-color: #17a2b8 !important;
+  background-color: var(--info-color) !important;
   border-color: #138496 !important;
   color: #fff !important;
   cursor: move !important;
 }
 
-/* Configuração específica para títulos de eventos por status */
-.event-status-pendente .fc-event-title {
-  color: #000 !important;
-}
-
-.event-status-realizado .fc-event-title,
-.event-status-cancelado .fc-event-title,
-.event-status-aguardando_aprovacao .fc-event-title {
-  color: #fff !important;
-}
-
-/* Link "mais eventos" */
-.fc-daygrid-more-link {
-  display: inline-block !important;
-  background-color: #004a8f !important;
-  color: white !important;
-  font-weight: bold !important;
-  border-radius: 12px !important;
-  padding: 2px 8px !important;
-  margin-top: 4px !important;
-  text-decoration: none !important;
-}
-
-/* Popover de eventos */
-.fc-popover {
-  border: none !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-  overflow: hidden !important;
-}
-
-.fc-popover-header {
-  background-color: #004a8f !important;
-  color: white !important;
-  padding: 8px 10px !important;
-  font-weight: 600 !important;
-}
-
-.fc-popover-body {
-  padding: 10px !important;
-}
-
-.fc-popover .fc-daygrid-event {
-  margin: 3px 0 !important;
-}
-
-/* Visualizações de lista */
-.fc-list-event-title,
-.fc-list-event-time {
-  font-weight: 600 !important;
-}
-
-/* Configuração de altura do calendário */
-.fc-dayGridMonth-view .fc-daygrid-event {
-  height: auto !important;
-  min-height: 22px !important;
-  max-height: none !important;
-}
-
-/* Modal de eventos */
-.event-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-.event-modal-content {
-  background-color: #fefefe;
-  margin: 10% auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 600px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  position: relative;
-}
-
-.event-modal-close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.event-modal-close:hover,
-.event-modal-close:focus {
-  color: black;
-  text-decoration: none;
-}
-
-.event-modal .event-card {
-  border-left-width: 4px;
-  box-shadow: none;
-  border: none;
-  padding: 0;
-}
-
-.event-modal .event-actions {
-  display: none;
-}
-
-/* Lista de eventos e filtros */
+/* Lista de compromissos e filtros */
 .events-list-container {
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: var(--border-radius-lg);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .section-title {
   margin-top: 0;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
   font-size: 1.5rem;
-  color: #004a8f;
+  color: var(--primary-color);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
 }
 
-.events-filters {
+.events-filters,
+.filter-container {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
   flex-wrap: wrap;
   align-items: center;
+  padding: var(--spacing-md);
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .filter-select,
 .filter-input {
-  padding: 0.5rem;
+  padding: var(--spacing-sm);
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   font-size: 0.9rem;
 }
 
@@ -381,44 +239,45 @@
 .events-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
-/* Cards de eventos na lista */
+/* Cards de eventos */
 .event-card {
   border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .event-card.event-status-pendente {
-  border-left: 4px solid #ffc107;
+  border-left: 4px solid var(--warning-color);
 }
 
 .event-card.event-status-realizado {
-  border-left: 4px solid #28a745;
+  border-left: 4px solid var(--success-color);
 }
 
 .event-card.event-status-cancelado {
-  border-left: 4px solid #dc3545;
+  border-left: 4px solid var(--danger-color);
 }
 
 .event-card.event-status-aguardando_aprovacao {
-  border-left: 4px solid #17a2b8;
+  border-left: 4px solid var(--info-color);
 }
 
 .event-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .event-title {
   margin: 0;
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .event-card.event-status-cancelado .event-title {
@@ -428,13 +287,13 @@
 .event-details {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .event-datetime {
   display: flex;
-  gap: 1rem;
+  gap: var(--spacing-md);
   font-size: 0.9rem;
   color: #666;
 }
@@ -448,90 +307,174 @@
 .event-description {
   font-size: 0.9rem;
   line-height: 1.5;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
   border-top: 1px solid #eee;
 }
 
 .event-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  padding-top: 0.5rem;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
   border-top: 1px solid #eee;
 }
 
-.status-form,
-.delete-form {
-  display: inline;
+/* Data Grid - Meus Compromissos */
+.data-grid-container {
+  overflow-x: auto;
+  margin-bottom: var(--spacing-lg);
+  background-color: #fff;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Estado vazio */
-.empty-state {
+.data-grid {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.data-grid thead {
+  background-color: #f5f5f5;
+}
+
+.data-grid th {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f5f5f5;
+}
+
+.data-grid td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+/* Colunas da tabela */
+.col-agenda {
+  width: 15%;
+}
+
+.col-title {
+  width: 25%;
+}
+
+.col-date,
+.col-time {
+  width: 12%;
+}
+
+.col-location {
+  width: 15%;
+}
+
+.col-status {
+  width: 13%;
+}
+
+.col-actions {
+  width: 8%;
+  text-align: center;
+}
+
+.compromisso-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.compromisso-row:hover {
+  background-color: #f8f9fa;
+}
+
+.compromisso-row.expanded {
+  background-color: #f0f0f0;
+}
+
+.compromisso-row.status-cancelled .text-cancelled {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.description-cell {
+  background-color: #f8f9fa;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-bottom: 1px solid #ddd;
+}
+
+.description-content {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.agenda-tag {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--border-radius);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.title-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.title-main {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Estado vazio e sem resultados */
+.empty-state,
+.no-results {
   text-align: center;
   padding: 2rem;
   background-color: #f8f9fa;
   border-radius: 8px;
   margin-top: 1rem;
-}
-
-.empty-state p {
   margin-bottom: 1rem;
 }
 
-/* Botões específicos */
-.btn-block {
-  display: block;
-  width: 100%;
-  text-align: center;
+.empty-state p,
+.no-results p {
+  margin-bottom: 1rem;
 }
 
-.mt-3 {
-  margin-top: 1rem;
-}
-
-/* Ícones básicos usando pseudo-elementos */
-.icon-calendar::before {
-  content: "📅 ";
-}
-
-.icon-clock::before {
-  content: "🕒 ";
-}
-
-.icon-location::before {
-  content: "📍 ";
-}
-
-.icon-repeat::before {
-  content: "🔄 ";
-}
-
-.icon-check::before {
-  content: "✓";
-}
-
-.icon-cancel::before {
-  content: "✗";
-}
-
-.icon-edit::before {
-  content: "✎";
-}
-
-.icon-trash::before {
-  content: "🗑";
+/* Recorrência de compromissos */
+.repeat-option {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+  border: 1px solid #eee;
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
-  .header-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .events-filters {
+@media (max-width: var(--breakpoint-sm)) {
+  .events-filters,
+  .filter-container {
     flex-direction: column;
     align-items: stretch;
   }
@@ -542,12 +485,12 @@
 
   .event-datetime {
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--spacing-xs);
   }
 
   .view-options {
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--spacing-lg);
   }
 
   .view-option {
@@ -557,6 +500,51 @@
 
   .fc .fc-toolbar {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
+  }
+
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-input,
+  .filter-select {
+    width: 100%;
+  }
+
+  .data-grid-container {
+    margin-left: -15px;
+    margin-right: -15px;
+    border-radius: 0;
+  }
+
+  .data-grid th:nth-child(3),
+  .data-grid td:nth-child(3) {
+    display: none;
+  }
+
+  .data-grid tbody tr.even-row {
+    background-color: #f8f9fa;
+  }
+
+  .data-grid tbody tr.odd-row {
+    background-color: #ffffff;
+  }
+}
+
+@media (max-width: var(--breakpoint-xs)) {
+  .event-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .event-actions .btn {
+    flex: 1 1 auto;
+    min-width: 80px;
   }
 }

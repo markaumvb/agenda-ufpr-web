@@ -1,14 +1,14 @@
 /* 
- * Arquivo: public/assets/css/shares.css
+ * Arquivo: app/assets/css/shares.css
  * Estilos específicos para o módulo de Compartilhamento de Agendas
  */
 
 /* Cabeçalho da página */
 .agenda-meta {
-  margin-top: 1rem;
+  margin-top: var(--spacing-md);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .agenda-meta h2 {
@@ -19,14 +19,14 @@
 /* Cards e containers */
 .card {
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: var(--border-radius-lg);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .card-header {
-  padding: 1rem;
+  padding: var(--spacing-md);
   background-color: #f8f9fa;
   border-bottom: 1px solid #eee;
 }
@@ -34,29 +34,20 @@
 .card-header h3 {
   margin: 0;
   font-size: 1.25rem;
-  color: #004a8f;
+  color: var(--primary-color);
 }
 
 .card-body {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
 }
 
 .content-container {
-  margin-bottom: 2rem;
-}
-
-/* Espaçamentos */
-.mt-3 {
-  margin-top: 1rem;
-}
-
-.mt-4 {
-  margin-top: 1.5rem;
+  margin-bottom: var(--spacing-xl);
 }
 
 /* URL pública */
 .public-url-container {
-  margin-top: 1rem;
+  margin-top: var(--spacing-md);
 }
 
 .input-group {
@@ -76,13 +67,13 @@
 
 /* Formulário de compartilhamento */
 .share-form {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-row {
   display: flex;
   align-items: flex-end;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .form-group-large {
@@ -154,7 +145,7 @@
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: #004a8f;
+  background-color: var(--primary-color);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -181,11 +172,184 @@
 }
 
 .agenda-permission {
-  margin-top: 1rem;
+  margin-top: var(--spacing-md);
+}
+
+/* Estilos específicos para a página pública de agendas */
+.public-agendas-section {
+  margin-top: 3rem;
+  background-color: #fff;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  padding: var(--spacing-xl);
+}
+
+.public-agendas-section h2 {
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+  font-size: 1.5rem;
+}
+
+.public-agendas-section p {
+  color: #666;
+  margin-bottom: var(--spacing-lg);
+}
+
+.public-agendas-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.public-agendas-table th {
+  background-color: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  padding: 0.75rem var(--spacing-md);
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+}
+
+.public-agendas-table td {
+  padding: var(--spacing-md);
+  vertical-align: middle;
+  border-top: 1px solid #eee;
+}
+
+.public-agendas-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.public-agendas-table tr:hover {
+  background-color: #f5f9ff;
+}
+
+/* Cor da borda à esquerda é definida inline com base na cor da agenda */
+.public-agendas-table tr {
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.public-agendas-table .btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Agendas compartilhadas */
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.agenda-card {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.agenda-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.agenda-card-header {
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.agenda-title {
+  margin: 0 0 0.7rem 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  width: 100%;
+}
+
+.agenda-visibility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  align-self: flex-start;
+}
+
+.agenda-card-body {
+  padding: var(--spacing-md) var(--spacing-lg);
+  flex: 1;
+}
+
+.agenda-description {
+  margin: 0 0 var(--spacing-md) 0;
+  color: #444;
+  font-size: 1.1rem;
+  font-weight: normal;
+  line-height: 1.3;
+}
+
+.agenda-owner p {
+  margin: 0.25rem 0;
+}
+
+.agenda-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.stat {
+  padding: var(--spacing-sm);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  margin-bottom: 0.1rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+}
+
+.agenda-card-footer {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: #fafafa;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.agenda-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.agenda-actions .btn {
+  flex: 1 1 auto;
+  min-width: 110px;
+  text-align: center;
+  white-space: nowrap;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
+@media (max-width: var(--breakpoint-sm)) {
   .form-row {
     flex-direction: column;
     align-items: stretch;
@@ -203,7 +367,36 @@
   .input-group .form-control,
   .input-group .btn {
     width: 100%;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .public-agendas-table th:nth-child(2),
+  .public-agendas-table td:nth-child(2) {
+    display: none; /* Esconde a coluna de descrição em telas pequenas */
+  }
+
+  .agenda-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-actions {
+    flex-direction: column;
+  }
+
+  .agenda-actions .btn,
+  .agenda-actions form {
+    width: 100%;
+  }
+}
+
+@media (max-width: var(--breakpoint-xs)) {
+  .public-agendas-table th:nth-child(3),
+  .public-agendas-table td:nth-child(3) {
+    display: none; /* Esconde a coluna de proprietário em telas muito pequenas */
+  }
+
+  .public-agendas-section {
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 }

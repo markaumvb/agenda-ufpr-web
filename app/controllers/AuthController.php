@@ -28,8 +28,7 @@ public function login() {
         exit;
     }
     
-    DebugHelper::log("Tentativa de login - POST", $_POST);
-    
+   
     // Obter dados do formulário
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
@@ -106,19 +105,12 @@ public function login() {
     $_SESSION['username'] = $user['username'];
     $_SESSION['name'] = $user['name'];
     
-    DebugHelper::log("Login bem-sucedido - verificando redirecionamento", [
-        'POST' => $_POST,
-        'SESSION' => $_SESSION
-    ]);
     
     // ABORDAGEM 1: Verificar parâmetros diretos para criação de compromisso
     if (isset($_POST['agenda_hash']) && !empty($_POST['agenda_hash']) && 
         isset($_POST['redirect_to']) && $_POST['redirect_to'] === 'compromissos/new') {
         
-        DebugHelper::log("Detectado redirecionamento para compromissos/new", [
-            'agenda_hash' => $_POST['agenda_hash']
-        ]);
-        
+
         require_once __DIR__ . '/../models/Agenda.php';
         $agendaModel = new Agenda();
         $agenda = $agendaModel->getByPublicHash($_POST['agenda_hash']);
@@ -129,11 +121,11 @@ public function login() {
                 $redirectUrl .= "&public=1";
             }
             
-            DebugHelper::log("Redirecionando para compromisso", $redirectUrl);
+
             header("Location: " . $redirectUrl);
             exit;
         } else {
-            DebugHelper::log("Agenda não encontrada com hash", $_POST['agenda_hash']);
+            
         }
     }
     
@@ -146,14 +138,14 @@ public function login() {
         
         if (!empty($redirectParams)) {
             $redirectUrl = PUBLIC_URL . "/redirect-from-login?" . http_build_query($redirectParams);
-            DebugHelper::log("Redirecionando para intermediária", $redirectUrl);
+
             header("Location: " . $redirectUrl);
             exit;
         }
     }
     
     // Redirecionamento padrão
-    DebugHelper::log("Nenhum redirecionamento especial, indo para agendas");
+
     header("Location: " . PUBLIC_URL . "/agendas");
     exit;
 }

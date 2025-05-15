@@ -28,67 +28,40 @@ $body_class = $is_auth_page ? 'auth-page' : '';
 
     <title><?= APP_NAME ?></title>
 
-    <!-- CSS Principal - Mantenha esses sempre carregados para o layout básico funcionar -->
+    <!-- CSS Base - Carregado em todas as páginas -->
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/style.css">
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/component.css">
-    <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/approval-modal.css">
     <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/sidebar.css">
-    
-    <!-- CSS específicos por módulo - SIMPLIFICADO -->
+
     <?php 
     // Identificar a página atual
     $currentUri = $_SERVER['REQUEST_URI'];
     
-    // Páginas de compromissos e formulários
-    if (strpos($currentUri, '/compromissos') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
-        
-        // Páginas de formulário recebem estilo de formulário
-        if (strpos($currentUri, '/new') !== false || strpos($currentUri, '/edit') !== false) {
-            echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
-        }
-    }
-    
-    // Carrega CSS de formulário para todas essas páginas
-    if (strpos($currentUri, '/new') !== false || 
-        strpos($currentUri, '/edit') !== false || 
-        strpos($currentUri, '/create') !== false || 
-        strpos($currentUri, '/login') !== false || 
-        strpos($currentUri, '/register') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
-    }
-    
-    // Autenticação
-    if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth/login.css">';
-    }
-    
-    // Agendas
+    // Carregamento condicional de CSS específicos
     if (strpos($currentUri, '/agendas') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
     }
     
-    // Compartilhamentos
+    if (strpos($currentUri, '/compromissos') !== false || strpos($currentUri, '/meuscompromissos') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
+    }
+    
     if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
     }
     
-    //notifcacao
     if (strpos($currentUri, '/notifications') !== false) {
-    echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/notifications.css">';
-}
-    // Meus Compromissos
-    if (strpos($currentUri, '/meuscompromissos') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/meuscompromissos.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/notifications.css">';
     }
-
-    if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
-    echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/public-agendas.css">';
-}
     
-    // Página com parâmetro public=1
-    if (strpos($currentUri, 'public=1') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/forms.css">';
+    // Carregar CSS de autenticação para páginas de login/registro
+    if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth.css">';
+    }
+    
+    // Página inicial
+    if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
     }
     ?>
     
@@ -97,7 +70,7 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     /* Estilos para eventos do calendário - sempre incluídos */
     .fc-event {
         border: none;
-        border-radius: 4px;
+        border-radius: var(--border-radius);
         padding: 2px 4px;
     }
 
@@ -108,27 +81,27 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     /* Status específicos */
     .fc-event.pendente, 
     .fc-event[data-status="pendente"] {
-        background-color: #ffc107 !important;
-        border-color: #ffc107 !important;
+        background-color: var(--warning-color) !important;
+        border-color: var(--warning-color) !important;
     }
 
     .fc-event.realizado, 
     .fc-event[data-status="realizado"] {
-        background-color: #28a745 !important;
-        border-color: #28a745 !important;
+        background-color: var(--success-color) !important;
+        border-color: var(--success-color) !important;
     }
 
     .fc-event.cancelado, 
     .fc-event[data-status="cancelado"] {
-        background-color: #dc3545 !important;
-        border-color: #dc3545 !important;
+        background-color: var(--danger-color) !important;
+        border-color: var(--danger-color) !important;
         text-decoration: line-through;
     }
 
     .fc-event.aguardando_aprovacao, 
     .fc-event[data-status="aguardando_aprovacao"] {
-        background-color: #17a2b8 !important;
-        border-color: #17a2b8 !important;
+        background-color: var(--info-color) !important;
+        border-color: var(--info-color) !important;
     }
     </style>
 </head>
