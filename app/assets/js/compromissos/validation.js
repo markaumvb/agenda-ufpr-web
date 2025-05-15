@@ -1,92 +1,150 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const startDatetimeField = document.getElementById("start_datetime");
-  const endDatetimeField = document.getElementById("end_datetime");
-  const agendaIdField = document.querySelector('input[name="agenda_id"]');
-  const submitButton = document.querySelector('button[type="submit"]');
+  const form = document.querySelector("form");
+  const startDatetimeInput = document.getElementById("start_datetime");
+  const endDatetimeInput = document.getElementById("end_datetime");
+  const errorContainer = document.getElementById("error-container");
+  const errorList = document.getElementById("error-list");
 
-  if (!startDatetimeField || !endDatetimeField || !agendaIdField) return;
+  // Função para validar o formulário apenas no envio
+  form.addEventListener("submit", function (event) {
+    const errors = validateForm();
 
-  // Obter dados da agenda
-  const agendaId = agendaIdField.value;
-  const minTimeBefore = startDatetimeField.dataset.minTime || 0;
-  const formElement = startDatetimeField.closest("form");
+    if (errors.length > 0) {
+      // Impedir o envio do formulário se houver erros
+      event.preventDefault();
 
-  // Verificar se estamos na página de edição
-  const isEditPage = window.location.href.includes("/compromissos/edit");
-
-  // REMOVER TODOS OS ATRIBUTOS HTML DE VALIDAÇÃO DOS CAMPOS DE DATA
-  // Isso evita que o navegador tente validar durante a digitação
-  startDatetimeField.removeAttribute("min");
-  startDatetimeField.removeAttribute("max");
-  endDatetimeField.removeAttribute("min");
-  endDatetimeField.removeAttribute("max");
-
-  // Adicionar validação APENAS no envio do formulário
-  if (formElement) {
-    formElement.addEventListener("submit", function (event) {
-      // Verificar todas as validações apenas no envio
-      const now = new Date();
-      const startDate = new Date(startDatetimeField.value);
-      const endDate = new Date(endDatetimeField.value);
-
-      // 1. Verificar se a data de início está no futuro
-      if (startDate <= now) {
-        event.preventDefault();
-        alert("A data e hora de início deve ser no futuro");
-        return;
-      }
-
-      // 2. Verificar tempo mínimo de antecedência (apenas para novos compromissos)
-      if (!isEditPage && minTimeBefore > 0) {
-        const minDate = new Date(now);
-        minDate.setHours(minDate.getHours() + parseInt(minTimeBefore));
-
-        if (startDate < minDate) {
-          event.preventDefault();
-          alert(
-            `A data e hora de início deve ter pelo menos ${minTimeBefore} horas de antecedência`
-          );
-          return;
-        }
-      }
-
-      // 3. Verificar se o término é posterior ao início
-      if (endDate <= startDate) {
-        event.preventDefault();
-        alert(
-          "A data e hora de término deve ser posterior à data e hora de início"
-        );
-        return;
-      }
-    });
-  }
-
-  // Sem event listeners para os campos de data para evitar qualquer validação durante a edição
-
-  // Único listener para atualizar logicamente o valor min do campo de término quando o início muda
-  startDatetimeField.addEventListener("change", function () {
-    // NÃO fazer validações aqui - apenas atualizar o estado interno
-    const startDate = new Date(startDatetimeField.value);
-    if (!isNaN(startDate.getTime())) {
-      // A data é válida, podemos fazer cálculos com ela
-      // Mas não mostrar alertas
+      // Exibir erros
+      displayErrors(errors);
     }
   });
 
-  // Auxiliar para formatar data (mantido para referência)
-  function formatDateTimeLocal(date) {
-    const year = date.getFullYear();
-    let month = date.getMonth() + 1;
-    let day = date.getDate();
-    let hour = date.getHours();
-    let minute = date.getMinutes();
+  // Atualizar automaticamente a data de término quando a data de início mudar
+  startDatetimeInput.addEventListener("change", function () {
+    // Apenas atualizar a data de término se estiver vazia ou for anterior à data de início
+    const startValue = new Date(startDatetimeInput.value);
+    let endValue = new Date(endDatetimeInput.value);
 
-    // Adicionar zeros à esquerda
-    month = month < 10 ? "0" + month : month;
-    day = day < 10 ? "0" + day : day;
-    hour = hour < 10 ? "0" + hour : hour;
-    minute = minute < 10 ? "0" + minute : minute;
+    if (!endDatetimeInput.value || endValue <= startValue) {
+      // Adicionar 1 hora à data de início
+      const newEndDate = new Date(startValue);
+      newEndDate.setHours(newEndDate.getHours() + 1);
 
-    return `${year}-${month}-${day}T${hour}:${minute}`;
+      // Formatar a nova data de término para o formato datetime-local
+      const year = newEndDate.getFullYear();
+      const month = String(newEndDate.getMonth() + 1).padStart(2, "0");
+      const day = String(newEndDate.getDate()).padStart(2, "0");
+      const hours = String(newEndDate.getHours()).padStart(2, "0");
+      const minutes = String(newEndDate.getMinutes()).padStart(2, "0");
+
+      endDatetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // Limpar mensagens de erro
+    clearErrors();
+  });
+
+  // Função para validar o formulário
+  function validateForm() {
+    const errors = [];
+    const title = document.getElementById("title").value.trim();
+    const startDatetime = startDatetimeInput.value;
+    const endDatetime = endDatetimeInput.value;
+
+    // Validar título
+    if (!title) {
+      errors.push("O título é obrigatório");
+    }
+
+    // Validar data e hora de início
+    if (!startDatetime) {
+      errors.push("A data e hora de início são obrigatórias");
+    } else {
+      const now = new Date();
+      const startDate = new Date(startDatetime);
+
+      // Verificar se a data é futura
+      if (startDate <= now) {
+        errors.push("A data e hora de início deve ser no futuro");
+      }
+
+      // Verificar tempo mínimo de antecedência
+      const minTimeBefore = parseInt(startDatetimeInput.dataset.minTime || 0);
+      if (minTimeBefore > 0) {
+        const minDate = new Date();
+        minDate.setHours(minDate.getHours() + minTimeBefore);
+
+        if (startDate < minDate) {
+          errors.push(
+            `A data e hora de início deve ter pelo menos ${minTimeBefore} horas de antecedência`
+          );
+        }
+      }
+    }
+
+    // Validar data e hora de término
+    if (!endDatetime) {
+      errors.push("A data e hora de término são obrigatórias");
+    } else if (startDatetime) {
+      const startDate = new Date(startDatetime);
+      const endDate = new Date(endDatetime);
+
+      if (endDate <= startDate) {
+        errors.push(
+          "A data e hora de término deve ser posterior à data e hora de início"
+        );
+      }
+    }
+
+    // Validar recorrência
+    const repeatType = document.querySelector(
+      'input[name="repeat_type"]:checked'
+    ).value;
+    if (repeatType !== "none") {
+      const repeatUntil = document.getElementById("repeat_until").value;
+
+      if (!repeatUntil) {
+        errors.push(
+          "Para eventos recorrentes, é necessário definir uma data final"
+        );
+      }
+
+      if (repeatType === "specific_days") {
+        const repeatDays = document.querySelectorAll(
+          'input[name="repeat_days[]"]:checked'
+        );
+        if (repeatDays.length === 0) {
+          errors.push(
+            "Selecione pelo menos um dia da semana para a recorrência"
+          );
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  // Função para exibir os erros
+  function displayErrors(errors) {
+    // Limpar lista de erros
+    errorList.innerHTML = "";
+
+    // Adicionar cada erro à lista
+    errors.forEach(function (error) {
+      const li = document.createElement("li");
+      li.textContent = error;
+      errorList.appendChild(li);
+    });
+
+    // Exibir o contêiner de erros
+    errorContainer.style.display = "block";
+
+    // Rolar até o topo do formulário
+    window.scrollTo({ top: form.offsetTop - 20, behavior: "smooth" });
+  }
+
+  // Função para limpar os erros
+  function clearErrors() {
+    errorList.innerHTML = "";
+    errorContainer.style.display = "none";
   }
 });

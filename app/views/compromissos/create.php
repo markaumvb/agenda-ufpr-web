@@ -15,8 +15,17 @@
     <?php endif; ?>
     
     <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post">
+
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
-        
+            <div id="error-container" class="alert alert-danger" style="display: <?= !empty($errors) ? 'block' : 'none' ?>;">
+                    <ul id="error-list">
+                        <?php if (!empty($errors)): ?>
+                            <?php foreach($errors as $error): ?>
+                                <li><?= htmlspecialchars($error) ?></li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
+                </div>
         <div class="form-group">
             <label for="title">Título *</label>
             <input type="text" id="title" name="title" required class="form-control">
@@ -31,8 +40,8 @@
             <div class="form-group form-group-half">
                 <label for="start_datetime">Data e Hora de Início *</label>
                 <input type="datetime-local" id="start_datetime" name="start_datetime" required class="form-control"
-                       value="<?= htmlspecialchars($defaultStartDateTime ?? '') ?>" 
-                       data-min-time="<?= $agenda['min_time_before'] ?? 0 ?>">
+                    value="<?= htmlspecialchars($defaultStartDateTime ?? '') ?>" 
+                    data-min-time="<?= $agenda['min_time_before'] ?? 0 ?>">
                 <small class="form-text text-muted">A data deve ser futura 
                 <?php if (isset($agenda['min_time_before']) && $agenda['min_time_before'] > 0): ?>
                 e ter pelo menos <?= $agenda['min_time_before'] ?> horas de antecedência
@@ -43,7 +52,7 @@
             <div class="form-group form-group-half">
                 <label for="end_datetime">Data e Hora de Término *</label>
                 <input type="datetime-local" id="end_datetime" name="end_datetime" required class="form-control"
-                       value="<?= htmlspecialchars($defaultEndDateTime ?? '') ?>">
+                    value="<?= htmlspecialchars($defaultEndDateTime ?? '') ?>">
             </div>
         </div>
         

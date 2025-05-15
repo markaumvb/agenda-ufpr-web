@@ -146,6 +146,20 @@ public function create() {
         exit;
     }
     
+    // Verificar se há erros de validação
+    $errors = [];
+    if (isset($_SESSION['validation_errors'])) {
+        $errors = $_SESSION['validation_errors'];
+        unset($_SESSION['validation_errors']);
+    }
+    
+    // Recuperar dados do formulário, se houver
+    $formData = [];
+    if (isset($_SESSION['form_data'])) {
+        $formData = $_SESSION['form_data'];
+        unset($_SESSION['form_data']);
+    }
+    
     // Definir data e hora padrão considerando a antecedência mínima
     $currentDate = new DateTime();
     
@@ -175,7 +189,7 @@ public function create() {
     $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
     $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
     
-    // Exibir a view
+    // Exibir a view, passando as variáveis errors e formData
     require_once __DIR__ . '/../views/shared/header.php';
     require_once __DIR__ . '/../views/compromissos/create.php';
     require_once __DIR__ . '/../views/shared/footer.php';
