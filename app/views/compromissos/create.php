@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/compromissos/create.php - Atualização para mostrar tempo mínimo
-?>
-
 <div class="form-container">
     <div class="form-header">
         <h1>Novo Compromisso</h1>
@@ -52,7 +48,7 @@
             <div class="form-group form-group-half">
                 <label for="end_datetime">Data e Hora de Término *</label>
                 <input type="datetime-local" id="end_datetime" name="end_datetime" required class="form-control"
-                    value="<?= htmlspecialchars($defaultEndDateTime ?? '') ?>">
+                   value="<?= isset($formData['end_datetime']) ? htmlspecialchars($formData['end_datetime']) : htmlspecialchars($defaultEndDateTime ?? '') ?>">
             </div>
         </div>
         

@@ -146,14 +146,14 @@ public function create() {
         exit;
     }
     
-    // Verificar se há erros de validação
+    // Verificar se há erros de validação da sessão
     $errors = [];
     if (isset($_SESSION['validation_errors'])) {
         $errors = $_SESSION['validation_errors'];
         unset($_SESSION['validation_errors']);
     }
     
-    // Recuperar dados do formulário, se houver
+    // Recuperar dados do formulário da sessão
     $formData = [];
     if (isset($_SESSION['form_data'])) {
         $formData = $_SESSION['form_data'];
@@ -186,10 +186,11 @@ public function create() {
     $endDate = clone $currentDate;
     $endDate->add(new DateInterval('PT1H')); // Adiciona 1 hora
     
+    // Formatar datas para o formato HTML datetime-local
     $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
     $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
     
-    // Exibir a view, passando as variáveis errors e formData
+    // Exibir a view
     require_once __DIR__ . '/../views/shared/header.php';
     require_once __DIR__ . '/../views/compromissos/create.php';
     require_once __DIR__ . '/../views/shared/footer.php';
@@ -452,12 +453,19 @@ public function store() {
         // Validar dados usando o método comum
         $errors = $this->validateCompromissoData($data, $id);
         
-        if (!empty($errors)) {
-            $_SESSION['flash_message'] = implode(', ', $errors);
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/compromissos/edit?id=' . $id);
-            exit;
-        }
+    if (!empty($errors)) {
+        // Manter o sistema de flash messages para compatibilidade
+        $_SESSION['flash_message'] = 'Por favor, corrija os erros abaixo.';
+        $_SESSION['flash_type'] = 'danger';
+        
+        // Também armazenar os erros detalhados e dados do formulário para a nova interface
+        $_SESSION['validation_errors'] = $errors;
+        $_SESSION['form_data'] = $_POST;
+        
+        // Redirecionar de volta para o formulário
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+        exit;
+    }
         
         // Buscar o compromisso atual
         $compromisso = $this->compromissoModel->getById($id);

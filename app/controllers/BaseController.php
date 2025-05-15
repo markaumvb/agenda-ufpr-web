@@ -17,14 +17,6 @@ class BaseController {
         }
     }
     
-    /**
-     * Verifica o acesso a uma agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @param int $userId ID do usuário
-     * @param bool $requireOwner Se é necessário ser o proprietário
-     * @return array|bool Retorna dados da agenda ou false
-     */
     protected function checkAgendaAccess($agendaId, $userId, $requireOwner = false) {
         require_once __DIR__ . '/../models/Agenda.php';
         $agendaModel = new Agenda();
