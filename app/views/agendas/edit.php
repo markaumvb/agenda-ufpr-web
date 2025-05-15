@@ -20,8 +20,8 @@
         
         <div class="form-group">
             <label for="color">Cor</label>
-            <input type="color" id="color" name="color" class="form-control color-picker" 
-                   value="<?= htmlspecialchars($agenda['color']) ?>">
+            <input type="color" id="color" name="color" class="color-picker" 
+                value="<?= htmlspecialchars($agenda['color']) ?>">
             <small class="form-text">Escolha uma cor para identificar esta agenda</small>
         </div>
         

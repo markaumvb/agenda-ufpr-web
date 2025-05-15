@@ -17,7 +17,7 @@
         
         <div class="form-group">
             <label for="color">Cor</label>
-            <input type="color" id="color" name="color" value="#3788d8" class="form-control color-picker">
+            <input type="color" id="color" name="color" value="#3788d8" class="color-picker">
             <small class="form-text">Escolha uma cor para identificar esta agenda</small>
         </div>
 

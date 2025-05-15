@@ -12,16 +12,16 @@
     
     <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post">
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
-        
-            <div id="error-container" class="alert alert-danger" style="display: <?= !empty($errors) ? 'block' : 'none' ?>;">
-                    <ul id="error-list">
-                        <?php if (!empty($errors)): ?>
-                            <?php foreach($errors as $error): ?>
-                                <li><?= htmlspecialchars($error) ?></li>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </ul>
-                </div>
+
+    <div id="error-container" class="alert alert-danger" style="display: <?= !empty($errors) ? 'block' : 'none' ?>;">
+            <ul id="error-list">
+                <?php if (!empty($errors)): ?>
+                    <?php foreach($errors as $error): ?>
+                        <li><?= htmlspecialchars($error) ?></li>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </ul>
+        </div>
         <div class="form-group">
             <label for="title">Título *</label>
             <input type="text" id="title" name="title" required class="form-control">
@@ -194,6 +194,5 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
 });
 </script>
-
-<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
