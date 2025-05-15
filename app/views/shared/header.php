@@ -4,6 +4,12 @@ $current_url = $_SERVER['REQUEST_URI'];
 $auth_pages = ['/login', '/register', '/login-process', '/register-process'];
 $is_auth_page = false;
 
+if (isset($_SESSION['user_id']) && !isset($notificationModel)) {
+    require_once __DIR__ . '/../../models/Database.php';
+    require_once __DIR__ . '/../../models/Notification.php';
+    $notificationModel = new Notification();
+}
+
 foreach ($auth_pages as $page) {
     if (strpos($current_url, $page) !== false) {
         $is_auth_page = true;

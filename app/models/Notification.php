@@ -196,4 +196,26 @@ public function countByUser($userId, $onlyUnread = false) {
         return false;
     }
 }
+
+public function countPendingApprovals($userId) {
+    try {
+        $query = "
+            SELECT COUNT(*) FROM notifications n
+            JOIN compromissos c ON n.compromisso_id = c.id
+            JOIN agendas a ON c.agenda_id = a.id
+            WHERE a.user_id = :user_id 
+            AND c.status = 'aguardando_aprovacao'
+            AND n.is_read = 0
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return (int)$stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log('Erro ao contar compromissos aguardando aprovação: ' . $e->getMessage());
+        return 0;
+    }
+}
 }

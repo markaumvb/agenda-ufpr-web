@@ -9,15 +9,12 @@ em agendas compartilhadas, (apenas visualização) não se pode modificar nenhum
 
 temos que criar uma tela que liste os compromissos em todas as agendas públicas, de forma linear (uma linha do tempo uma barra de linha do tempo de forma vertical... e essa barra deve ir atualizando com o decorrer do tempo (de meia em meia hora) a pessoa, ao abrir essa tela, pegará os eventos do dia!, mas logo acima podemos criar um filtro para: escolher a data, escolher a agenda (multiseleção) e pesquisar por descrição do evento. Além disso preciso de um script ou alguma forma de que obanco de dados atualize de forma automática, ou seja, eventos pendentes que sejam < que a data/hora atual devem ficar finalizados se forma automática sem intervenção humana... algum script ou processo que faça isso de forma agendada de meia em meia hora
 
-compromissos cancelados, não podem ser editados, nem finalizados... só podem ser visualizados
-
-
 
 na agenda, configurar o status padrão do agendamento, e também configurar o time de quando a pessoa pode criar um agendamento, ou seja, quantas horas antes do compromisso ou da data atual pode ser criado um compromisso
 
 
-
-notificações
-Deve ter uma tela para apresentar as notificações recebidas, ou seja uma tabela listando as notificações e um filtro para escolher as notificações que ainda não foram lidas, nessa tela, deve ter um acesso a outra tela apenas para a leitura da notificação
-as notificações serão:
-sempre que alguém criar um compromisso na agenda da pessoa, deverá ser notificada desse compromisso, e esse tipo de notificação deverá ter o botão para aceitar ou cancelar o compromisso, se o compromisso for aceito ele ficará como pendente, se ele for cancelado deverá ficar como cancelado. O mesmo deverá ocorrer caso a pessoa alterar o compromisso, notificando a pessoa dessa alteração. e tendo os 2 botões para controlar o compromisso
+- NOTIFICAÇÕES ESTÃO SENDO DUPLICADAS AO CRIAR COMPROMISSOS EM AGENDAS PÚBLICAS, DEVE MESCLAR EM UMA UNICA NOTIFICAÇÃO
+- ao clicar na notificação está dando erro, e não está marcando como lida
+- BADGES NA NOTIFICAÇÃO NÃO ESTÁ FUNCIONANDO
+- COMPROMISSOS SEM VERIFICAÇÕES DE DATA E HORA INICIAL E FINAL, DEVE-SE SEMPRE VERIFICAR ANTES DE CRIAR QUALQUER COMPROMISSO SE JÁ EXISTE COMPROMISSO NAQUELA DATA E HORA (OBEDECENDO O INTERVALO DE TEMPO)
+- https://200.238.174.7/agenda_ufpr/compromissos?agenda_id=6 tela de compromisso, no calendário não permitir clicar e arrastar os eventos. Ao clicar em um evento ele está apareceno no final da tela os detalhes do evento, antes ele aparecia em uma tela de formato modal, quero que volte a ser desse jeito....

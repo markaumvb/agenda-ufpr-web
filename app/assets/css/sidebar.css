@@ -146,18 +146,19 @@ body.auth-page .main-content.full-width {
 
 .notification-badge {
   position: absolute;
-  top: 10px;
-  right: 15px;
-  background-color: #dc3545;
+  top: 50%;
+  right: 15px; /* Ajuste conforme necessário */
+  transform: translateY(-50%);
+  font-size: 10px;
+  background-color: #f44336;
   color: white;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: bold;
 }
 
 .notification-badge.hidden {

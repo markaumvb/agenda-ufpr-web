@@ -63,7 +63,7 @@
                     <th class="col-time">Horário</th>
                     <th class="col-location">Local</th>
                     <th class="col-status">Status</th>
-                    <th class="col-actions">Ações</th>
+                    <th class="col-actions" style="width: 290px;"></th> 
                 </tr>
             </thead>
             <tbody>
@@ -138,45 +138,42 @@
                         </td>
                         
                         <td class="col-actions">
-                        <div class="action-buttons">
                             <?php if ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
-                                <!-- Botões para Compromissos aguardando aprovação (dono da agenda) -->
-                                <button class="btn btn-sm btn-success approve-btn" data-id="<?= $compromisso['id'] ?>" title="Aprovar">
-                                    <i class="fas fa-check"></i> Aprovar
-                                </button>
-                                <button class="btn btn-sm btn-danger reject-btn" data-id="<?= $compromisso['id'] ?>" title="Rejeitar">
-                                    <i class="fas fa-times"></i> Rejeitar
-                                </button>
-                            <?php else: ?>
-                                <!-- Botões para outros status -->
-                                <?php if ($compromisso['status'] === 'pendente'): ?>
+                                <!-- Botões para compromissos aguardando aprovação (apenas para dono da agenda) -->
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-success approve-btn" data-id="<?= $compromisso['id'] ?>">
+                                        <i class="fas fa-check"></i> Aprovar
+                                    </button>
+                                    <button class="btn btn-sm btn-danger reject-btn" data-id="<?= $compromisso['id'] ?>">
+                                        <i class="fas fa-times"></i> Rejeitar
+                                    </button>
+                                </div>
+                            <?php elseif ($compromisso['status'] === 'pendente'): ?>
+                                <!-- Botões apenas para compromissos pendentes -->
+                                <div class="action-buttons">
                                     <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner'] || $compromisso['created_by'] == $_SESSION['user_id']): ?>
-                                        <!-- Botão Cancelar (apenas para pendentes) -->
-                                        <button class="btn btn-sm btn-warning cancel-btn" data-id="<?= $compromisso['id'] ?>" title="Cancelar">
+                                        <button class="btn btn-sm btn-warning cancel-btn" data-id="<?= $compromisso['id'] ?>">
                                             <i class="fas fa-ban"></i> Cancelar
                                         </button>
-                                        
-                                        <!-- Botão Editar (apenas para pendentes) -->
-                                        <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-primary" title="Editar">
+                                    <?php endif; ?>
+                                    
+                                    <?php if (isset($agendaInfo['is_owner']) && ($agendaInfo['is_owner'] || isset($agendaInfo['can_edit']) && $agendaInfo['can_edit']) || 
+                                            $compromisso['created_by'] == $_SESSION['user_id']): ?>
+                                        <a href="<?= BASE_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-primary">
                                             <i class="fas fa-edit"></i> Editar
                                         </a>
-                                        
-                                        <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
-                                            <!-- Botão Excluir (apenas para pendentes, apenas para dono) -->
-                                            <button class="btn btn-sm btn-danger delete-btn" data-id="<?= $compromisso['id'] ?>" title="Excluir">
-                                                <i class="fas fa-trash"></i> Excluir
-                                            </button>
-                                        <?php endif; ?>
                                     <?php endif; ?>
-                                <?php elseif ($compromisso['status'] === 'realizado'): ?>
-                                    <!-- Nenhuma ação disponível para compromissos realizados -->
-                                    <span class="text-muted"><i class="fas fa-check-circle"></i> Realizado</span>
-                                <?php elseif ($compromisso['status'] === 'cancelado'): ?>
-                                    <!-- Nenhuma ação disponível para compromissos cancelados -->
-                                    <span class="text-muted"><i class="fas fa-ban"></i> Cancelado</span>
-                                <?php endif; ?>
+                                    
+                                    <?php if (isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']): ?>
+                                        <button class="btn btn-sm btn-danger delete-btn" data-id="<?= $compromisso['id'] ?>">
+                                            <i class="fas fa-trash"></i> Excluir
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            <?php else: ?>
+                                <!-- Nenhuma ação para compromissos cancelados ou realizados -->
+                                <!-- Deixar em branco conforme solicitado -->
                             <?php endif; ?>
-                        </div>
                     </td>
                     </tr>
                     

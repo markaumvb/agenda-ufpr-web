@@ -6,6 +6,11 @@
   margin-bottom: var(--spacing-md);
 }
 
+.data-grid .col-actions {
+  min-width: 290px;
+  /width: auto;
+}
+
 .agenda-meta h2 {
   margin: 0;
   font-size: 1.25rem;
@@ -485,14 +490,16 @@
 /* botões de ação de meus compromissos */
 .action-buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .action-buttons .btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  padding: 0.35rem 0.65rem;
   white-space: nowrap;
 }
 
