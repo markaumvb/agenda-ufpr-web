@@ -11,8 +11,8 @@
     <?php endif; ?>
     
     <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post">
-
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
+        
             <div id="error-container" class="alert alert-danger" style="display: <?= !empty($errors) ? 'block' : 'none' ?>;">
                     <ul id="error-list">
                         <?php if (!empty($errors)): ?>

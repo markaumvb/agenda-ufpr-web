@@ -1,112 +1,71 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("compromisso-form");
-  if (!form) return; // Sair se o formulário não for encontrado
-
+  // Selecionar elementos do formulário
+  const form = document.querySelector("form");
   const startDatetimeInput = document.getElementById("start_datetime");
   const endDatetimeInput = document.getElementById("end_datetime");
   const errorContainer = document.getElementById("error-container");
   const errorList = document.getElementById("error-list");
 
-  // Função para validar o formulário apenas no envio
-  form.addEventListener("submit", function (event) {
-    const errors = validateForm();
+  // Sem eventos de validação nos campos de data e hora - validaremos apenas no envio!
 
-    if (errors.length > 0) {
-      // Impedir o envio do formulário se houver erros
-      event.preventDefault();
+  // Validar o formulário apenas no envio
+  if (form) {
+    form.addEventListener("submit", function (event) {
+      const errors = validateForm();
 
-      // Exibir erros
-      displayErrors(errors);
-    }
-  });
+      if (errors.length > 0) {
+        // Impedir o envio do formulário
+        event.preventDefault();
 
-  // Atualizar automaticamente a data de término quando a data de início mudar
-  if (startDatetimeInput) {
+        // Exibir erros
+        displayErrors(errors);
+      }
+    });
+  }
+
+  // Opcional: atualizar automaticamente a data de término quando a data de início for completamente modificada
+  if (startDatetimeInput && endDatetimeInput) {
     startDatetimeInput.addEventListener("change", function () {
       if (!startDatetimeInput.value) return;
 
-      // Calcular nova data de término (1 hora após o início)
       const startValue = new Date(startDatetimeInput.value);
       let endValue = endDatetimeInput.value
         ? new Date(endDatetimeInput.value)
         : null;
 
-      // Atualizar data de término se vazia ou anterior à data de início
+      // Atualizar data de término somente se estiver vazia ou for anterior à data de início
       if (!endDatetimeInput.value || !endValue || endValue <= startValue) {
         const newEndDate = new Date(startValue);
         newEndDate.setHours(newEndDate.getHours() + 1);
 
         // Formatar para datetime-local (YYYY-MM-DDThh:mm)
-        const year = newEndDate.getFullYear();
-        const month = String(newEndDate.getMonth() + 1).padStart(2, "0");
-        const day = String(newEndDate.getDate()).padStart(2, "0");
-        const hours = String(newEndDate.getHours()).padStart(2, "0");
-        const minutes = String(newEndDate.getMinutes()).padStart(2, "0");
-
-        endDatetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
-      }
-
-      // Limpar mensagens de erro
-      clearErrors();
-    });
-  }
-
-  // Limpar erros relacionados à data final quando a data final mudar
-  if (endDatetimeInput) {
-    endDatetimeInput.addEventListener("change", function () {
-      // Verificar se existem erros relativos à data final e removê-los
-      if (errorContainer.style.display !== "none") {
-        // Buscar através de todos os itens da lista de erros
-        const items = errorList.querySelectorAll("li");
-        let hasEndDateError = false;
-
-        items.forEach((item) => {
-          if (item.textContent.includes("data e hora de término")) {
-            item.remove();
-            hasEndDateError = true;
-          }
-        });
-
-        // Se não houver mais erros, esconder o contêiner
-        if (errorList.querySelectorAll("li").length === 0) {
-          clearErrors();
-        }
-
-        // Se encontrou e removeu erros, marcar o campo como válido
-        if (hasEndDateError) {
-          endDatetimeInput.classList.remove("field-error");
-        }
+        endDatetimeInput.value = formatDateTimeLocal(newEndDate);
       }
     });
   }
 
-  // Função para validar o formulário
+  // Funções auxiliares para validação
+
+  // Função para validar o formulário completo
   function validateForm() {
     const errors = [];
-    const title = document.getElementById("title").value.trim();
-    const startDatetime = startDatetimeInput ? startDatetimeInput.value : "";
-    const endDatetime = endDatetimeInput ? endDatetimeInput.value : "";
 
     // Validar título
-    if (!title) {
+    const title = document.getElementById("title");
+    if (title && !title.value.trim()) {
       errors.push("O título é obrigatório");
-      highlightField("title");
-    } else {
-      resetField("title");
     }
 
     // Validar data e hora de início
-    if (!startDatetime) {
+    if (startDatetimeInput && !startDatetimeInput.value) {
       errors.push("A data e hora de início são obrigatórias");
-      highlightField("start_datetime");
-    } else {
+    } else if (startDatetimeInput && startDatetimeInput.value) {
       const now = new Date();
-      const startDate = new Date(startDatetime);
+      const startDate = new Date(startDatetimeInput.value);
 
       // Verificar se a data é futura
       if (startDate <= now) {
         errors.push("A data e hora de início deve ser no futuro");
-        highlightField("start_datetime");
       } else {
         // Verificar tempo mínimo de antecedência
         const minTimeBefore = parseInt(startDatetimeInput.dataset.minTime || 0);
@@ -118,31 +77,27 @@ document.addEventListener("DOMContentLoaded", function () {
             errors.push(
               `A data e hora de início deve ter pelo menos ${minTimeBefore} horas de antecedência`
             );
-            highlightField("start_datetime");
-          } else {
-            resetField("start_datetime");
           }
-        } else {
-          resetField("start_datetime");
         }
       }
     }
 
     // Validar data e hora de término
-    if (!endDatetime) {
+    if (endDatetimeInput && !endDatetimeInput.value) {
       errors.push("A data e hora de término são obrigatórias");
-      highlightField("end_datetime");
-    } else if (startDatetime) {
-      const startDate = new Date(startDatetime);
-      const endDate = new Date(endDatetime);
+    } else if (
+      endDatetimeInput &&
+      startDatetimeInput &&
+      endDatetimeInput.value &&
+      startDatetimeInput.value
+    ) {
+      const startDate = new Date(startDatetimeInput.value);
+      const endDate = new Date(endDatetimeInput.value);
 
       if (endDate <= startDate) {
         errors.push(
           "A data e hora de término deve ser posterior à data e hora de início"
         );
-        highlightField("end_datetime");
-      } else {
-        resetField("end_datetime");
       }
     }
 
@@ -157,9 +112,6 @@ document.addEventListener("DOMContentLoaded", function () {
         errors.push(
           "Para eventos recorrentes, é necessário definir uma data final"
         );
-        highlightField("repeat_until");
-      } else {
-        resetField("repeat_until");
       }
 
       if (repeatType.value === "specific_days") {
@@ -170,7 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
           errors.push(
             "Selecione pelo menos um dia da semana para a recorrência"
           );
-          // Destacar os checkboxes é um pouco mais complicado, então vamos pular isso
         }
       }
     }
@@ -178,25 +129,11 @@ document.addEventListener("DOMContentLoaded", function () {
     return errors;
   }
 
-  // Função para destacar um campo com erro
-  function highlightField(fieldId) {
-    const field = document.getElementById(fieldId);
-    if (field) {
-      field.classList.add("field-error");
-    }
-  }
-
-  // Função para remover destaque de erro de um campo
-  function resetField(fieldId) {
-    const field = document.getElementById(fieldId);
-    if (field) {
-      field.classList.remove("field-error");
-    }
-  }
-
-  // Função para exibir os erros
+  // Função para exibir erros
   function displayErrors(errors) {
-    // Limpar lista de erros
+    if (!errorList) return;
+
+    // Limpar erros anteriores
     errorList.innerHTML = "";
 
     // Adicionar cada erro à lista
@@ -206,21 +143,27 @@ document.addEventListener("DOMContentLoaded", function () {
       errorList.appendChild(li);
     });
 
-    // Exibir o contêiner de erros
-    errorContainer.style.display = "block";
+    // Mostrar o contêiner de erros
+    if (errorContainer) {
+      errorContainer.style.display = "block";
 
-    // Rolar até o topo do formulário
-    window.scrollTo({ top: form.offsetTop - 20, behavior: "smooth" });
+      // Rolar até o topo do formulário para ver os erros
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
-  // Função para limpar os erros
-  function clearErrors() {
-    errorList.innerHTML = "";
-    errorContainer.style.display = "none";
-
-    // Remover destaque de todos os campos
-    document.querySelectorAll(".field-error").forEach((field) => {
-      field.classList.remove("field-error");
-    });
+  // Função auxiliar para formatar data em formato datetime-local
+  function formatDateTimeLocal(date) {
+    return (
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0") +
+      "T" +
+      String(date.getHours()).padStart(2, "0") +
+      ":" +
+      String(date.getMinutes()).padStart(2, "0")
+    );
   }
 });
