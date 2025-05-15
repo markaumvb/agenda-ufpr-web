@@ -275,16 +275,6 @@ $routes = [
         'action' => 'getPendingApprovals',
         'method' => 'GET'
     ],
-    '/compromissos/new-public' => [
-        'controller' => 'CompromissoController',
-        'action' => 'newPublic',
-        'method' => 'GET'
-    ],
-    '/redirect-from-login' => [
-        'controller' => 'AuthController',
-        'action' => 'redirectFromLogin',
-        'method' => 'GET'
-    ],
     '/agendas/all' => [
         'controller' => 'AgendaController',
         'action' => 'allAgendas',

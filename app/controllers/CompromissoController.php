@@ -867,31 +867,6 @@ public function store() {
         exit;
     }
 
-    public function newPublic() {
-        // Obter ID da agenda
-        $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
-        
-        if (!$agendaId) {
-            $_SESSION['flash_message'] = 'Agenda não especificada';
-            $_SESSION['flash_type'] = 'danger';
-            header("Location: " . PUBLIC_URL . "/agendas");
-            exit;
-        }
-        
-        // Salvar na sessão para uso após o login
-        $_SESSION['redirect_to_new_compromisso'] = $agendaId;
-        
-        // Verificar se o usuário está logado
-        if (!isset($_SESSION['user_id'])) {
-            // Redirecionar para login (sem parâmetros complexos)
-            header("Location: " . PUBLIC_URL . "/login");
-            exit;
-        }
-        
-        // Se já estiver logado, redirecionar para o formulário normal
-        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
-        exit;
-    }
 
 private function validateCompromissoData($data, $compromissoId = null) {
     $errors = [];
@@ -1101,5 +1076,31 @@ private function notifyAgendaOwner($agenda, $data, $createdById) {
             }
         }
     }
+
+    public function newPublic() {
+    // Obter ID da agenda
+    $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
+    
+    if (!$agendaId) {
+        $_SESSION['flash_message'] = 'Agenda não especificada';
+        $_SESSION['flash_type'] = 'danger';
+        header("Location: " . PUBLIC_URL . "/agendas");
+        exit;
+    }
+    
+    // Salvar na sessão para uso após o login
+    $_SESSION['redirect_to_new_compromisso'] = $agendaId;
+    
+    // Verificar se o usuário está logado
+    if (!isset($_SESSION['user_id'])) {
+        // Redirecionar para login (sem parâmetros complexos)
+        header("Location: " . PUBLIC_URL . "/login");
+        exit;
+    }
+    
+    // Se já estiver logado, redirecionar para o formulário normal
+    header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
+    exit;
+}
     
 }

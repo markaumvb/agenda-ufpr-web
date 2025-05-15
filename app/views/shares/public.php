@@ -870,20 +870,6 @@
         }
     });
     </script>
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const createBtn = document.getElementById('createCompromissoBtn');
-    if (createBtn) {
-        createBtn.addEventListener('click', function(e) {
-            <?php if (!isset($_SESSION['user_id'])): ?>
-            // Store both the agenda ID and the intended redirect URL
-            sessionStorage.setItem('pendingCompromissoAgendaId', this.getAttribute('data-agenda-id'));
-            sessionStorage.setItem('redirectAfterLogin', '<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>&public=1');
-            <?php endif; ?>
-        });
-    }
-});
-</script>
     <script src="<?= PUBLIC_URL ?>/app/assets/js/shares/public.js"></script>
     
 </body>

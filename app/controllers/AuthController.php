@@ -28,7 +28,6 @@ public function login() {
         exit;
     }
     
-   
     // Obter dados do formulário
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
@@ -48,17 +47,7 @@ public function login() {
         $_SESSION['flash_message'] = 'Por favor, corrija os erros no formulário';
         $_SESSION['flash_type'] = 'danger';
         
-        // Manter os parâmetros de redirecionamento na URL
-        $redirectParams = [];
-        if (isset($_POST['agenda_hash'])) $redirectParams['agenda_hash'] = $_POST['agenda_hash'];
-        if (isset($_POST['redirect_to'])) $redirectParams['redirect_to'] = $_POST['redirect_to'];
-        if (isset($_POST['public'])) $redirectParams['public'] = $_POST['public'];
-        
         $redirectUrl = PUBLIC_URL . "/login";
-        if (!empty($redirectParams)) {
-            $redirectUrl .= "?" . http_build_query($redirectParams);
-        }
-        
         header("Location: " . $redirectUrl);
         exit;
     }
@@ -73,17 +62,7 @@ public function login() {
         $_SESSION['flash_message'] = 'Usuário ou senha inválidos';
         $_SESSION['flash_type'] = 'danger';
         
-        // Manter os parâmetros de redirecionamento na URL em caso de falha
-        $redirectParams = [];
-        if (isset($_POST['agenda_hash'])) $redirectParams['agenda_hash'] = $_POST['agenda_hash'];
-        if (isset($_POST['redirect_to'])) $redirectParams['redirect_to'] = $_POST['redirect_to'];
-        if (isset($_POST['public'])) $redirectParams['public'] = $_POST['public'];
-        
         $redirectUrl = PUBLIC_URL . "/login";
-        if (!empty($redirectParams)) {
-            $redirectUrl .= "?" . http_build_query($redirectParams);
-        }
-        
         header("Location: " . $redirectUrl);
         exit;
     }
@@ -105,47 +84,16 @@ public function login() {
     $_SESSION['username'] = $user['username'];
     $_SESSION['name'] = $user['name'];
     
-    
-    // ABORDAGEM 1: Verificar parâmetros diretos para criação de compromisso
-    if (isset($_POST['agenda_hash']) && !empty($_POST['agenda_hash']) && 
-        isset($_POST['redirect_to']) && $_POST['redirect_to'] === 'compromissos/new') {
+    // Verificar se há um redirecionamento pendente para criação de compromisso
+    if (isset($_SESSION['redirect_to_new_compromisso'])) {
+        $agendaId = $_SESSION['redirect_to_new_compromisso'];
+        unset($_SESSION['redirect_to_new_compromisso']);
         
-
-        require_once __DIR__ . '/../models/Agenda.php';
-        $agendaModel = new Agenda();
-        $agenda = $agendaModel->getByPublicHash($_POST['agenda_hash']);
-        
-        if ($agenda) {
-            $redirectUrl = PUBLIC_URL . "/compromissos/new?agenda_id=" . $agenda['id'];
-            if (isset($_POST['public']) && $_POST['public'] == '1') {
-                $redirectUrl .= "&public=1";
-            }
-            
-
-            header("Location: " . $redirectUrl);
-            exit;
-        } else {
-            
-        }
-    }
-    
-    // ABORDAGEM ALTERNATIVA - Redirecionar para uma página intermediária
-    if (isset($_POST['agenda_hash']) || isset($_POST['redirect_to'])) {
-        $redirectParams = [];
-        if (isset($_POST['agenda_hash'])) $redirectParams['agenda_hash'] = $_POST['agenda_hash'];
-        if (isset($_POST['redirect_to'])) $redirectParams['redirect_to'] = $_POST['redirect_to'];
-        if (isset($_POST['public'])) $redirectParams['public'] = $_POST['public'];
-        
-        if (!empty($redirectParams)) {
-            $redirectUrl = PUBLIC_URL . "/redirect-from-login?" . http_build_query($redirectParams);
-
-            header("Location: " . $redirectUrl);
-            exit;
-        }
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
+        exit;
     }
     
     // Redirecionamento padrão
-
     header("Location: " . PUBLIC_URL . "/agendas");
     exit;
 }
