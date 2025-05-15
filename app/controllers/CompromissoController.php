@@ -108,57 +108,78 @@ class CompromissoController extends BaseController {
     }
     
 
-    public function create() {
-        // Obter ID da agenda
-        $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
-        $isPublic = isset($_GET['public']) && $_GET['public'] == 1;
-        
-        if (!$agendaId) {
-            // Tratar erro...
-            $_SESSION['flash_message'] = 'Agenda não especificada';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/agendas');
-            exit;
-        }
-        
-        // Carregar dados da agenda
-        $agendaModel = new Agenda();
-        $agenda = $agendaModel->getById($agendaId);
-        
-        if (!$agenda) {
-            // Tratar erro...
-            $_SESSION['flash_message'] = 'Agenda não encontrada';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/agendas');
-            exit;
-        }
-        
-        // Verificar permissão e determinar status padrão
-        $userId = $_SESSION['user_id'];
-        $authService = new AuthorizationService();
-        
-        // Determinar se o usuário pode criar compromissos nesta agenda
-        $canCreate = $authService->canAccessAgenda($agendaId, $userId);
-        if (!$canCreate) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para acessar esta agenda';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/agendas');
-            exit;
-        }
-        
-        // Definir data e hora padrão
-        $currentDate = new DateTime();
-        $endDate = clone $currentDate;
-        $endDate->add(new DateInterval('PT1H')); // Adiciona 1 hora
-        
-        $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
-        $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
-        
-        // Exibir a view
-        require_once __DIR__ . '/../views/shared/header.php';
-        require_once __DIR__ . '/../views/compromissos/create.php';
-        require_once __DIR__ . '/../views/shared/footer.php';
+public function create() {
+    // Obter ID da agenda
+    $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
+    $isPublic = isset($_GET['public']) && $_GET['public'] == 1;
+    
+    if (!$agendaId) {
+        // Tratar erro...
+        $_SESSION['flash_message'] = 'Agenda não especificada';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . PUBLIC_URL . '/agendas');
+        exit;
     }
+    
+    // Carregar dados da agenda
+    $agendaModel = new Agenda();
+    $agenda = $agendaModel->getById($agendaId);
+    
+    if (!$agenda) {
+        // Tratar erro...
+        $_SESSION['flash_message'] = 'Agenda não encontrada';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . PUBLIC_URL . '/agendas');
+        exit;
+    }
+    
+    // Verificar permissão e determinar status padrão
+    $userId = $_SESSION['user_id'];
+    $authService = new AuthorizationService();
+    
+    // Determinar se o usuário pode criar compromissos nesta agenda
+    $canCreate = $authService->canAccessAgenda($agendaId, $userId);
+    if (!$canCreate) {
+        $_SESSION['flash_message'] = 'Você não tem permissão para acessar esta agenda';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . PUBLIC_URL . '/agendas');
+        exit;
+    }
+    
+    // Definir data e hora padrão considerando a antecedência mínima
+    $currentDate = new DateTime();
+    
+    // Verificar se a agenda tem um tempo mínimo de antecedência
+    $minTimeBefore = isset($agenda['min_time_before']) ? (int)$agenda['min_time_before'] : 0;
+    
+    if ($minTimeBefore > 0) {
+        // Adicionar o tempo mínimo à data atual
+        $currentDate->add(new DateInterval("PT{$minTimeBefore}H"));
+    }
+    
+    // Se a data tiver sido passada na URL, usar essa
+    $selectedDate = isset($_GET['date']) ? $_GET['date'] : null;
+    if ($selectedDate) {
+        $selectedDateTime = new DateTime($selectedDate);
+        // Substituir apenas a data, manter o horário já calculado
+        $currentDate->setDate(
+            $selectedDateTime->format('Y'),
+            $selectedDateTime->format('m'),
+            $selectedDateTime->format('d')
+        );
+    }
+    
+    $endDate = clone $currentDate;
+    $endDate->add(new DateInterval('PT1H')); // Adiciona 1 hora
+    
+    $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
+    $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
+    
+    // Exibir a view
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/compromissos/create.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
     
     /**
      * Processa o formulário de criação de compromisso
@@ -387,6 +408,7 @@ public function store() {
         
         // Obter dados do formulário
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
         $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
         $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
         $startDatetime = filter_input(INPUT_POST, 'start_datetime', FILTER_SANITIZE_STRING);
@@ -401,6 +423,7 @@ public function store() {
         // Dados a serem validados
         $data = [
             'id' => $id,
+            'agenda_id' => $agendaId,
             'title' => $title,
             'description' => $description,
             'start_datetime' => $startDatetime,
@@ -892,7 +915,9 @@ private function validateCompromissoData($data, $compromissoId = null) {
     
     // Verificar se a data inicial está no futuro e respeita o tempo mínimo
     if (!empty($data['start_datetime']) && !empty($data['agenda_id'])) {
-        $dateErrors = $this->compromissoModel->validateCompromissoDate($data['agenda_id'], $data['start_datetime']);
+        // Determinar se é uma edição ou criação
+        $isEditing = ($compromissoId !== null);
+        $dateErrors = $this->compromissoModel->validateCompromissoDate($data['agenda_id'], $data['start_datetime'], $isEditing);
         if (!empty($dateErrors)) {
             $errors = array_merge($errors, $dateErrors);
         }
@@ -1037,30 +1062,29 @@ private function validateCompromissoData($data, $compromissoId = null) {
         }
     }
 
-    private function notifyAgendaOwner($agenda, $data, $createdById) {
-        // Se o sistema tiver um módulo de notificações implementado
-        if (class_exists('NotificationModel')) {
-            require_once __DIR__ . '/../models/User.php';
-            $userModel = new User();
-            $creator = $userModel->getById($createdById);
-            
-            $notificationText = "";
-            if ($data['status'] === 'aguardando_aprovacao') {
-                $notificationText = "{$creator['name']} adicionou um compromisso que está aguardando sua aprovação na agenda '{$agenda['title']}'";
-            } else {
-                $notificationText = "{$creator['name']} adicionou um novo compromisso na agenda '{$agenda['title']}'";
-            }
-            
-            require_once __DIR__ . '/../models/Notification.php';
-            $notificationModel = new Notification();
-            $notificationModel->create([
-                'user_id' => $agenda['user_id'],
-                'message' => $notificationText,
-                'type' => 'compromisso',
-                'reference_id' => $data['id'],
-                'is_read' => 0
-            ]);
+private function notifyAgendaOwner($agenda, $data, $createdById) {
+    // Se o sistema tiver um módulo de notificações implementado
+    if (class_exists('Notification')) {  // Mudado de 'NotificationModel' para 'Notification'
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $creator = $userModel->getById($createdById);
+        
+        $notificationText = "";
+        if ($data['status'] === 'aguardando_aprovacao') {
+            $notificationText = "{$creator['name']} adicionou um compromisso que está aguardando sua aprovação na agenda '{$agenda['title']}'";
+        } else {
+            $notificationText = "{$creator['name']} adicionou um novo compromisso na agenda '{$agenda['title']}'";
         }
+        
+        require_once __DIR__ . '/../models/Notification.php';
+        $notificationModel = new Notification();
+        $notificationModel->create([
+            'user_id' => $agenda['user_id'],
+            'compromisso_id' => $data['id'],
+            'message' => $notificationText,
+            'is_read' => 0
+        ]);
+    }
         
         // Se o sistema tiver um módulo de e-mail implementado
         if (class_exists('EmailService')) {

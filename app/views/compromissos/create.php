@@ -1,5 +1,5 @@
 <?php
-// Arquivo: app/views/compromissos/create.php
+// Arquivo: app/views/compromissos/create.php - Atualização para mostrar tempo mínimo
 ?>
 
 <div class="form-container">
@@ -7,6 +7,12 @@
         <h1>Novo Compromisso</h1>
         <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-link">Voltar</a>
     </div>
+    
+    <?php if (isset($agenda['min_time_before']) && $agenda['min_time_before'] > 0): ?>
+    <div class="alert alert-info">
+        <strong>Atenção:</strong> Esta agenda requer <?= $agenda['min_time_before'] ?> horas de antecedência para criação de compromissos.
+    </div>
+    <?php endif; ?>
     
     <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post">
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
@@ -25,7 +31,13 @@
             <div class="form-group form-group-half">
                 <label for="start_datetime">Data e Hora de Início *</label>
                 <input type="datetime-local" id="start_datetime" name="start_datetime" required class="form-control"
-                       value="<?= htmlspecialchars($defaultStartDateTime ?? '') ?>">
+                       value="<?= htmlspecialchars($defaultStartDateTime ?? '') ?>" 
+                       data-min-time="<?= $agenda['min_time_before'] ?? 0 ?>">
+                <small class="form-text text-muted">A data deve ser futura 
+                <?php if (isset($agenda['min_time_before']) && $agenda['min_time_before'] > 0): ?>
+                e ter pelo menos <?= $agenda['min_time_before'] ?> horas de antecedência
+                <?php endif; ?>
+                </small>
             </div>
             
             <div class="form-group form-group-half">
@@ -46,10 +58,15 @@
 
         <div class="form-group">
             <label for="status-display">Status</label>
-            <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+            <?php if ($isFromPublic): ?>
+                <input type="text" id="status-display" class="form-control" value="Aguardando Aprovação" readonly>
+                <!-- Não definimos o status aqui para permitir que a lógica do controller o faça -->
+            <?php else: ?>
+                <input type="text" id="status-display" class="form-control" value="Pendente" readonly>
+                <input type="hidden" name="status" value="pendente">
+            <?php endif; ?>
         </div>
-        <input type="hidden" name="status" value="pendente">
-        
+
         <?php if ($isFromPublic): ?>
             <input type="hidden" name="public" value="1">
         <?php endif; ?>
@@ -173,8 +190,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/agenda_ufpr/app/assets/js/compromissos/form.js')): ?>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation.js"></script>
-
-<?php endif; ?>

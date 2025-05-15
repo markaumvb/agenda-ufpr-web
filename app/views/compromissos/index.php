@@ -4,28 +4,30 @@
 
 <div class="page-header">
 <div class="header-container">
-    <h1><?= htmlspecialchars($agenda['title']) ?></h1>
+    <h1><?= htmlspecialchars($agenda['title'] ?? '') ?></h1>
     <div class="header-actions">
         <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
-            <?php if ($agenda['is_active']): ?>
-                <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?>" class="btn btn-primary">Novo Compromisso</a>
+            <?php if (isset($agenda['is_active']) && $agenda['is_active']): ?>
+                <a href="<?= PUBLIC_URL ?>/compromissos/new?agenda_id=<?= $agenda['id'] ?? 0 ?>" class="btn btn-primary">Novo Compromisso</a>
             <?php else: ?>
                 <button class="btn btn-primary" disabled title="Agenda desativada">Novo Compromisso</button>
             <?php endif; ?>
+        <?php elseif (isset($agenda['is_public']) && $agenda['is_public'] && isset($agenda['is_active']) && $agenda['is_active']): ?>
+            <a href="<?= PUBLIC_URL ?>/compromissos/new-public?agenda_id=<?= $agenda['id'] ?? 0 ?>" class="btn btn-primary">Solicitar Compromisso</a>
         <?php endif; ?>
         <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-secondary">Voltar para Agendas</a>
     </div>
 </div>
     
     <div class="agenda-meta">
-        <span class="badge <?= $agenda['is_public'] ? 'badge-success' : 'badge-secondary' ?>">
-            <?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?>
+        <span class="badge <?= isset($agenda['is_public']) && $agenda['is_public'] ? 'badge-success' : 'badge-secondary' ?>">
+            <?= isset($agenda['is_public']) && $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?>
         </span>
         <?php if (!$isOwner): ?>
             <span class="agenda-owner">Proprietário: <?= htmlspecialchars($agenda['user_name'] ?? 'Usuário') ?></span>
         <?php endif; ?>
     </div>
-        <?php if (!$agenda['is_active']): ?>
+        <?php if (isset($agenda['is_active']) && !$agenda['is_active']): ?>
         <div class="alert alert-warning">
             <strong>Atenção:</strong> Esta agenda está desativada. Não é possível criar novos compromissos.
         </div>
@@ -43,29 +45,35 @@
 </div>
 
 <!-- FullCalendar Container -->
-<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?>">
+<div class="calendar-container" data-agenda-id="<?= $agenda['id'] ?? 0 ?>" data-min-time-before="<?= $agenda['min_time_before'] ?? 0 ?>">
     <div id="calendar"></div>
     
     <script>
     // Disponibilizar os dados dos compromissos para o calendário
-    window.allCompromissos = <?= json_encode($allCompromissos) ?>;
+    window.allCompromissos = <?= json_encode($allCompromissos ?? []) ?>;
     </script>
 </div>
-</script>
-
+<!-- Adicionar um aviso sobre o tempo mínimo de antecedência, se existir -->
+<?php if (isset($agenda['min_time_before']) && $agenda['min_time_before'] > 0): ?>
+<div class="alert alert-info mt-3">
+    <strong>Aviso:</strong> Esta agenda requer <?= $agenda['min_time_before'] ?> horas de antecedência para a criação de novos compromissos.
+</div>
+<?php endif; ?>
 
 <!-- Lista de Compromissos Filtrados -->
 <div class="events-list-container">
     <h2 class="section-title">Compromissos</h2>
     
-    <?php if (empty($allCompromissos)): ?>
-        <div class="empty-state">
-            <p>Nenhum compromisso encontrado nesta agenda.</p>
-            <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
-                <p>Clique em "Novo Compromisso" para adicionar seu primeiro compromisso.</p>
-            <?php endif; ?>
-        </div>
-    <?php else: ?>
+        <?php if (empty($allCompromissos)): ?>
+            <div class="empty-state">
+                <p>Nenhum compromisso encontrado nesta agenda.</p>
+                <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
+                    <p>Clique em "Novo Compromisso" para adicionar seu primeiro compromisso.</p>
+                <?php elseif (isset($agenda['is_public']) && $agenda['is_public'] && isset($agenda['is_active']) && $agenda['is_active']): ?>
+                    <p>Clique em "Solicitar Compromisso" para adicionar uma nova solicitação.</p>
+                <?php endif; ?>
+            </div>
+        <?php else: ?>
         <div class="events-filters">
             <div class="filter-group">
                 <label for="filter-status">Status:</label>
@@ -106,20 +114,20 @@
         <div class="events-list">
             <?php foreach ($allCompromissos as $compromisso): ?>
                 <?php 
-                $startDate = new DateTime($compromisso['start_datetime']);
-                $endDate = new DateTime($compromisso['end_datetime']);
+                $startDate = new DateTime($compromisso['start_datetime'] ?? 'now');
+                $endDate = new DateTime($compromisso['end_datetime'] ?? 'now');
                 ?>
                 
-                <div class="event-card event-status-<?= $compromisso['status'] ?>" 
-                     data-status="<?= $compromisso['status'] ?>" 
+                <div class="event-card event-status-<?= $compromisso['status'] ?? 'pendente' ?>" 
+                     data-status="<?= $compromisso['status'] ?? 'pendente' ?>" 
                      data-month="<?= $startDate->format('n') ?>" 
                      data-date="<?= $startDate->format('Y-m-d') ?>"
-                     data-id="<?= $compromisso['id'] ?>"
-                     data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
+                     data-id="<?= $compromisso['id'] ?? 0 ?>"
+                     data-search="<?= htmlspecialchars(strtolower(($compromisso['title'] ?? '') . ' ' . ($compromisso['description'] ?? '') . ' ' . ($compromisso['location'] ?? ''))) ?>">
                     <div class="event-header">
-                        <h3 class="event-title"><?= htmlspecialchars($compromisso['title']) ?></h3>
+                        <h3 class="event-title"><?= htmlspecialchars($compromisso['title'] ?? '') ?></h3>
                         <div class="event-status">
-                            <span class="badge badge-<?= $compromisso['status'] ?>">
+                            <span class="badge badge-<?= $compromisso['status'] ?? 'pendente' ?>">
                                 <?php
                                 $statusLabels = [
                                     'pendente' => 'Pendente',
@@ -127,7 +135,7 @@
                                     'cancelado' => 'Cancelado',
                                     'aguardando_aprovacao' => 'Aguardando'
                                 ];
-                                echo $statusLabels[$compromisso['status']] ?? $compromisso['status'];
+                                echo $statusLabels[$compromisso['status'] ?? 'pendente'] ?? ($compromisso['status'] ?? 'Pendente');
                                 ?>
                             </span>
                         </div>
@@ -149,20 +157,20 @@
                             </div>
                         </div>
                         
-                        <?php if (!empty($compromisso['location'])): ?>
+                        <?php if (!empty($compromisso['location'] ?? '')): ?>
                             <div class="event-location">
                                 <i class="icon-location"></i>
                                 <?= htmlspecialchars($compromisso['location']) ?>
                             </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($compromisso['description'])): ?>
+                        <?php if (!empty($compromisso['description'] ?? '')): ?>
                             <div class="event-description">
                                 <?= nl2br(htmlspecialchars($compromisso['description'])) ?>
                             </div>
                         <?php endif; ?>
                         
-                        <?php if ($compromisso['repeat_type'] !== 'none'): ?>
+                        <?php if (isset($compromisso['repeat_type']) && $compromisso['repeat_type'] !== 'none'): ?>
                             <div class="event-recurrence">
                                 <i class="icon-repeat"></i>
                                 <?php
@@ -173,11 +181,11 @@
                                 ];
                                 echo $recurrenceLabels[$compromisso['repeat_type']] ?? '';
                                 
-                                if ($compromisso['repeat_until']) {
+                                if (isset($compromisso['repeat_until']) && $compromisso['repeat_until']) {
                                     echo ' até ' . (new DateTime($compromisso['repeat_until']))->format('d/m/Y');
                                 }
                                 
-                                if ($compromisso['repeat_type'] === 'specific_days' && $compromisso['repeat_days']) {
+                                if (isset($compromisso['repeat_type']) && $compromisso['repeat_type'] === 'specific_days' && isset($compromisso['repeat_days']) && $compromisso['repeat_days']) {
                                     $daysLabels = [
                                         '0' => 'Dom',
                                         '1' => 'Seg',
@@ -208,37 +216,37 @@
                     
                     <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
                         <div class="event-actions">
-                            <?php if ($compromisso['status'] !== 'realizado'): ?>
+                            <?php if (!isset($compromisso['status']) || $compromisso['status'] !== 'realizado'): ?>
                                 <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?? 0 ?>">
                                     <input type="hidden" name="status" value="realizado">
                                     <button type="submit" class="btn btn-sm btn-success" title="Marcar como realizado">
                                         <i class="icon-check"></i>
                                     </button>
                                 </form>
-                            <?php endif; ?>
+                                                                            
+                                <?php if (isset($compromisso['status']) && $compromisso['status'] === 'pendente'): ?>
+                                    <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
+                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?? 0 ?>">
+                                        <input type="hidden" name="status" value="cancelado">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Cancelar compromisso">
+                                            <i class="icon-cancel"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                
+                                <a href="<?= PUBLIC_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?? 0 ?>" class="btn btn-sm btn-secondary" title="Editar compromisso">
+                                    <i class="icon-edit"></i>
+                                </a>
                             
-                            <?php if ($compromisso['status'] === 'pendente'): ?>
-                                <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <input type="hidden" name="status" value="cancelado">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Cancelar compromisso">
-                                        <i class="icon-cancel"></i>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            
-                            <a href="<?= PUBLIC_URL ?>/compromissos/edit?id=<?= $compromisso['id'] ?>" class="btn btn-sm btn-secondary" title="Editar compromisso">
-                                <i class="icon-edit"></i>
-                            </a>
-                            
-                            <?php if ($compromisso['status'] === 'pendente'): ?>
-                                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
-                                        <i class="icon-trash"></i>
-                                    </button>
-                                </form>
+                                <?php if (isset($compromisso['status']) && $compromisso['status'] === 'pendente'): ?>
+                                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
+                                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?? 0 ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Excluir compromisso">
+                                            <i class="icon-trash"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>

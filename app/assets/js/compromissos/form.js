@@ -13,18 +13,17 @@ document.addEventListener("DOMContentLoaded", function () {
     input.addEventListener("change", toggleRepeatOptions);
   });
 
-  // Verificar conflitos de horário ao mudar as datas
+  // REMOVER completamente os listeners para verificação de conflitos durante a edição
   const startDatetime = document.getElementById("start_datetime");
   const endDatetime = document.getElementById("end_datetime");
-
-  if (startDatetime)
-    startDatetime.addEventListener("change", checkTimeConflict);
-  if (endDatetime) endDatetime.addEventListener("change", checkTimeConflict);
 
   // Validação do formulário
   const form = document.querySelector("form");
   if (form) {
     form.addEventListener("submit", function (event) {
+      // As validações de data já estão no arquivo validation.js
+
+      // Apenas validações específicas do formulário
       const title = document.getElementById("title").value;
       if (!title.trim()) {
         event.preventDefault();
@@ -114,27 +113,6 @@ document.addEventListener("DOMContentLoaded", function () {
         repeatDaysContainer.style.display = "block";
       } else {
         repeatDaysContainer.style.display = "none";
-      }
-    }
-  }
-
-  /**
-   * Verifica conflitos de horário
-   */
-  function checkTimeConflict() {
-    const startDatetime = document.getElementById("start_datetime").value;
-    const endDatetime = document.getElementById("end_datetime").value;
-    const agendaId =
-      document.querySelector('input[name="agenda_id"]')?.value ||
-      document.querySelector("form").getAttribute("data-agenda-id");
-
-    if (startDatetime && endDatetime) {
-      // Verificar se a data final é maior que a inicial
-      if (new Date(endDatetime) <= new Date(startDatetime)) {
-        alert(
-          "A data e hora de término deve ser posterior à data e hora de início."
-        );
-        return;
       }
     }
   }

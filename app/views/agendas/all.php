@@ -260,6 +260,12 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                             <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-primary">
                                 <i class="fas fa-calendar-alt"></i> Ver Compromissos
                             </a>
+                            
+                            <?php if (isset($agenda['is_active']) && $agenda['is_active']): ?>
+                                <a href="<?= PUBLIC_URL ?>/compromissos/new-public?agenda_id=<?= $agenda['id'] ?>" class="btn btn-sm btn-success">
+                                    <i class="fas fa-plus"></i> Solicitar Compromisso
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
