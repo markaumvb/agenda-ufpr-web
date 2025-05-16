@@ -320,33 +320,44 @@ public function store() {
     
     // Se for recorrente, criar o grupo e gerar as ocorrências
     if ($repeatType !== 'none') {
-        // Gerar um ID de grupo (pode ser o ID do primeiro compromisso)
-        $groupId = 'group_' . $compromissoId;
-        
-        // Atualizar o primeiro compromisso com o ID do grupo
-        $this->compromissoModel->update($compromissoId, ['group_id' => $groupId]);
-        
-        // Gerar ocorrências recorrentes
-        $this->generateRecurrences($compromissoId, $compromissoData, $groupId);
+    // Calcular todas as ocorrências
+    $occurrences = $this->compromissoModel->calculateOccurrences(
+        $repeatType,
+        $startDatetime,
+        $endDatetime,
+        $repeatUntil,
+        $repeatDays ?? ''
+    );
+    
+    // Verificar conflitos para cada ocorrência
+    $conflicts = [];
+    foreach ($occurrences as $occurrence) {
+        if ($this->compromissoModel->hasTimeConflict(
+            $agendaId,
+            $occurrence['start'],
+            $occurrence['end']
+        )) {
+            // Obter detalhes do evento conflitante
+            $conflictingEvent = $this->compromissoModel->getConflictingEvent(
+                $agendaId,
+                $occurrence['start'],
+                $occurrence['end']
+            );
+            
+            $conflictDate = new DateTime($occurrence['start']);
+            $conflicts[] = "Conflito no dia " . $conflictDate->format('d/m/Y') . 
+                           " às " . $conflictDate->format('H:i') . 
+                           ": \"" . $conflictingEvent['title'] . "\"";
+        }
     }
     
-    // Enviar notificação ao dono da agenda se não for ele mesmo
-    if (!$isOwner) {
-        // Adicionar o ID do compromisso aos dados
-        $compromissoData['id'] = $compromissoId;
-        $this->notifyAgendaOwner($agenda, $compromissoData, $userId);
+    if (!empty($conflicts)) {
+        $_SESSION['validation_errors'] = $conflicts;
+        $_SESSION['form_data'] = $_POST;
+        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+        exit;
     }
-    
-    // Mostrar mensagem de sucesso e redirecionar
-    $_SESSION['flash_message'] = 'Compromisso criado com sucesso';
-    $_SESSION['flash_type'] = 'success';
-    
-    if ($status === 'aguardando_aprovacao') {
-        $_SESSION['flash_message'] = 'Compromisso criado e está aguardando aprovação do dono da agenda';
-    }
-    
-    header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
-    exit;
+}
 }
     
 
@@ -1132,5 +1143,7 @@ private function notifyAgendaOwner($agenda, $data, $createdById) {
     header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
     exit;
 }
+
+
     
 }

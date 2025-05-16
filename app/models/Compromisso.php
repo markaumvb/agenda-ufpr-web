@@ -1011,5 +1011,30 @@ public function validateCompromissoDate($agendaId, $startDatetime, $isEditing = 
     }
 }
 
+public function getConflictingEvent($agendaId, $startDatetime, $endDatetime) {
+    try {
+        $query = "
+            SELECT * FROM compromissos 
+            WHERE agenda_id = :agenda_id
+            AND status != 'cancelado'
+            AND (
+                (start_datetime < :end_datetime AND end_datetime > :start_datetime)
+            )
+            LIMIT 1
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':agenda_id', $agendaId);
+        $stmt->bindParam(':start_datetime', $startDatetime);
+        $stmt->bindParam(':end_datetime', $endDatetime);
+        $stmt->execute();
+        
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar evento conflitante: ' . $e->getMessage());
+        return false;
+    }
+}
+
     
 }

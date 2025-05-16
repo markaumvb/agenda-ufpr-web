@@ -18,3 +18,7 @@ na agenda, configurar o status padrão do agendamento, e também configurar o ti
 - BADGES NA NOTIFICAÇÃO NÃO ESTÁ FUNCIONANDO
 - COMPROMISSOS SEM VERIFICAÇÕES DE DATA E HORA INICIAL E FINAL, DEVE-SE SEMPRE VERIFICAR ANTES DE CRIAR QUALQUER COMPROMISSO SE JÁ EXISTE COMPROMISSO NAQUELA DATA E HORA (OBEDECENDO O INTERVALO DE TEMPO)
 - https://200.238.174.7/agenda_ufpr/compromissos?agenda_id=6 tela de compromisso, no calendário não permitir clicar e arrastar os eventos. Ao clicar em um evento ele está apareceno no final da tela os detalhes do evento, antes ele aparecia em uma tela de formato modal, quero que volte a ser desse jeito....
+
+ - quando criei um compromisso que se repete diariamente até um dia... o sistema crioui um monte de compromiso.... 
+
+ - quando oo compromisso for recorrente, apenas 1 notificação deverá ser gerada, tanto para informar do comrpomisso criado, tanto para quando o compromisso for aceito, quando aceito, todos os compromissos da recorrencia devems ser aceitos
