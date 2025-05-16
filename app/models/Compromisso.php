@@ -224,10 +224,7 @@ class Compromisso {
                 
                 if ($stmt->execute()) {
                     $newId = $this->db->lastInsertId();
-                    
-                    // Criar notificação para o dono da agenda
-                    $this->createNotificationForAgendaOwner($newId);
-                    
+                                       
                     return $newId;
                 }
                 

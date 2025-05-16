@@ -14,11 +14,7 @@
         <div class="notification-card">
             <div class="notification-card-header">
                 <div class="notification-status">
-                    <?php if ($notification['is_read']): ?>
-                        <span class="badge badge-secondary">Lida</span>
-                    <?php else: ?>
-                        <span class="badge badge-primary">Não lida</span>
-                    <?php endif; ?>
+                    <span class="badge badge-secondary">Lida</span>
                 </div>
                 <div class="notification-date">
                     <?= date('d/m/Y H:i', strtotime($notification['created_at'])) ?>
@@ -115,16 +111,6 @@
                                     </button>
                                 </form>
                             </div>
-                        <?php elseif (!$notification['is_read']): ?>
-                            <div class="notification-actions">
-                                <form action="<?= BASE_URL ?>/notifications/mark-read" method="post">
-                                    <input type="hidden" name="id" value="<?= $notification['id'] ?>">
-                                    <input type="hidden" name="redirect_url" value="<?= BASE_URL ?>/notifications/view?id=<?= $notification['id'] ?>">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-check"></i> Marcar como lida
-                                    </button>
-                                </form>
-                            </div>
                         <?php endif; ?>
                         
                         <div class="view-compromisso-link">
@@ -146,15 +132,6 @@
                         <i class="fas fa-trash"></i> Excluir Notificação
                     </button>
                 </form>
-                
-                <?php if (!$notification['is_read']): ?>
-                    <form action="<?= BASE_URL ?>/notifications/mark-read" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="<?= $notification['id'] ?>">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-check"></i> Marcar como lida
-                        </button>
-                    </form>
-                <?php endif; ?>
             </div>
         </div>
     </div>

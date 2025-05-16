@@ -128,204 +128,215 @@ class NotificationController extends BaseController {
     /**
      * Processa a ação de aceitar um compromisso a partir de uma notificação
      */
-    public function acceptCompromisso() {
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        $userId = $_SESSION['user_id'];
-        $notificationId = filter_input(INPUT_POST, 'notification_id', FILTER_VALIDATE_INT);
-        $compromissoId = filter_input(INPUT_POST, 'compromisso_id', FILTER_VALIDATE_INT);
-        
-        if (!$notificationId || !$compromissoId) {
-            $_SESSION['flash_message'] = 'Parâmetros inválidos';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Buscar o compromisso
-        $compromisso = $this->compromissoModel->getById($compromissoId);
-        
-        if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Verificar se o usuário é o dono da agenda
-        $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
-        
-        if (!$isOwner) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para aprovar este compromisso';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Verificar se o compromisso está aguardando aprovação
-        if ($compromisso['status'] !== 'aguardando_aprovacao') {
-            $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
-            $_SESSION['flash_type'] = 'warning';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Preparar dados para atualizar o status
-        $data = [
-            'title' => $compromisso['title'],
-            'description' => $compromisso['description'],
-            'start_datetime' => $compromisso['start_datetime'],
-            'end_datetime' => $compromisso['end_datetime'],
-            'location' => $compromisso['location'],
-            'repeat_type' => $compromisso['repeat_type'],
-            'repeat_until' => $compromisso['repeat_until'],
-            'repeat_days' => $compromisso['repeat_days'],
-            'status' => 'pendente' // Mudar para pendente após aprovação
-        ];
-        
-        // Atualizar o status
-        $result = $this->compromissoModel->update($compromissoId, $data);
-        
-        if ($result) {
-            // Marcar a notificação como lida
-            $this->notificationModel->markAsRead($notificationId, $userId);
-            
-            // Criar notificação para o criador do compromisso
-            if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
-                // Buscar a agenda
-                $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
-                
-                // Formatar data
-                $dateObj = new DateTime($compromisso['start_datetime']);
-                $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
-                
-                // Criar mensagem
-                $message = "Seu compromisso \"{$compromisso['title']}\" foi aprovado para {$formattedDate} na agenda \"{$agenda['title']}\"";
-                
-                // Criar notificação
-                $this->notificationModel->create([
-                    'user_id' => $compromisso['created_by'],
-                    'compromisso_id' => $compromissoId,
-                    'message' => $message,
-                    'is_read' => 0
-                ]);
-            }
-            
-            $_SESSION['flash_message'] = 'Compromisso aprovado com sucesso';
-            $_SESSION['flash_type'] = 'success';
-        } else {
-            $_SESSION['flash_message'] = 'Erro ao aprovar compromisso';
-            $_SESSION['flash_type'] = 'danger';
-        }
-        
-        header('Location: ' . BASE_URL . '/notifications/view?id=' . $notificationId);
+ /**
+ * Processa a ação de aceitar um compromisso a partir de uma notificação
+ */
+public function acceptCompromisso() {
+    // Verificar se é uma requisição POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: ' . BASE_URL . '/notifications');
         exit;
     }
     
-    /**
-     * Processa a ação de rejeitar um compromisso a partir de uma notificação
-     */
-    public function rejectCompromisso() {
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        $userId = $_SESSION['user_id'];
-        $notificationId = filter_input(INPUT_POST, 'notification_id', FILTER_VALIDATE_INT);
-        $compromissoId = filter_input(INPUT_POST, 'compromisso_id', FILTER_VALIDATE_INT);
-        
-        if (!$notificationId || !$compromissoId) {
-            $_SESSION['flash_message'] = 'Parâmetros inválidos';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Buscar o compromisso
-        $compromisso = $this->compromissoModel->getById($compromissoId);
-        
-        if (!$compromisso) {
-            $_SESSION['flash_message'] = 'Compromisso não encontrado';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Verificar se o usuário é o dono da agenda
-        $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
-        
-        if (!$isOwner) {
-            $_SESSION['flash_message'] = 'Você não tem permissão para rejeitar este compromisso';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Verificar se o compromisso está aguardando aprovação
-        if ($compromisso['status'] !== 'aguardando_aprovacao') {
-            $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
-            $_SESSION['flash_type'] = 'warning';
-            header('Location: ' . BASE_URL . '/notifications');
-            exit;
-        }
-        
-        // Preparar dados para atualizar o status (cancelando o compromisso)
-        $data = [
-            'title' => $compromisso['title'],
-            'description' => $compromisso['description'],
-            'start_datetime' => $compromisso['start_datetime'],
-            'end_datetime' => $compromisso['end_datetime'],
-            'location' => $compromisso['location'],
-            'repeat_type' => $compromisso['repeat_type'],
-            'repeat_until' => $compromisso['repeat_until'],
-            'repeat_days' => $compromisso['repeat_days'],
-            'status' => 'cancelado' // Cancelar o compromisso ao rejeitar
-        ];
-        
-        // Atualizar o status
-        $result = $this->compromissoModel->update($compromissoId, $data);
-        
-        if ($result) {
-            // Marcar a notificação como lida
-            $this->notificationModel->markAsRead($notificationId, $userId);
-            
-            // Criar notificação para o criador do compromisso
-            if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
-                // Buscar a agenda
-                $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
-                
-                // Formatar data
-                $dateObj = new DateTime($compromisso['start_datetime']);
-                $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
-                
-                // Criar mensagem
-                $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi rejeitado";
-                
-                // Criar notificação
-                $this->notificationModel->create([
-                    'user_id' => $compromisso['created_by'],
-                    'compromisso_id' => $compromissoId,
-                    'message' => $message,
-                    'is_read' => 0
-                ]);
-            }
-            
-            $_SESSION['flash_message'] = 'Compromisso rejeitado com sucesso';
-            $_SESSION['flash_type'] = 'success';
-        } else {
-            $_SESSION['flash_message'] = 'Erro ao rejeitar compromisso';
-            $_SESSION['flash_type'] = 'danger';
-        }
-        
-        header('Location: ' . BASE_URL . '/notifications/view?id=' . $notificationId);
+    $userId = $_SESSION['user_id'];
+    $notificationId = filter_input(INPUT_POST, 'notification_id', FILTER_VALIDATE_INT);
+    $compromissoId = filter_input(INPUT_POST, 'compromisso_id', FILTER_VALIDATE_INT);
+    
+    if (!$notificationId || !$compromissoId) {
+        $_SESSION['flash_message'] = 'Parâmetros inválidos';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
         exit;
     }
+    
+    // Buscar o compromisso
+    $compromisso = $this->compromissoModel->getById($compromissoId);
+    
+    if (!$compromisso) {
+        $_SESSION['flash_message'] = 'Compromisso não encontrado';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Verificar se o usuário é o dono da agenda
+    $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
+    
+    if (!$isOwner) {
+        $_SESSION['flash_message'] = 'Você não tem permissão para aprovar este compromisso';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Verificar se o compromisso está aguardando aprovação
+    if ($compromisso['status'] !== 'aguardando_aprovacao') {
+        $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
+        $_SESSION['flash_type'] = 'warning';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Preparar dados para atualizar o status
+    $data = [
+        'title' => $compromisso['title'],
+        'description' => $compromisso['description'],
+        'start_datetime' => $compromisso['start_datetime'],
+        'end_datetime' => $compromisso['end_datetime'],
+        'location' => $compromisso['location'],
+        'repeat_type' => $compromisso['repeat_type'],
+        'repeat_until' => $compromisso['repeat_until'],
+        'repeat_days' => $compromisso['repeat_days'],
+        'status' => 'pendente' // Mudar para pendente após aprovação
+    ];
+    
+    // Atualizar o status
+    $result = $this->compromissoModel->update($compromissoId, $data);
+    
+    if ($result) {
+        // Marcar a notificação como lida
+        $this->notificationModel->markAsRead($notificationId, $userId);
+        
+        // Criar notificação para o criador do compromisso
+        if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+            // Buscar a agenda
+            $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+            
+            // Formatar data
+            $dateObj = new DateTime($compromisso['start_datetime']);
+            $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+            
+            // Buscar informações do aprovador
+            $owner = $this->userModel->getById($userId);
+            $ownerName = $owner ? $owner['name'] : 'Administrador';
+            
+            // Criar mensagem
+            $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi APROVADO por {$ownerName}";
+            
+            // Criar notificação
+            $this->notificationModel->create([
+                'user_id' => $compromisso['created_by'],
+                'compromisso_id' => $compromissoId,
+                'message' => $message,
+                'is_read' => 0
+            ]);
+        }
+        
+        $_SESSION['flash_message'] = 'Compromisso aprovado com sucesso';
+        $_SESSION['flash_type'] = 'success';
+    } else {
+        $_SESSION['flash_message'] = 'Erro ao aprovar compromisso';
+        $_SESSION['flash_type'] = 'danger';
+    }
+    
+    header('Location: ' . BASE_URL . '/notifications/view?id=' . $notificationId);
+    exit;
+}
+
+/**
+ * Processa a ação de rejeitar um compromisso a partir de uma notificação
+ */
+public function rejectCompromisso() {
+    // Verificar se é uma requisição POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    $userId = $_SESSION['user_id'];
+    $notificationId = filter_input(INPUT_POST, 'notification_id', FILTER_VALIDATE_INT);
+    $compromissoId = filter_input(INPUT_POST, 'compromisso_id', FILTER_VALIDATE_INT);
+    
+    if (!$notificationId || !$compromissoId) {
+        $_SESSION['flash_message'] = 'Parâmetros inválidos';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Buscar o compromisso
+    $compromisso = $this->compromissoModel->getById($compromissoId);
+    
+    if (!$compromisso) {
+        $_SESSION['flash_message'] = 'Compromisso não encontrado';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Verificar se o usuário é o dono da agenda
+    $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
+    
+    if (!$isOwner) {
+        $_SESSION['flash_message'] = 'Você não tem permissão para rejeitar este compromisso';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Verificar se o compromisso está aguardando aprovação
+    if ($compromisso['status'] !== 'aguardando_aprovacao') {
+        $_SESSION['flash_message'] = 'Este compromisso não está aguardando aprovação';
+        $_SESSION['flash_type'] = 'warning';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Preparar dados para atualizar o status (cancelando o compromisso)
+    $data = [
+        'title' => $compromisso['title'],
+        'description' => $compromisso['description'],
+        'start_datetime' => $compromisso['start_datetime'],
+        'end_datetime' => $compromisso['end_datetime'],
+        'location' => $compromisso['location'],
+        'repeat_type' => $compromisso['repeat_type'],
+        'repeat_until' => $compromisso['repeat_until'],
+        'repeat_days' => $compromisso['repeat_days'],
+        'status' => 'cancelado' // Cancelar o compromisso ao rejeitar
+    ];
+    
+    // Atualizar o status
+    $result = $this->compromissoModel->update($compromissoId, $data);
+    
+    if ($result) {
+        // Marcar a notificação como lida
+        $this->notificationModel->markAsRead($notificationId, $userId);
+        
+        // Criar notificação para o criador do compromisso
+        if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+            // Buscar a agenda
+            $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+            
+            // Formatar data
+            $dateObj = new DateTime($compromisso['start_datetime']);
+            $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+            
+            // Buscar informações do rejeitador
+            $owner = $this->userModel->getById($userId);
+            $ownerName = $owner ? $owner['name'] : 'Administrador';
+            
+            // Criar mensagem mais informativa
+            $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi REJEITADO por {$ownerName}";
+            
+            // Criar notificação
+            $this->notificationModel->create([
+                'user_id' => $compromisso['created_by'],
+                'compromisso_id' => $compromissoId,
+                'message' => $message,
+                'is_read' => 0
+            ]);
+        }
+        
+        $_SESSION['flash_message'] = 'Compromisso rejeitado com sucesso';
+        $_SESSION['flash_type'] = 'success';
+    } else {
+        $_SESSION['flash_message'] = 'Erro ao rejeitar compromisso';
+        $_SESSION['flash_type'] = 'danger';
+    }
+    
+    header('Location: ' . BASE_URL . '/notifications/view?id=' . $notificationId);
+    exit;
+}
     
     /**
      * Exclui uma notificação
@@ -407,4 +418,36 @@ class NotificationController extends BaseController {
         
         return $notification;
     }
+
+    public function view() {
+    $userId = $_SESSION['user_id'];
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    
+    if (!$id) {
+        $_SESSION['flash_message'] = 'Notificação não especificada';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Obter detalhes completos da notificação
+    $notification = $this->getNotificationDetails($id, $userId);
+    
+    if (!$notification) {
+        $_SESSION['flash_message'] = 'Notificação não encontrada';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/notifications');
+        exit;
+    }
+    
+    // Marcar como lida automaticamente
+    $this->notificationModel->markAsRead($id, $userId);
+    
+    // Exibir a view
+    require_once __DIR__ . '/../views/shared/header.php';
+    require_once __DIR__ . '/../views/notifications/view.php';
+    require_once __DIR__ . '/../views/shared/footer.php';
+}
+
+
 }
