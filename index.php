@@ -325,6 +325,11 @@ $routes = [
         'action' => 'index',
         'method' => 'GET'
 ],
+'/compromissos/new-public' => [
+    'controller' => 'CompromissoController',
+    'action' => 'newPublic',
+    'method' => 'GET'
+],
 
 ];
 
