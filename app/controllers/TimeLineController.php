@@ -1,9 +1,5 @@
 <?php
-// File: app/controllers/TimelineController.php
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../models/Agenda.php';
-require_once __DIR__ . '/../models/Compromisso.php';
-require_once __DIR__ . '/../models/User.php';
 
 class TimelineController extends BaseController {
     private $agendaModel;
@@ -11,14 +7,19 @@ class TimelineController extends BaseController {
     private $userModel;
     
     public function __construct() {
+        // Inicialização dos modelos
+        require_once __DIR__ . '/../models/Database.php';
+        require_once __DIR__ . '/../models/Agenda.php';
+        require_once __DIR__ . '/../models/Compromisso.php';
+        require_once __DIR__ . '/../models/User.php';
+        
         $this->agendaModel = new Agenda();
         $this->compromissoModel = new Compromisso();
         $this->userModel = new User();
+        
+        // NÃO chamar checkAuth() aqui, diferente de outros controllers
     }
     
-    /**
-     * Display the public events timeline
-     */
     public function index() {
         // Get current date or from GET parameter
         $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
@@ -100,7 +101,7 @@ class TimelineController extends BaseController {
             return strtotime($a['start_datetime']) - strtotime($b['start_datetime']);
         });
         
-        // Load view
+        // Carregar a visualização sem verificar autenticação
         require_once __DIR__ . '/../views/shared/header.php';
         require_once __DIR__ . '/../views/timeline/index.php';
         require_once __DIR__ . '/../views/shared/footer.php';
