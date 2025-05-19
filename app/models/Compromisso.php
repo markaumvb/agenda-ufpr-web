@@ -183,6 +183,78 @@ class Compromisso {
     }
     
     /**
+     * Método público para obter as ocorrências de um evento recorrente
+     */
+    public function getEventOccurrences($repeatType, $startDatetime, $endDatetime, $repeatUntil, $repeatDays) {
+        return $this->calculateOccurrences($repeatType, $startDatetime, $endDatetime, $repeatUntil, $repeatDays);
+    }
+    
+    /**
+     * Verifica conflitos para um conjunto de ocorrências recorrentes
+     */
+    public function checkRecurringConflicts($repeatType, $startDatetime, $endDatetime, $repeatUntil, $repeatDays, $agendaId, $excludeId = null) {
+        $occurrences = $this->calculateOccurrences($repeatType, $startDatetime, $endDatetime, $repeatUntil, $repeatDays);
+        
+        $conflicts = [];
+        foreach ($occurrences as $occurrence) {
+            if ($this->hasTimeConflict($agendaId, $occurrence['start'], $occurrence['end'], $excludeId)) {
+                // Obter detalhes do evento conflitante
+                $conflictingEvent = $this->getConflictingEvent($agendaId, $occurrence['start'], $occurrence['end'], $excludeId);
+                
+                if ($conflictingEvent) {
+                    $conflictDate = new DateTime($occurrence['start']);
+                    $conflicts[] = "Conflito no dia " . $conflictDate->format('d/m/Y') . 
+                                   " às " . $conflictDate->format('H:i') . 
+                                   ": \"" . $conflictingEvent['title'] . "\"";
+                }
+            }
+        }
+        
+        return $conflicts;
+    }
+    
+    /**
+     * Obtém detalhes de um evento que conflita com o período especificado
+     */
+    public function getConflictingEvent($agendaId, $startDatetime, $endDatetime, $excludeId = null) {
+        try {
+            $query = "
+                SELECT * FROM compromissos 
+                WHERE agenda_id = :agenda_id
+                AND status != 'cancelado'
+                AND (
+                    (start_datetime < :end_datetime AND end_datetime > :start_datetime)
+                )
+            ";
+            
+            $params = [
+                ':agenda_id' => $agendaId,
+                ':start_datetime' => $startDatetime,
+                ':end_datetime' => $endDatetime
+            ];
+            
+            if ($excludeId !== null) {
+                $query .= " AND id != :exclude_id";
+                $params[':exclude_id'] = $excludeId;
+            }
+            
+            $query .= " LIMIT 1";
+            
+            $stmt = $this->db->prepare($query);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar evento conflitante: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Cria um novo compromisso com suporte a recorrência
      * 
      * @param array $data Dados do compromisso
@@ -224,7 +296,7 @@ class Compromisso {
                 
                 if ($stmt->execute()) {
                     $newId = $this->db->lastInsertId();
-                                       
+                    $this->createNotificationForAgendaOwner($parentId);                   
                     return $newId;
                 }
                 
@@ -322,7 +394,7 @@ class Compromisso {
                 }
             }
             
-            // Criar notificação para o dono da agenda
+            // Criar notificação para o dono da agenda (apenas para o evento principal)
             $this->createNotificationForAgendaOwner($parentId);
             
             // Se chegou até aqui, confirmar a transação
@@ -346,61 +418,117 @@ class Compromisso {
      * @return bool Resultado da operação
      */
     private function createNotificationForAgendaOwner($compromissoId) {
-        try {
-            // Obter o compromisso
-            $compromisso = $this->getById($compromissoId);
-            if (!$compromisso) {
-                return false;
-            }
-            
-            // Obter a agenda
-            $query = "SELECT a.*, u.id as owner_id, u.name as owner_name FROM agendas a 
-                     JOIN users u ON a.user_id = u.id 
-                     WHERE a.id = :agenda_id LIMIT 1";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':agenda_id', $compromisso['agenda_id'], PDO::PARAM_INT);
-            $stmt->execute();
-            $agenda = $stmt->fetch();
-            
-            if (!$agenda) {
-                return false;
-            }
-            
-            // Se o usuário atual não for o dono da agenda, criar notificação
-            if ($_SESSION['user_id'] != $agenda['owner_id']) {
-                // Verificar se o módulo de notificação está disponível
-                if (!class_exists('Notification')) {
-                    require_once __DIR__ . '/Notification.php';
-                }
-                
-                $notificationModel = new Notification();
-                
-                // Formatar data
-                $dateObj = new DateTime($compromisso['start_datetime']);
-                $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
-                
-                // Criar notificação
-                $message = "Novo compromisso \"{$compromisso['title']}\" foi adicionado em sua agenda \"{$agenda['title']}\" para {$formattedDate}";
-                
-                $notificationData = [
-                    'user_id' => $agenda['owner_id'],
-                    'compromisso_id' => $compromissoId,
-                    'message' => $message,
-                    'is_read' => 0
-                ];
-                
-                $notificationModel->create($notificationData);
-                
-                // Enviar e-mail (opcional)
-                $this->sendEmailNotification($agenda['owner_id'], $compromissoId);
-            }
-            
-            return true;
-        } catch (Exception $e) {
-            error_log('Erro ao criar notificação: ' . $e->getMessage());
+    try {
+        // Obter o compromisso
+        $compromisso = $this->getById($compromissoId);
+        if (!$compromisso) {
             return false;
         }
+        
+        // Obter a agenda
+        $query = "SELECT a.*, u.id as owner_id, u.name as owner_name FROM agendas a 
+                 JOIN users u ON a.user_id = u.id 
+                 WHERE a.id = :agenda_id LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':agenda_id', $compromisso['agenda_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $agenda = $stmt->fetch();
+        
+        if (!$agenda) {
+            return false;
+        }
+        
+        // Se o usuário atual não for o dono da agenda, criar notificação
+        if ($_SESSION['user_id'] != $agenda['owner_id']) {
+            // Verificar se o módulo de notificação está disponível
+            if (!class_exists('Notification')) {
+                require_once __DIR__ . '/Notification.php';
+            }
+            
+            $notificationModel = new Notification();
+            
+            // Verificar se é um evento recorrente
+            $isRecurring = !empty($compromisso['group_id']);
+            
+            // Para eventos recorrentes, verificar se já existe uma notificação para este grupo
+            if ($isRecurring) {
+                // Verificar se já existe notificação para este grupo_id
+                $checkQuery = "SELECT COUNT(*) FROM notifications 
+                              WHERE user_id = :user_id
+                              AND compromisso_id IN (
+                                  SELECT id FROM compromissos 
+                                  WHERE group_id = :group_id
+                              )";
+                $checkStmt = $this->db->prepare($checkQuery);
+                $checkStmt->bindParam(':user_id', $agenda['owner_id'], PDO::PARAM_INT);
+                $checkStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+                $checkStmt->execute();
+                
+                if ($checkStmt->fetchColumn() > 0) {
+                    // Já existe notificação para este grupo, não criar outra
+                    return true;
+                }
+                
+                // Contar total de ocorrências no grupo
+                $countQuery = "SELECT COUNT(*) FROM compromissos WHERE group_id = :group_id";
+                $countStmt = $this->db->prepare($countQuery);
+                $countStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+                $countStmt->execute();
+                $occurrenceCount = $countStmt->fetchColumn();
+                
+                // Informações sobre recorrência para incluir na mensagem
+                $recurrenceInfo = "";
+                
+                if ($compromisso['repeat_until']) {
+                    $untilDate = new DateTime($compromisso['repeat_until']);
+                    $formattedUntil = $untilDate->format('d/m/Y');
+                    
+                    switch($compromisso['repeat_type']) {
+                        case 'daily':
+                            $recurrenceInfo = " (se repete diariamente até {$formattedUntil} - {$occurrenceCount} ocorrências)";
+                            break;
+                        case 'weekly':
+                            $recurrenceInfo = " (se repete semanalmente até {$formattedUntil} - {$occurrenceCount} ocorrências)";
+                            break;
+                        case 'specific_days':
+                            $daysText = $this->getFormattedWeekDays($compromisso['repeat_days']);
+                            $recurrenceInfo = " (se repete nos dias: {$daysText} até {$formattedUntil} - {$occurrenceCount} ocorrências)";
+                            break;
+                    }
+                }
+            }
+            
+            // Formatar data
+            $dateObj = new DateTime($compromisso['start_datetime']);
+            $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+            
+            // Criar mensagem
+            $message = "Novo compromisso \"{$compromisso['title']}\" foi adicionado em sua agenda \"{$agenda['title']}\" para {$formattedDate}";
+            
+            // Adicionar informação de recorrência se aplicável
+            if (isset($recurrenceInfo)) {
+                $message .= $recurrenceInfo;
+            }
+            
+            $notificationData = [
+                'user_id' => $agenda['owner_id'],
+                'compromisso_id' => $compromissoId,
+                'message' => $message,
+                'is_read' => 0
+            ];
+            
+            $notificationModel->create($notificationData);
+            
+            // Enviar e-mail (opcional)
+            $this->sendEmailNotification($agenda['owner_id'], $compromissoId);
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log('Erro ao criar notificação: ' . $e->getMessage());
+        return false;
     }
+}
     
     /**
      * Envia notificação por e-mail (se configurado)
@@ -582,6 +710,29 @@ class Compromisso {
                 $this->db->rollBack();
             }
             error_log('Erro ao atualizar compromisso: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Atualiza o status de todos os compromissos de um grupo
+     */
+    public function updateGroupStatus($groupId, $status) {
+        try {
+            $query = "
+                UPDATE compromissos
+                SET status = :status,
+                    updated_at = NOW()
+                WHERE group_id = :group_id
+            ";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':status', $status, PDO::PARAM_STR);
+            $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log('Erro ao atualizar status do grupo: ' . $e->getMessage());
             return false;
         }
     }
@@ -1011,29 +1162,28 @@ public function validateCompromissoDate($agendaId, $startDatetime, $isEditing = 
     }
 }
 
-public function getConflictingEvent($agendaId, $startDatetime, $endDatetime) {
-    try {
-        $query = "
-            SELECT * FROM compromissos 
-            WHERE agenda_id = :agenda_id
-            AND status != 'cancelado'
-            AND (
-                (start_datetime < :end_datetime AND end_datetime > :start_datetime)
-            )
-            LIMIT 1
-        ";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':agenda_id', $agendaId);
-        $stmt->bindParam(':start_datetime', $startDatetime);
-        $stmt->bindParam(':end_datetime', $endDatetime);
-        $stmt->execute();
-        
-        return $stmt->fetch();
-    } catch (PDOException $e) {
-        error_log('Erro ao buscar evento conflitante: ' . $e->getMessage());
-        return false;
+private function getFormattedWeekDays($repeatDays) {
+    if (empty($repeatDays)) return '';
+    
+    $days = explode(',', $repeatDays);
+    $dayNames = [
+        '0' => 'Domingo',
+        '1' => 'Segunda',
+        '2' => 'Terça',
+        '3' => 'Quarta',
+        '4' => 'Quinta',
+        '5' => 'Sexta',
+        '6' => 'Sábado'
+    ];
+    
+    $formattedDays = [];
+    foreach($days as $day) {
+        if (isset($dayNames[$day])) {
+            $formattedDays[] = $dayNames[$day];
+        }
     }
+    
+    return implode(', ', $formattedDays);
 }
 
     

@@ -372,6 +372,64 @@
   color: #666;
   margin-bottom: 0.5rem;
 }
+.current-occurrence-row {
+  background-color: #e9f7fe !important;
+  border-left: 4px solid #004a8f !important;
+  font-weight: 600;
+}
+
+.occurrences-table {
+  margin-top: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.occurrences-table h5 {
+  color: #004a8f;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.table-info-note {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+.notification-actions .card {
+  height: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.notification-actions .card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.notification-actions .card-header {
+  font-weight: bold;
+}
+
+.notification-actions .btn {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+.recurrence-info {
+  background-color: #f0f7ff;
+  border-color: #b8d4ff;
+  border-radius: 8px;
+}
+
+.recurrence-info h4 {
+  color: #004a8f;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
 
 /* ====== RESPONSIVIDADE ====== */
 @media (max-width: 768px) {

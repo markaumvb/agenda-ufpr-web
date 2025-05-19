@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../models/Database.php';
 require_once __DIR__ . '/../models/Notification.php';
 require_once __DIR__ . '/../models/Compromisso.php';
 require_once __DIR__ . '/../models/Agenda.php';
@@ -17,6 +18,8 @@ class NotificationController extends BaseController {
         $this->compromissoModel = new Compromisso();
         $this->agendaModel = new Agenda();
         $this->userModel = new User();
+
+        $this->db = Database::getInstance()->getConnection();
         
         // Verificar se o usuário está logado
         $this->checkAuth();
@@ -125,12 +128,6 @@ class NotificationController extends BaseController {
         exit;
     }
     
-    /**
-     * Processa a ação de aceitar um compromisso a partir de uma notificação
-     */
- /**
- * Processa a ação de aceitar um compromisso a partir de uma notificação
- */
 public function acceptCompromisso() {
     // Verificar se é uma requisição POST
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -141,6 +138,7 @@ public function acceptCompromisso() {
     $userId = $_SESSION['user_id'];
     $notificationId = filter_input(INPUT_POST, 'notification_id', FILTER_VALIDATE_INT);
     $compromissoId = filter_input(INPUT_POST, 'compromisso_id', FILTER_VALIDATE_INT);
+    $approveAll = isset($_POST['approve_all']);
     
     if (!$notificationId || !$compromissoId) {
         $_SESSION['flash_message'] = 'Parâmetros inválidos';
@@ -177,65 +175,130 @@ public function acceptCompromisso() {
         exit;
     }
     
-    // Preparar dados para atualizar o status
-    $data = [
-        'title' => $compromisso['title'],
-        'description' => $compromisso['description'],
-        'start_datetime' => $compromisso['start_datetime'],
-        'end_datetime' => $compromisso['end_datetime'],
-        'location' => $compromisso['location'],
-        'repeat_type' => $compromisso['repeat_type'],
-        'repeat_until' => $compromisso['repeat_until'],
-        'repeat_days' => $compromisso['repeat_days'],
-        'status' => 'pendente' // Mudar para pendente após aprovação
-    ];
-    
-    // Atualizar o status
-    $result = $this->compromissoModel->update($compromissoId, $data);
-    
-    if ($result) {
-        // Marcar a notificação como lida
-        $this->notificationModel->markAsRead($notificationId, $userId);
-        
-        // Criar notificação para o criador do compromisso
-        if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
-            // Buscar a agenda
-            $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+    // Se for aprovar todos e for um compromisso recorrente
+    if ($approveAll && !empty($compromisso['group_id'])) {
+        try {
+            // Iniciar transação
+            $this->db->beginTransaction();
             
-            // Formatar data
-            $dateObj = new DateTime($compromisso['start_datetime']);
-            $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+            // Atualizar todos os compromissos do mesmo grupo
+            $query = "UPDATE compromissos 
+                      SET status = 'pendente' 
+                      WHERE group_id = :group_id 
+                      AND status = 'aguardando_aprovacao'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+            $result = $stmt->execute();
             
-            // Buscar informações do aprovador
-            $owner = $this->userModel->getById($userId);
-            $ownerName = $owner ? $owner['name'] : 'Administrador';
-            
-            // Criar mensagem
-            $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi APROVADO por {$ownerName}";
-            
-            // Criar notificação
-            $this->notificationModel->create([
-                'user_id' => $compromisso['created_by'],
-                'compromisso_id' => $compromissoId,
-                'message' => $message,
-                'is_read' => 0
-            ]);
+            if ($result) {
+                // Buscar a agenda
+                $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+                
+                // Criar notificação para o criador do compromisso
+                if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                    // Buscar quantidade de ocorrências atualizadas
+                    $countQuery = "SELECT COUNT(*) FROM compromissos 
+                                  WHERE group_id = :group_id 
+                                  AND status = 'pendente'";
+                    $countStmt = $this->db->prepare($countQuery);
+                    $countStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+                    $countStmt->execute();
+                    $occurrenceCount = $countStmt->fetchColumn();
+                    
+                    // Formatar data
+                    $dateObj = new DateTime($compromisso['start_datetime']);
+                    $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+                    
+                    // Buscar informações do aprovador
+                    $owner = $this->userModel->getById($userId);
+                    $ownerName = $owner ? $owner['name'] : 'Administrador';
+                    
+                    // Criar mensagem
+                    $message = "Sua série de compromissos \"{$compromisso['title']}\" com {$occurrenceCount} ocorrências iniciando em {$formattedDate} na agenda \"{$agenda['title']}\" foi APROVADA por {$ownerName}";
+                    
+                    // Criar notificação
+                    $this->notificationModel->create([
+                        'user_id' => $compromisso['created_by'],
+                        'compromisso_id' => $compromissoId,
+                        'message' => $message,
+                        'is_read' => 0
+                    ]);
+                }
+                
+                $this->db->commit();
+                
+                $_SESSION['flash_message'] = 'Todos os compromissos da série foram aprovados com sucesso';
+                $_SESSION['flash_type'] = 'success';
+                
+                // Marcar a notificação como lida
+                $this->notificationModel->markAsRead($notificationId, $userId);
+            } else {
+                $this->db->rollBack();
+                $_SESSION['flash_message'] = 'Erro ao aprovar os compromissos da série';
+                $_SESSION['flash_type'] = 'danger';
+            }
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            $_SESSION['flash_message'] = 'Erro ao processar a operação: ' . $e->getMessage();
+            $_SESSION['flash_type'] = 'danger';
         }
-        
-        $_SESSION['flash_message'] = 'Compromisso aprovado com sucesso';
-        $_SESSION['flash_type'] = 'success';
     } else {
-        $_SESSION['flash_message'] = 'Erro ao aprovar compromisso';
-        $_SESSION['flash_type'] = 'danger';
+        // Aprovar apenas um compromisso (código existente)
+        $data = [
+            'title' => $compromisso['title'],
+            'description' => $compromisso['description'],
+            'start_datetime' => $compromisso['start_datetime'],
+            'end_datetime' => $compromisso['end_datetime'],
+            'location' => $compromisso['location'],
+            'repeat_type' => $compromisso['repeat_type'],
+            'repeat_until' => $compromisso['repeat_until'],
+            'repeat_days' => $compromisso['repeat_days'],
+            'status' => 'pendente'
+        ];
+        
+        $result = $this->compromissoModel->update($compromissoId, $data);
+        
+        if ($result) {
+            // Marcar a notificação como lida
+            $this->notificationModel->markAsRead($notificationId, $userId);
+            
+            // Criar notificação para o criador do compromisso
+            if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                // Buscar a agenda
+                $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+                
+                // Formatar data
+                $dateObj = new DateTime($compromisso['start_datetime']);
+                $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+                
+                // Buscar informações do aprovador
+                $owner = $this->userModel->getById($userId);
+                $ownerName = $owner ? $owner['name'] : 'Administrador';
+                
+                // Criar mensagem
+                $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi APROVADO por {$ownerName}";
+                
+                // Criar notificação
+                $this->notificationModel->create([
+                    'user_id' => $compromisso['created_by'],
+                    'compromisso_id' => $compromissoId,
+                    'message' => $message,
+                    'is_read' => 0
+                ]);
+            }
+            
+            $_SESSION['flash_message'] = 'Compromisso aprovado com sucesso';
+            $_SESSION['flash_type'] = 'success';
+        } else {
+            $_SESSION['flash_message'] = 'Erro ao aprovar compromisso';
+            $_SESSION['flash_type'] = 'danger';
+        }
     }
     
     header('Location: ' . BASE_URL . '/notifications/view?id=' . $notificationId);
     exit;
 }
 
-/**
- * Processa a ação de rejeitar um compromisso a partir de uma notificação
- */
 public function rejectCompromisso() {
     // Verificar se é uma requisição POST
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -246,6 +309,7 @@ public function rejectCompromisso() {
     $userId = $_SESSION['user_id'];
     $notificationId = filter_input(INPUT_POST, 'notification_id', FILTER_VALIDATE_INT);
     $compromissoId = filter_input(INPUT_POST, 'compromisso_id', FILTER_VALIDATE_INT);
+    $rejectAll = isset($_POST['reject_all']);
     
     if (!$notificationId || !$compromissoId) {
         $_SESSION['flash_message'] = 'Parâmetros inválidos';
@@ -282,56 +346,124 @@ public function rejectCompromisso() {
         exit;
     }
     
-    // Preparar dados para atualizar o status (cancelando o compromisso)
-    $data = [
-        'title' => $compromisso['title'],
-        'description' => $compromisso['description'],
-        'start_datetime' => $compromisso['start_datetime'],
-        'end_datetime' => $compromisso['end_datetime'],
-        'location' => $compromisso['location'],
-        'repeat_type' => $compromisso['repeat_type'],
-        'repeat_until' => $compromisso['repeat_until'],
-        'repeat_days' => $compromisso['repeat_days'],
-        'status' => 'cancelado' // Cancelar o compromisso ao rejeitar
-    ];
-    
-    // Atualizar o status
-    $result = $this->compromissoModel->update($compromissoId, $data);
-    
-    if ($result) {
-        // Marcar a notificação como lida
-        $this->notificationModel->markAsRead($notificationId, $userId);
-        
-        // Criar notificação para o criador do compromisso
-        if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
-            // Buscar a agenda
-            $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+    // Se for rejeitar todos e for um compromisso recorrente
+    if ($rejectAll && !empty($compromisso['group_id'])) {
+        try {
+            // Iniciar transação
+            $this->db->beginTransaction();
             
-            // Formatar data
-            $dateObj = new DateTime($compromisso['start_datetime']);
-            $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+            // Atualizar todos os compromissos do mesmo grupo
+            $query = "UPDATE compromissos 
+                      SET status = 'cancelado' 
+                      WHERE group_id = :group_id 
+                      AND status = 'aguardando_aprovacao'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+            $result = $stmt->execute();
             
-            // Buscar informações do rejeitador
-            $owner = $this->userModel->getById($userId);
-            $ownerName = $owner ? $owner['name'] : 'Administrador';
-            
-            // Criar mensagem mais informativa
-            $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi REJEITADO por {$ownerName}";
-            
-            // Criar notificação
-            $this->notificationModel->create([
-                'user_id' => $compromisso['created_by'],
-                'compromisso_id' => $compromissoId,
-                'message' => $message,
-                'is_read' => 0
-            ]);
+            if ($result) {
+                // Buscar a agenda
+                $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+                
+                // Criar notificação para o criador do compromisso
+                if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                    // Buscar quantidade de ocorrências atualizadas
+                    $countQuery = "SELECT COUNT(*) FROM compromissos 
+                                  WHERE group_id = :group_id 
+                                  AND status = 'cancelado'";
+                    $countStmt = $this->db->prepare($countQuery);
+                    $countStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+                    $countStmt->execute();
+                    $occurrenceCount = $countStmt->fetchColumn();
+                    
+                    // Formatar data
+                    $dateObj = new DateTime($compromisso['start_datetime']);
+                    $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+                    
+                    // Buscar informações do rejeitador
+                    $owner = $this->userModel->getById($userId);
+                    $ownerName = $owner ? $owner['name'] : 'Administrador';
+                    
+                    // Criar mensagem
+                    $message = "Sua série de compromissos \"{$compromisso['title']}\" com {$occurrenceCount} ocorrências iniciando em {$formattedDate} na agenda \"{$agenda['title']}\" foi REJEITADA por {$ownerName}";
+                    
+                    // Criar notificação
+                    $this->notificationModel->create([
+                        'user_id' => $compromisso['created_by'],
+                        'compromisso_id' => $compromissoId,
+                        'message' => $message,
+                        'is_read' => 0
+                    ]);
+                }
+                
+                $this->db->commit();
+                
+                $_SESSION['flash_message'] = 'Todos os compromissos da série foram rejeitados com sucesso';
+                $_SESSION['flash_type'] = 'success';
+                
+                // Marcar a notificação como lida
+                $this->notificationModel->markAsRead($notificationId, $userId);
+            } else {
+                $this->db->rollBack();
+                $_SESSION['flash_message'] = 'Erro ao rejeitar os compromissos da série';
+                $_SESSION['flash_type'] = 'danger';
+            }
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            $_SESSION['flash_message'] = 'Erro ao processar a operação: ' . $e->getMessage();
+            $_SESSION['flash_type'] = 'danger';
         }
-        
-        $_SESSION['flash_message'] = 'Compromisso rejeitado com sucesso';
-        $_SESSION['flash_type'] = 'success';
     } else {
-        $_SESSION['flash_message'] = 'Erro ao rejeitar compromisso';
-        $_SESSION['flash_type'] = 'danger';
+        // Rejeitar apenas um compromisso (código existente)
+        $data = [
+            'title' => $compromisso['title'],
+            'description' => $compromisso['description'],
+            'start_datetime' => $compromisso['start_datetime'],
+            'end_datetime' => $compromisso['end_datetime'],
+            'location' => $compromisso['location'],
+            'repeat_type' => $compromisso['repeat_type'],
+            'repeat_until' => $compromisso['repeat_until'],
+            'repeat_days' => $compromisso['repeat_days'],
+            'status' => 'cancelado'
+        ];
+        
+        $result = $this->compromissoModel->update($compromissoId, $data);
+        
+        if ($result) {
+            // Marcar a notificação como lida
+            $this->notificationModel->markAsRead($notificationId, $userId);
+            
+            // Criar notificação para o criador do compromisso
+            if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                // Buscar a agenda
+                $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+                
+                // Formatar data
+                $dateObj = new DateTime($compromisso['start_datetime']);
+                $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+                
+                // Buscar informações do rejeitador
+                $owner = $this->userModel->getById($userId);
+                $ownerName = $owner ? $owner['name'] : 'Administrador';
+                
+                // Criar mensagem
+                $message = "Seu compromisso \"{$compromisso['title']}\" para {$formattedDate} na agenda \"{$agenda['title']}\" foi REJEITADO por {$ownerName}";
+                
+                // Criar notificação
+                $this->notificationModel->create([
+                    'user_id' => $compromisso['created_by'],
+                    'compromisso_id' => $compromissoId,
+                    'message' => $message,
+                    'is_read' => 0
+                ]);
+            }
+            
+            $_SESSION['flash_message'] = 'Compromisso rejeitado com sucesso';
+            $_SESSION['flash_type'] = 'success';
+        } else {
+            $_SESSION['flash_message'] = 'Erro ao rejeitar compromisso';
+            $_SESSION['flash_type'] = 'danger';
+        }
     }
     
     header('Location: ' . BASE_URL . '/notifications/view?id=' . $notificationId);
@@ -419,7 +551,37 @@ public function rejectCompromisso() {
         return $notification;
     }
 
-    public function view() {
+    public function create($data) {
+    try {
+        // Verificamos se já estão presentes no array de dados
+        $isRecurring = isset($data['is_recurring']) ? $data['is_recurring'] : 0;
+        $groupId = isset($data['group_id']) ? $data['group_id'] : null;
+        
+        $query = "
+            INSERT INTO notifications (user_id, compromisso_id, message, is_read, created_at, is_recurring, group_id)
+            VALUES (:user_id, :compromisso_id, :message, :is_read, NOW(), :is_recurring, :group_id)
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
+        $stmt->bindParam(':compromisso_id', $data['compromisso_id'], PDO::PARAM_INT);
+        $stmt->bindParam(':message', $data['message'], PDO::PARAM_STR);
+        $stmt->bindParam(':is_read', $data['is_read'], PDO::PARAM_BOOL);
+        $stmt->bindParam(':is_recurring', $isRecurring, PDO::PARAM_BOOL);
+        $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
+        
+        if ($stmt->execute()) {
+            return $this->db->lastInsertId();
+        }
+        
+        return false;
+    } catch (PDOException $e) {
+        error_log('Erro ao criar notificação: ' . $e->getMessage());
+        return false;
+    }
+}
+
+public function view() {
     $userId = $_SESSION['user_id'];
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     
@@ -438,6 +600,19 @@ public function rejectCompromisso() {
         $_SESSION['flash_type'] = 'danger';
         header('Location: ' . BASE_URL . '/notifications');
         exit;
+    }
+    
+    // Se for um compromisso recorrente, buscar todas as ocorrências
+    if (isset($notification['compromisso']) && !empty($notification['compromisso']['group_id'])) {
+        // Buscar todas as ocorrências do grupo
+        $query = "SELECT * FROM compromissos WHERE group_id = :group_id ORDER BY start_datetime";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':group_id', $notification['compromisso']['group_id'], PDO::PARAM_STR);
+        $stmt->execute();
+        $occurrences = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Adicionar à notificação
+        $notification['occurrences'] = $occurrences;
     }
     
     // Marcar como lida automaticamente

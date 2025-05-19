@@ -10,29 +10,35 @@ class Notification {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    public function create($data) {
-        try {
-            $query = "
-                INSERT INTO notifications (user_id, compromisso_id, message, is_read, created_at)
-                VALUES (:user_id, :compromisso_id, :message, :is_read, NOW())
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
-            $stmt->bindParam(':compromisso_id', $data['compromisso_id'], PDO::PARAM_INT);
-            $stmt->bindParam(':message', $data['message'], PDO::PARAM_STR);
-            $stmt->bindParam(':is_read', $data['is_read'], PDO::PARAM_BOOL);
-            
-            if ($stmt->execute()) {
-                return $this->db->lastInsertId();
-            }
-            
-            return false;
-        } catch (PDOException $e) {
-            error_log('Erro ao criar notificação: ' . $e->getMessage());
-            return false;
+public function create($data) {
+    try {
+        // Verificamos se já estão presentes no array de dados
+        $isRecurring = isset($data['is_recurring']) ? $data['is_recurring'] : 0;
+        $groupId = isset($data['group_id']) ? $data['group_id'] : null;
+        
+        $query = "
+            INSERT INTO notifications (user_id, compromisso_id, message, is_read, created_at, is_recurring, group_id)
+            VALUES (:user_id, :compromisso_id, :message, :is_read, NOW(), :is_recurring, :group_id)
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
+        $stmt->bindParam(':compromisso_id', $data['compromisso_id'], PDO::PARAM_INT);
+        $stmt->bindParam(':message', $data['message'], PDO::PARAM_STR);
+        $stmt->bindParam(':is_read', $data['is_read'], PDO::PARAM_BOOL);
+        $stmt->bindParam(':is_recurring', $isRecurring, PDO::PARAM_BOOL);
+        $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
+        
+        if ($stmt->execute()) {
+            return $this->db->lastInsertId();
         }
+        
+        return false;
+    } catch (PDOException $e) {
+        error_log('Erro ao criar notificação: ' . $e->getMessage());
+        return false;
     }
+}
     
     public function getUnreadByUser($userId, $limit = 10) {
         try {

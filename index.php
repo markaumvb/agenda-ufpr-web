@@ -319,7 +319,13 @@ $routes = [
     'controller' => 'ApiController',
     'action' => 'checkMinTimeBefore',
     'method' => 'GET'
+    ],
+    '/timeline' => [
+    'controller' => 'TimelineController',
+    'action' => 'index',
+    'method' => 'GET'
 ],
+
 ];
 
 

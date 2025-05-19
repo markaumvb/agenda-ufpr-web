@@ -242,6 +242,42 @@ public function store() {
         exit;
     }
     
+    // Para eventos recorrentes, verificar conflitos para todas as ocorrências
+    if ($repeatType !== 'none') {
+        $conflicts = $this->compromissoModel->checkRecurringConflicts(
+            $repeatType,
+            $startDatetime, 
+            $endDatetime, 
+            $repeatUntil,
+            isset($repeatDays) && is_array($repeatDays) ? implode(',', $repeatDays) : '',
+            $agendaId
+        );
+        
+        if (!empty($conflicts)) {
+            $_SESSION['validation_errors'] = $conflicts;
+            $_SESSION['form_data'] = $_POST;
+            header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+            exit;
+        }
+    } else {
+        // Verificar conflito para evento único
+        if ($this->compromissoModel->hasTimeConflict($agendaId, $startDatetime, $endDatetime)) {
+            $conflictingEvent = $this->compromissoModel->getConflictingEvent($agendaId, $startDatetime, $endDatetime);
+            
+            if ($conflictingEvent) {
+                $conflictDate = new DateTime($startDatetime);
+                $error = "Conflito no dia " . $conflictDate->format('d/m/Y') . 
+                         " às " . $conflictDate->format('H:i') . 
+                         ": \"" . $conflictingEvent['title'] . "\"";
+                
+                $_SESSION['validation_errors'] = [$error];
+                $_SESSION['form_data'] = $_POST;
+                header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
+                exit;
+            }
+        }
+    }
+    
     // Verificar se a agenda existe e está ativa
     $agenda = $this->agendaModel->getById($agendaId);
     
@@ -308,7 +344,7 @@ public function store() {
         'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null
     ];
     
-    // Salvar o compromisso
+    // Salvar o compromisso (agora o model já lida com recorrências)
     $compromissoId = $this->compromissoModel->create($compromissoData);
     
     if (!$compromissoId) {
@@ -318,46 +354,16 @@ public function store() {
         exit;
     }
     
-    // Se for recorrente, criar o grupo e gerar as ocorrências
-    if ($repeatType !== 'none') {
-    // Calcular todas as ocorrências
-    $occurrences = $this->compromissoModel->calculateOccurrences(
-        $repeatType,
-        $startDatetime,
-        $endDatetime,
-        $repeatUntil,
-        $repeatDays ?? ''
-    );
+    // Mostrar mensagem de sucesso e redirecionar
+    $_SESSION['flash_message'] = 'Compromisso criado com sucesso';
+    $_SESSION['flash_type'] = 'success';
     
-    // Verificar conflitos para cada ocorrência
-    $conflicts = [];
-    foreach ($occurrences as $occurrence) {
-        if ($this->compromissoModel->hasTimeConflict(
-            $agendaId,
-            $occurrence['start'],
-            $occurrence['end']
-        )) {
-            // Obter detalhes do evento conflitante
-            $conflictingEvent = $this->compromissoModel->getConflictingEvent(
-                $agendaId,
-                $occurrence['start'],
-                $occurrence['end']
-            );
-            
-            $conflictDate = new DateTime($occurrence['start']);
-            $conflicts[] = "Conflito no dia " . $conflictDate->format('d/m/Y') . 
-                           " às " . $conflictDate->format('H:i') . 
-                           ": \"" . $conflictingEvent['title'] . "\"";
-        }
+    if ($status === 'aguardando_aprovacao') {
+        $_SESSION['flash_message'] = 'Compromisso criado e está aguardando aprovação do dono da agenda';
     }
     
-    if (!empty($conflicts)) {
-        $_SESSION['validation_errors'] = $conflicts;
-        $_SESSION['form_data'] = $_POST;
-        header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
-        exit;
-    }
-}
+    header("Location: " . PUBLIC_URL . "/compromissos?agenda_id=" . $agendaId);
+    exit;
 }
     
 
@@ -854,7 +860,12 @@ public function edit() {
             'status' => $status
         ];
         
-        $result = $this->compromissoModel->update($id, $data);
+        // Para compromissos recorrentes, atualizar todos os eventos do grupo se necessário
+        if (!empty($compromisso['group_id'])) {
+            $result = $this->compromissoModel->updateGroupStatus($compromisso['group_id'], $status);
+        } else {
+            $result = $this->compromissoModel->update($id, $data);
+        }
         
         if ($result) {
             $_SESSION['flash_message'] = 'Status do compromisso atualizado com sucesso';
@@ -963,161 +974,6 @@ private function validateCompromissoData($data, $compromissoId = null) {
     return $errors;
 }
 
-    private function generateRecurrences($originalId, $data, $groupId) {
-        // Definir data de início da primeira ocorrência (já criada)
-        $startDate = new DateTime($data['start_datetime']);
-        $endDate = new DateTime($data['end_datetime']);
-        $duration = $startDate->diff($endDate);
-        
-        // Definir data final do período de recorrência
-        $untilDate = new DateTime($data['repeat_until']);
-        $untilDate->setTime(23, 59, 59); // Fim do dia
-        
-        // Definir intervalo baseado no tipo de recorrência
-        switch ($data['repeat_type']) {
-            case 'daily':
-                $interval = new DateInterval('P1D'); // 1 dia
-                break;
-                
-            case 'weekly':
-                $interval = new DateInterval('P7D'); // 7 dias
-                break;
-                
-            case 'specific_days':
-                // Dias específicos são tratados separadamente
-                $repeatDays = explode(',', $data['repeat_days']);
-                $this->generateSpecificDaysRecurrences($originalId, $data, $groupId, $repeatDays, $duration, $untilDate);
-                return;
-                
-            default:
-                return; // Tipo de recorrência não suportado
-        }
-        
-        // Avançar para o próximo dia para começar a gerar ocorrências
-        $currentStart = clone $startDate;
-        $currentStart->add($interval);
-        
-        // Gerar ocorrências até a data final
-        while ($currentStart <= $untilDate) {
-            // Calcular data de término da ocorrência
-            $currentEnd = clone $currentStart;
-            $currentEnd->add($duration);
-            
-            // Criar nova ocorrência
-            $occurrenceData = $data;
-            $occurrenceData['start_datetime'] = $currentStart->format('Y-m-d H:i:s');
-            $occurrenceData['end_datetime'] = $currentEnd->format('Y-m-d H:i:s');
-            $occurrenceData['group_id'] = $groupId;
-            $occurrenceData['is_recurrence'] = 1;
-            
-            // Salvar ocorrência
-            $this->compromissoModel->create($occurrenceData);
-            
-            // Avançar para a próxima data
-            $currentStart->add($interval);
-        }
-    }
-
-    private function generateSpecificDaysRecurrences($originalId, $data, $groupId, $repeatDays, $duration, $untilDate) {
-        // Converter dias da semana para valores numéricos (0 = Domingo, 6 = Sábado)
-        $repeatDays = array_map('intval', $repeatDays);
-        
-        // Obter dia da semana da primeira ocorrência
-        $startDate = new DateTime($data['start_datetime']);
-        $originalDayOfWeek = (int)$startDate->format('w'); // Dia da semana (0-6)
-        
-        // Remover o dia original da lista se estiver presente, pois já foi criado
-        $key = array_search($originalDayOfWeek, $repeatDays);
-        if ($key !== false) {
-            unset($repeatDays[$key]);
-            $repeatDays = array_values($repeatDays); // Reindexar array
-        }
-        
-        // Hora de início e duração
-        $startTime = $startDate->format('H:i:s');
-        
-        // Gerar primeira semana (dias restantes da semana atual)
-        $currentDate = clone $startDate;
-        
-        // Processar cada dia da semana na recorrência
-        foreach ($repeatDays as $dayOfWeek) {
-            // Calcular diferença de dias
-            $diff = ($dayOfWeek - $originalDayOfWeek + 7) % 7;
-            if ($diff === 0) $diff = 7; // Para evitar duplicar o mesmo dia
-            
-            // Avançar para o dia da semana
-            $currentStart = clone $startDate;
-            $currentStart->add(new DateInterval("P{$diff}D"));
-            
-            // Definir mesma hora de início
-            $currentStart->setTime(
-                (int)$startDate->format('H'),
-                (int)$startDate->format('i'),
-                (int)$startDate->format('s')
-            );
-            
-            // Continuar até a data final
-            while ($currentStart <= $untilDate) {
-                // Calcular data de término
-                $currentEnd = clone $currentStart;
-                $currentEnd->add($duration);
-                
-                // Criar ocorrência
-                $occurrenceData = $data;
-                $occurrenceData['start_datetime'] = $currentStart->format('Y-m-d H:i:s');
-                $occurrenceData['end_datetime'] = $currentEnd->format('Y-m-d H:i:s');
-                $occurrenceData['group_id'] = $groupId;
-                $occurrenceData['is_recurrence'] = 1;
-                
-                // Salvar ocorrência
-                $this->compromissoModel->create($occurrenceData);
-                
-                // Avançar para a próxima semana
-                $currentStart->add(new DateInterval('P7D'));
-            }
-        }
-    }
-
-private function notifyAgendaOwner($agenda, $data, $createdById) {
-    // Se o sistema tiver um módulo de notificações implementado
-    if (class_exists('Notification')) {  // Mudado de 'NotificationModel' para 'Notification'
-        require_once __DIR__ . '/../models/User.php';
-        $userModel = new User();
-        $creator = $userModel->getById($createdById);
-        
-        $notificationText = "";
-        if ($data['status'] === 'aguardando_aprovacao') {
-            $notificationText = "{$creator['name']} adicionou um compromisso que está aguardando sua aprovação na agenda '{$agenda['title']}'";
-        } else {
-            $notificationText = "{$creator['name']} adicionou um novo compromisso na agenda '{$agenda['title']}'";
-        }
-        
-        require_once __DIR__ . '/../models/Notification.php';
-        $notificationModel = new Notification();
-        $notificationModel->create([
-            'user_id' => $agenda['user_id'],
-            'compromisso_id' => $data['id'],
-            'message' => $notificationText,
-            'is_read' => 0
-        ]);
-    }
-        
-        // Se o sistema tiver um módulo de e-mail implementado
-        if (class_exists('EmailService')) {
-            require_once __DIR__ . '/../services/EmailService.php';
-            $emailService = new EmailService();
-            
-            require_once __DIR__ . '/../models/User.php';
-            $userModel = new User();
-            $owner = $userModel->getById($agenda['user_id']);
-            $creator = $userModel->getById($createdById);
-            
-            if ($owner && $creator) {
-                $emailService->sendNewCompromissoNotification($owner, $data, $agenda);
-            }
-        }
-    }
-
     public function newPublic() {
     // Obter ID da agenda
     $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
@@ -1143,7 +999,5 @@ private function notifyAgendaOwner($agenda, $data, $createdById) {
     header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
     exit;
 }
-
-
     
 }
