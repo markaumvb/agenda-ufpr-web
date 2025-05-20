@@ -1,5 +1,5 @@
 <?php
-// app/views/timeline/index.php - Versão com depuração avançada
+// app/views/timeline/index.php - Com estilização melhorada para os filtros
 ?>
 
 <div class="container">
@@ -14,7 +14,6 @@
         </div>
     </div>
 
-
     <!-- Filtros da timeline -->
     <div class="timeline-filters">
         <form action="<?= PUBLIC_URL ?>/timeline" method="get" class="filter-form">
@@ -27,15 +26,29 @@
                 
                 <?php if (!empty($publicAgendas)): ?>
                 <div class="col-md-5 mb-3">
-                    <label for="agenda-select">Agenda</label>
-                    <select id="agenda-select" name="agenda_id" class="form-control">
-                        <option value="all" <?= (!isset($_GET['agenda_id']) || $_GET['agenda_id'] == 'all') ? 'selected' : '' ?>>Todas as Agendas</option>
+                    <label>Agendas</label>
+                    <div class="agendas-filter-container">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="select-all-agendas" 
+                                <?= empty($selectedAgendas) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="select-all-agendas">
+                                <strong>Selecionar Todas</strong>
+                            </label>
+                        </div>
+                        <hr>
                         <?php foreach ($publicAgendas as $agenda): ?>
-                        <option value="<?= $agenda['id'] ?>" <?= (isset($_GET['agenda_id']) && $_GET['agenda_id'] == $agenda['id']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($agenda['title']) ?> (<?= htmlspecialchars($agenda['owner_name']) ?>)
-                        </option>
+                        <div class="form-check agenda-item">
+                            <input class="form-check-input agenda-checkbox" type="checkbox" 
+                                   name="agendas[]" value="<?= $agenda['id'] ?>" id="agenda-<?= $agenda['id'] ?>"
+                                   <?= (empty($selectedAgendas) || in_array($agenda['id'], $selectedAgendas)) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="agenda-<?= $agenda['id'] ?>">
+                                <span class="agenda-color-dot" style="background-color: <?= htmlspecialchars($agenda['color']) ?>;"></span>
+                                <?= htmlspecialchars($agenda['title']) ?> 
+                                <small class="text-muted">(<?= htmlspecialchars($agenda['owner_name']) ?>)</small>
+                            </label>
+                        </div>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
                 </div>
                 <?php endif; ?>
                 
@@ -117,7 +130,45 @@ window.timelineEvents = [
     <?php endforeach; ?>
 ];
 
-
+// Lógica para o checkbox "Selecionar Todas"
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-agendas');
+    const agendaCheckboxes = document.querySelectorAll('.agenda-checkbox');
+    
+    if (selectAllCheckbox) {
+        // Atualizar o estado do checkbox "Selecionar Todas" com base nos checkboxes individuais
+        function updateSelectAllCheckbox() {
+            let allChecked = true;
+            agendaCheckboxes.forEach(checkbox => {
+                if (!checkbox.checked) {
+                    allChecked = false;
+                }
+            });
+            selectAllCheckbox.checked = allChecked;
+        }
+        
+        // Quando clica em "Selecionar Todas"
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            agendaCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        });
+        
+        // Quando clica em um checkbox individual
+        agendaCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectAllCheckbox);
+        });
+        
+        // Auto-submeter o formulário quando mudar a data
+        const datePicker = document.getElementById('date-picker');
+        if (datePicker) {
+            datePicker.addEventListener('change', function() {
+                document.querySelector('.filter-form').submit();
+            });
+        }
+    }
+});
 </script>
 
 <!-- Carregar o script externo da timeline -->

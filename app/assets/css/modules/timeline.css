@@ -1,3 +1,8 @@
+/* 
+ * Estilos para o módulo de timeline
+ * Arquivo completo: app/assets/css/modules/timeline.css
+ */
+
 /* Contêiner principal */
 .timeline-container {
   background-color: #fff;
@@ -83,6 +88,58 @@
   font-weight: 400;
 }
 
+/* Estilos para o filtro de agendas - CORRIGIDO */
+.agendas-filter-container {
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  margin-top: 5px;
+}
+
+.agendas-filter-container .form-check {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.agendas-filter-container hr {
+  margin: 8px 0;
+  border-color: #e0e0e0;
+}
+
+/* Estilo para a bolinha colorida da agenda - CORRIGIDO */
+.agenda-color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px; /* Ajuste fino para alinhar verticalmente */
+}
+
+/* Alinhamento do item de agenda */
+.agenda-item {
+  display: flex;
+  align-items: center;
+}
+
+.agenda-item .form-check-input {
+  margin-top: 0;
+}
+
+.agenda-item .form-check-label {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Estilos FullCalendar customizados */
 .fc {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -151,72 +208,160 @@
 
 /* Estilos para os eventos */
 .fc-event {
-  cursor: pointer !important;
   border-radius: 6px !important;
-  border-left-width: 4px !important;
-  margin: 2px 1px !important;
-  padding: 2px 4px !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  margin: 2px 1px !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+
+.fc-event-main {
+  padding: 4px 6px !important;
 }
 
 .fc-event-title {
   font-weight: 600 !important;
-  padding: 2px 0 !important;
+  margin-bottom: 3px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.3 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  font-size: 0.9rem !important;
 }
 
-.fc-event-time {
-  font-size: 0.85rem !important;
-  opacity: 0.9;
+.fc-event-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* Modal e detalhes do evento */
-.event-header {
-  margin-bottom: 1.25rem;
-  padding-left: 15px;
+.fc-event-info {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Opções de visualização do calendário */
+.view-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.view-options .btn-group {
+  display: flex;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.view-option {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.view-option:hover {
+  background-color: #e9ecef;
+}
+
+.view-option.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.view-option:first-child {
+  border-top-left-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
+}
+
+.view-option:last-child {
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+}
+
+/* Modal de detalhes do evento */
+.event-details-header {
+  margin-bottom: 15px;
+  padding-left: 12px;
   border-left-width: 4px;
   border-left-style: solid;
 }
 
-.event-header h4 {
-  margin-bottom: 0.5rem;
+.event-details-header h4 {
+  margin-bottom: 5px;
   font-size: 1.4rem;
-  font-weight: 600;
   color: #333;
 }
 
-.agenda-info {
-  font-size: 0.9rem;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.agenda-color-dot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.event-details {
+.event-details-body {
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
-.event-details p {
-  margin-bottom: 0.75rem;
+.event-details-body p {
+  margin-bottom: 8px;
 }
 
-.event-details strong {
-  color: #444;
+.event-details-body i {
+  width: 20px;
+  text-align: center;
+  color: #666;
 }
 
-/* Indicador de atualização automática */
+.description-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.description-section .bg-light {
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #f8f9fa !important;
+  border: 1px solid #eee;
+}
+
+/* Melhorar a visualização em lista */
+.fc-list-day-cushion {
+  background-color: #f0f7ff !important;
+}
+
+.fc-list-event {
+  cursor: pointer !important;
+}
+
+.fc-list-event-title {
+  font-weight: 600 !important;
+}
+
+.fc-list-event-dot {
+  border-color: inherit !important;
+}
+
+/* Estado vazio */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  margin: 2rem 0;
+}
+
+.empty-state p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+/* Auto-update indicator */
 .auto-update-indicator {
   position: fixed;
   bottom: 20px;
@@ -240,6 +385,21 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
+  .fc-header-toolbar {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fc-toolbar-chunk {
+    margin-bottom: 5px;
+  }
+
+  .view-options {
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+
   .filter-row {
     flex-direction: column;
   }
@@ -256,32 +416,6 @@
 
   .filter-actions .btn {
     flex: 1;
-  }
-
-  .fc .fc-toolbar {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: center;
-  }
-
-  .fc-toolbar-chunk {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .fc-toolbar-chunk .fc-button-group {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-
-  .current-time-indicator {
-    margin-bottom: 1rem;
-  }
-
-  .timeline-container {
-    padding: 1rem;
   }
 }
 
