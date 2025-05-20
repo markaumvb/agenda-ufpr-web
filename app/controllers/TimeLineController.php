@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../models/Agenda.php';
+require_once __DIR__ . '/../models/Compromisso.php';
+require_once __DIR__ . '/../models/User.php';
 
 class TimelineController extends BaseController {
     private $agendaModel;
@@ -7,19 +10,17 @@ class TimelineController extends BaseController {
     private $userModel;
     
     public function __construct() {
-        // Inicialização dos modelos
-        require_once __DIR__ . '/../models/Database.php';
-        require_once __DIR__ . '/../models/Agenda.php';
-        require_once __DIR__ . '/../models/Compromisso.php';
-        require_once __DIR__ . '/../models/User.php';
-        
         $this->agendaModel = new Agenda();
         $this->compromissoModel = new Compromisso();
         $this->userModel = new User();
         
-        // NÃO chamar checkAuth() aqui, diferente de outros controllers
+        // Verificar se o usuário está logado
+        $this->checkAuth();
     }
     
+    /**
+     * Display the public events timeline
+     */
     public function index() {
         // Get current date or from GET parameter
         $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
@@ -76,6 +77,12 @@ class TimelineController extends BaseController {
             
             // Add agenda info to each event
             foreach ($events as &$event) {
+                // Filtrar apenas eventos públicos realizados ou pendentes 
+                // (não mostrar cancelados ou aguardando aprovação)
+                if ($event['status'] === 'cancelado') {
+                    continue;
+                }
+                
                 $event['agenda_info'] = [
                     'id' => $agenda['id'],
                     'title' => $agenda['title'],
@@ -101,7 +108,7 @@ class TimelineController extends BaseController {
             return strtotime($a['start_datetime']) - strtotime($b['start_datetime']);
         });
         
-        // Carregar a visualização sem verificar autenticação
+        // Load view
         require_once __DIR__ . '/../views/shared/header.php';
         require_once __DIR__ . '/../views/timeline/index.php';
         require_once __DIR__ . '/../views/shared/footer.php';

@@ -1,112 +1,176 @@
-<div class="page-header">
-    <div class="header-container">
-        <h1>Linha do Tempo - Eventos Públicos</h1>
+<?php
+// app/views/timeline/index.php - Versão corrigida usando CSS existente e garantindo exibição dos eventos
+?>
+
+<div class="container">
+    <div class="page-header">
+        <div class="header-container">
+            <h1>Linha do Tempo</h1>
+            <div class="header-actions">
+                <a href="<?= PUBLIC_URL ?>/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
     </div>
-    
-    <!-- Filtros -->
+
+    <!-- Filtros da timeline -->
     <div class="timeline-filters">
-        <form action="<?= PUBLIC_URL ?>/timeline" method="get" id="timeline-filter-form">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="date-filter">Data:</label>
-                    <input type="date" id="date-filter" name="date" value="<?= $formattedDate ?>" class="form-control">
+        <form action="<?= PUBLIC_URL ?>/timeline" method="get" class="filter-form">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="date-picker">Data</label>
+                    <input type="date" id="date-picker" name="date" class="form-control" 
+                           value="<?= htmlspecialchars($date->format('Y-m-d')) ?>">
                 </div>
                 
-                <div class="filter-group">
-                    <label for="agendas-filter">Agendas:</label>
-                    <select id="agendas-filter" name="agendas[]" multiple class="form-control">
+                <?php if (!empty($publicAgendas)): ?>
+                <div class="col-md-5 mb-3">
+                    <label for="agenda-select">Agenda</label>
+                    <select id="agenda-select" name="agenda_id" class="form-control">
+                        <option value="all" <?= (!isset($_GET['agenda_id']) || $_GET['agenda_id'] == 'all') ? 'selected' : '' ?>>Todas as Agendas</option>
                         <?php foreach ($publicAgendas as $agenda): ?>
-                            <option value="<?= $agenda['id'] ?>" 
-                                    <?= in_array($agenda['id'], $selectedAgendas) ? 'selected' : '' ?>
-                                    data-color="<?= $agenda['color'] ?>">
-                                <?= htmlspecialchars($agenda['title']) ?> (<?= htmlspecialchars($agenda['owner_name']) ?>)
-                            </option>
+                        <option value="<?= $agenda['id'] ?>" <?= (isset($_GET['agenda_id']) && $_GET['agenda_id'] == $agenda['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($agenda['title']) ?> (<?= htmlspecialchars($agenda['owner_name']) ?>)
+                        </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <?php endif; ?>
                 
-                <div class="filter-group">
-                    <label for="search-filter">Pesquisar:</label>
-                    <input type="text" id="search-filter" name="search" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Buscar por título, descrição ou local" class="form-control">
-                </div>
-                
-                <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">Filtrar</button>
-                    <a href="<?= PUBLIC_URL ?>/timeline" class="btn btn-secondary">Limpar</a>
+                <div class="col-md-4 mb-3">
+                    <label for="search-input">Buscar</label>
+                    <div class="input-group">
+                        <input type="text" id="search-input" name="search" class="form-control" 
+                               placeholder="Título, local ou descrição" value="<?= htmlspecialchars($searchQuery) ?>">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
-</div>
 
-<!-- Indicador de hora atual -->
-<div class="current-time-indicator">
-    <div class="time-label">Agora: <span id="current-time"></span></div>
-</div>
+    <!-- Opções de visualização do calendário -->
+    <div class="view-options mb-4">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline view-option active" data-view="timeGridDay">Dia</button>
+            <button type="button" class="btn btn-outline view-option" data-view="listDay">Lista</button>
+        </div>
+    </div>
 
-<!-- Container do calendário -->
-<div class="timeline-container">
-    <div id="timeline-calendar"></div>
-</div>
+    <!-- Debug - Para verificar se os eventos estão sendo recuperados -->
+    <?php if (empty($allEvents)): ?>
+    <div class="alert alert-info">
+        <p>Nenhum compromisso encontrado para esta data.</p>
+    </div>
+    <?php else: ?>
+    <div class="alert alert-success d-none">
+        <p>Encontrado(s) <?= count($allEvents) ?> compromisso(s) para exibição.</p>
+    </div>
+    <?php endif; ?>
 
-<!-- Modal de detalhes do evento -->
-<div class="modal fade" id="event-details-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detalhes do Evento</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="event-info"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+    <!-- Calendário FullCalendar -->
+    <div class="calendar-container">
+        <div id="calendar"></div>
+    </div>
+
+    <!-- Modal para detalhes do evento -->
+    <div id="event-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do Compromisso</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body" id="event-details">
+                    <!-- Detalhes do evento serão inseridos aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Script para inicializar o FullCalendar -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar FullCalendar
-    const calendarEl = document.getElementById('timeline-calendar');
+    // Auto-submeter o formulário quando mudar a data
+    const datePicker = document.getElementById('date-picker');
+    if (datePicker) {
+        datePicker.addEventListener('change', function() {
+            document.querySelector('.filter-form').submit();
+        });
+    }
+
+    // Auto-submeter o formulário quando mudar a agenda
+    const agendaSelect = document.getElementById('agenda-select');
+    if (agendaSelect) {
+        agendaSelect.addEventListener('change', function() {
+            document.querySelector('.filter-form').submit();
+        });
+    }
+
+    // Inicializar o FullCalendar
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) {
+        console.error('Elemento do calendário não encontrado');
+        return;
+    }
+
+    // Preparar eventos para o FullCalendar
+    const events = [];
+    
+    <?php foreach ($allEvents as $event): 
+        // Filtrar apenas eventos pendentes ou realizados
+        if (!in_array($event['status'], ['pendente', 'realizado'])) continue;
+        
+        // Usar a cor da agenda para o evento
+        $colorHex = !empty($event['agenda_info']['color']) ? 
+            $event['agenda_info']['color'] : 
+            ($event['status'] === 'pendente' ? '#ffc107' : '#28a745');
+    ?>
+    events.push({
+        id: <?= json_encode($event['id']) ?>,
+        title: <?= json_encode($event['title']) ?>,
+        start: <?= json_encode($event['start_datetime']) ?>,
+        end: <?= json_encode($event['end_datetime']) ?>,
+        backgroundColor: <?= json_encode($colorHex) ?>,
+        borderColor: <?= json_encode($colorHex) ?>,
+        textColor: '#fff',
+        description: <?= json_encode($event['description'] ?? '') ?>,
+        location: <?= json_encode($event['location'] ?? '') ?>,
+        status: <?= json_encode($event['status']) ?>,
+        agendaInfo: {
+            title: <?= json_encode($event['agenda_info']['title'] ?? 'Agenda') ?>,
+            color: <?= json_encode($event['agenda_info']['color'] ?? '#ccc') ?>,
+            owner: <?= json_encode($event['agenda_info']['owner_name'] ?? 'Desconhecido') ?>
+        }
+    });
+    <?php endforeach; ?>
+
+    console.log('Total de eventos encontrados:', events.length);
+
+    // Criar o calendário
     const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridDay',
-        initialDate: '<?= $formattedDate ?>',
+        locale: 'pt-br',
+        initialView: 'timeGridDay', // Vista padrão: dia
+        initialDate: '<?= $date->format('Y-m-d') ?>',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'timeGridDay,listDay'
+            right: ''  // Removido pois temos botões personalizados
         },
-        locale: 'pt-br',
-        allDaySlot: false,
-        nowIndicator: true,
-        height: 'auto',
-        slotMinTime: '07:00:00',
+        slotMinTime: '06:00:00',
         slotMaxTime: '22:00:00',
-        slotDuration: '00:30:00',
-        events: <?= json_encode(array_map(function($event) {
-            return [
-                'id' => $event['id'],
-                'title' => $event['title'],
-                'start' => $event['start_datetime'],
-                'end' => $event['end_datetime'],
-                'backgroundColor' => $event['agenda_info']['color'],
-                'borderColor' => $event['agenda_info']['color'],
-                'extendedProps' => [
-                    'description' => $event['description'],
-                    'location' => $event['location'],
-                    'status' => $event['status'],
-                    'agendaTitle' => $event['agenda_info']['title'],
-                    'agendaColor' => $event['agenda_info']['color'],
-                    'ownerName' => $event['agenda_info']['owner_name'],
-                    'creatorName' => $event['creator_name'] ?? 'Desconhecido'
-                ]
-            ];
-        }, $allEvents)) ?>,
+        allDaySlot: false,
+        height: 'auto',
+        events: events,
         eventTimeFormat: {
             hour: '2-digit',
             minute: '2-digit',
@@ -114,108 +178,77 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         eventClick: function(info) {
             showEventDetails(info.event);
-        },
-        eventClassNames: function(arg) {
-            return [`event-status-${arg.event.extendedProps.status}`];
         }
     });
-    
+
     calendar.render();
     
-    // Atualizar hora atual a cada minuto
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 60000);
-    
-    // Atualizar calendário a cada 30 minutos
-    setInterval(function() {
-        calendar.refetchEvents();
-        showUpdateMessage();
-    }, 30 * 60 * 1000);
-    
-    // Função para atualizar o indicador de hora atual
-    function updateCurrentTime() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
+    // Manipular botões de visualização
+    document.querySelectorAll('.view-option').forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+            calendar.changeView(view);
+            
+            // Atualizar estilo dos botões
+            document.querySelectorAll('.view-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
         });
-        document.getElementById('current-time').textContent = timeString;
-    }
-    
-    // Função para mostrar mensagem de atualização
-    function showUpdateMessage() {
-        const indicator = document.createElement('div');
-        indicator.className = 'auto-update-indicator';
-        indicator.textContent = 'Calendário atualizado!';
-        document.body.appendChild(indicator);
-        
-        // Mostra a mensagem
-        setTimeout(() => {
-            indicator.classList.add('visible');
-        }, 100);
-        
-        // Remove a mensagem após 3 segundos
-        setTimeout(() => {
-            indicator.classList.remove('visible');
-            setTimeout(() => {
-                document.body.removeChild(indicator);
-            }, 300);
-        }, 3000);
-    }
-    
-    // Função para mostrar detalhes do evento no modal
-    function showEventDetails(event) {
-        const props = event.extendedProps;
-        const start = new Date(event.start);
-        const end = new Date(event.end);
-        
-        const formattedStart = formatDateTime(start);
-        const formattedEnd = formatDateTime(end);
-        
-        const statusLabels = {
-            'pendente': 'Pendente',
-            'realizado': 'Realizado',
-            'cancelado': 'Cancelado',
-            'aguardando_aprovacao': 'Aguardando Aprovação'
-        };
-        
-        // Preencher o modal com detalhes do evento
-        let content = `
-            <div class="event-header" style="border-left: 4px solid ${props.agendaColor}; padding-left: 10px;">
-                <h4>${event.title}</h4>
-                <div class="agenda-info">
-                    <span class="agenda-color-dot" style="background-color: ${props.agendaColor}"></span>
-                    <strong>Agenda:</strong> ${props.agendaTitle} (${props.ownerName})
-                </div>
-            </div>
-            <div class="event-details">
-                <p><strong>Horário:</strong> ${formattedStart} até ${formattedEnd}</p>
-                <p><strong>Status:</strong> <span class="badge badge-${props.status}">${statusLabels[props.status] || props.status}</span></p>
-                <p><strong>Criado por:</strong> ${props.creatorName}</p>
-                ${props.location ? `<p><strong>Local:</strong> ${props.location}</p>` : ''}
-                ${props.description ? `<p><strong>Descrição:</strong><br>${props.description}</p>` : ''}
-            </div>
-        `;
-        
-        // Definir o conteúdo e mostrar o modal
-        document.querySelector('#event-details-modal .event-info').innerHTML = content;
-        $('#event-details-modal').modal('show');
-    }
-    
-    // Função auxiliar para formatar data e hora
-    function formatDateTime(date) {
-        return date.toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-    
-    // Enviar o formulário quando mudar a data
-    document.getElementById('date-filter').addEventListener('change', function() {
-        document.getElementById('timeline-filter-form').submit();
     });
+
+    // Função para mostrar os detalhes do evento
+    function showEventDetails(event) {
+        const modal = document.getElementById('event-modal');
+        const detailsContainer = document.getElementById('event-details');
+        
+        if (modal && detailsContainer) {
+            const startTime = new Date(event.start).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            const endTime = new Date(event.end).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            
+            let content = `
+                <div class="event-details-header" style="border-left: 4px solid ${event.backgroundColor}; padding-left: 10px;">
+                    <h4>${event.title}</h4>
+                    <span class="badge badge-${event.extendedProps.status}">
+                        ${event.extendedProps.status === 'pendente' ? 'Pendente' : 'Realizado'}
+                    </span>
+                </div>
+                <div class="event-details-body">
+                    <p>
+                        <i class="fas fa-clock"></i> <strong>Horário:</strong> 
+                        ${startTime} até ${endTime}
+                    </p>`;
+                    
+            if (event.extendedProps.agendaInfo) {
+                content += `
+                    <p>
+                        <i class="fas fa-calendar"></i> <strong>Agenda:</strong> 
+                        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${event.extendedProps.agendaInfo.color}; margin-right: 5px;"></span>
+                        ${event.extendedProps.agendaInfo.title} 
+                        <span style="font-style: italic; color: #777;">(${event.extendedProps.agendaInfo.owner})</span>
+                    </p>`;
+            }
+            
+            if (event.extendedProps.location) {
+                content += `<p><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> ${event.extendedProps.location}</p>`;
+            }
+            
+            if (event.extendedProps.description) {
+                content += `
+                    <div class="description-section mt-3 pt-3" style="border-top: 1px solid #eee;">
+                        <strong>Descrição:</strong>
+                        <div class="p-2 mt-2 bg-light rounded">${event.extendedProps.description.replace(/\n/g, '<br>')}</div>
+                    </div>`;
+            }
+            
+            content += `</div>`;
+            
+            // Inserir conteúdo no modal
+            detailsContainer.innerHTML = content;
+            
+            // Abrir o modal
+            $(modal).modal('show');
+        }
+    }
 });
 </script>
