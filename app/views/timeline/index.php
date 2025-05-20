@@ -1,5 +1,5 @@
 <?php
-// app/views/timeline/index.php - Com estilização melhorada para os filtros
+// Versão corrigida e simplificada do app/views/timeline/index.php
 ?>
 
 <div class="container">
@@ -14,18 +14,36 @@
         </div>
     </div>
 
-    <!-- Filtros da timeline -->
+    <!-- Filtros simplificados para garantir funcionamento -->
     <div class="timeline-filters">
         <form action="<?= PUBLIC_URL ?>/timeline" method="get" class="filter-form">
             <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="date-picker">Data</label>
-                    <input type="date" id="date-picker" name="date" class="form-control" 
-                           value="<?= htmlspecialchars($date->format('Y-m-d')) ?>">
+                <!-- Linha superior: Data e Busca lado a lado -->
+                <div class="col-md-8 mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="date-picker">Data</label>
+                            <input type="date" id="date-picker" name="date" class="form-control" 
+                                   value="<?= htmlspecialchars($date->format('Y-m-d')) ?>">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="search-input">Buscar</label>
+                            <div class="input-group">
+                                <input type="text" id="search-input" name="search" class="form-control" 
+                                       placeholder="Título, local ou descrição" value="<?= htmlspecialchars($searchQuery) ?>">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Coluna da direita: Filtro de Agendas -->
                 <?php if (!empty($publicAgendas)): ?>
-                <div class="col-md-5 mb-3">
+                <div class="col-md-4 mb-3">
                     <label>Agendas</label>
                     <div class="agendas-filter-container">
                         <div class="form-check mb-2">
@@ -36,40 +54,29 @@
                             </label>
                         </div>
                         <hr>
-                        <?php foreach ($publicAgendas as $agenda): ?>
-                        <div class="form-check agenda-item">
-                            <input class="form-check-input agenda-checkbox" type="checkbox" 
-                                   name="agendas[]" value="<?= $agenda['id'] ?>" id="agenda-<?= $agenda['id'] ?>"
-                                   <?= (empty($selectedAgendas) || in_array($agenda['id'], $selectedAgendas)) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="agenda-<?= $agenda['id'] ?>">
-                                <span class="agenda-color-dot" style="background-color: <?= htmlspecialchars($agenda['color']) ?>;"></span>
-                                <?= htmlspecialchars($agenda['title']) ?> 
-                                <small class="text-muted">(<?= htmlspecialchars($agenda['owner_name']) ?>)</small>
-                            </label>
+                        <div class="agendas-scroll-area">
+                            <?php foreach ($publicAgendas as $agenda): ?>
+                            <div class="form-check agenda-item">
+                                <input class="form-check-input agenda-checkbox" type="checkbox" 
+                                       name="agendas[]" value="<?= $agenda['id'] ?>" id="agenda-<?= $agenda['id'] ?>"
+                                       <?= (empty($selectedAgendas) || in_array($agenda['id'], $selectedAgendas)) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="agenda-<?= $agenda['id'] ?>">
+                                    <span class="agenda-color-dot" style="background-color: <?= htmlspecialchars($agenda['color']) ?>;"></span>
+                                    <?= htmlspecialchars($agenda['title']) ?> 
+                                    <small class="text-muted">(<?= htmlspecialchars($agenda['owner_name']) ?>)</small>
+                                </label>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php endforeach; ?>
                     </div>
                 </div>
                 <?php endif; ?>
-                
-                <div class="col-md-4 mb-3">
-                    <label for="search-input">Buscar</label>
-                    <div class="input-group">
-                        <input type="text" id="search-input" name="search" class="form-control" 
-                               placeholder="Título, local ou descrição" value="<?= htmlspecialchars($searchQuery) ?>">
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i> Buscar
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </form>
     </div>
 
     <!-- Opções de visualização do calendário -->
-    <div class="view-options mb-4">
+    <div class="view-options mb-3">
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-outline-primary view-option active" data-view="timeGridDay">Dia</button>
             <button type="button" class="btn btn-outline-primary view-option" data-view="listDay">Lista</button>
@@ -81,12 +88,12 @@
     <div class="alert alert-info">
         <p>Nenhum compromisso encontrado para esta data.</p>
     </div>
-    <?php endif; ?>
-
+    <?php else: ?>
     <!-- Calendário FullCalendar -->
     <div class="calendar-container">
         <div id="calendar"></div>
     </div>
+    <?php endif; ?>
 
     <!-- Modal para detalhes do evento -->
     <div id="event-modal" class="modal fade" tabindex="-1">
@@ -171,5 +178,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Carregar o script externo da timeline -->
+<!-- Carregar o script da timeline -->
 <script src="<?= PUBLIC_URL ?>/app/assets/js/timeline.js"></script>

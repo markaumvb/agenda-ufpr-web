@@ -1,108 +1,50 @@
 /* 
- * Estilos para o módulo de timeline
- * Arquivo completo: app/assets/css/modules/timeline.css
+ * Estilos completos para o módulo de timeline
+ * app/assets/css/modules/timeline.css
  */
 
-/* Contêiner principal */
+/* ===== CONTÊINERES PRINCIPAIS ===== */
 .timeline-container {
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   margin-bottom: 2rem;
-  min-height: 600px;
+  min-height: 600px; /* Altura mínima aumentada para o calendário */
 }
 
-/* Filtros e cabeçalho */
+#calendar {
+  width: 100%;
+  min-height: 550px; /* Altura mínima garantida para o calendário */
+}
+
+/* ===== FILTROS E CABEÇALHO ===== */
 .timeline-filters {
   background-color: #f0f7ff;
   border-radius: 10px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border: 1px solid #d0e3ff;
 }
 
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  align-items: flex-end;
-}
-
-.filter-group {
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.filter-group label {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: #3c4043;
-}
-
-.filter-group .form-control {
-  border: 1px solid #d0e3ff;
-  border-radius: 6px;
-  padding: 0.75rem;
-  transition: all 0.2s ease;
-}
-
-.filter-group .form-control:focus {
-  border-color: #3788d8;
-  box-shadow: 0 0 0 2px rgba(55, 136, 216, 0.2);
-}
-
-.filter-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-}
-
-/* Indicador de hora atual */
-.current-time-indicator {
-  background: linear-gradient(90deg, #004a8f, #005cb2);
-  color: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-weight: bold;
-  box-shadow: 0 3px 10px rgba(0, 74, 143, 0.2);
-}
-
-.time-label {
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.time-label:before {
-  content: "\f017";
-  font-family: "Font Awesome 5 Free";
-  font-weight: 400;
-}
-
-/* Estilos para o filtro de agendas - CORRIGIDO */
+/* Agendas filter com barra de rolagem */
 .agendas-filter-container {
-  max-height: 150px;
-  overflow-y: auto;
+  max-height: 220px;
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: #f8f9fa;
+}
+
+.agendas-scroll-area {
+  max-height: 130px;
+  overflow-y: auto;
   margin-top: 5px;
 }
 
 .agendas-filter-container .form-check {
   margin-bottom: 8px;
-  display: flex;
-  align-items: center;
 }
 
 .agendas-filter-container hr {
@@ -110,7 +52,7 @@
   border-color: #e0e0e0;
 }
 
-/* Estilo para a bolinha colorida da agenda - CORRIGIDO */
+/* Estilo para a bolinha colorida da agenda */
 .agenda-color-dot {
   display: inline-block;
   width: 10px;
@@ -118,8 +60,6 @@
   border-radius: 50%;
   margin-right: 5px;
   vertical-align: middle;
-  position: relative;
-  top: -1px; /* Ajuste fino para alinhar verticalmente */
 }
 
 /* Alinhamento do item de agenda */
@@ -140,14 +80,47 @@
   text-overflow: ellipsis;
 }
 
-/* Estilos FullCalendar customizados */
+/* Opções de visualização do calendário */
+.view-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.view-options .btn-group {
+  display: flex;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.view-option {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.view-option:hover {
+  background-color: #e9ecef;
+}
+
+.view-option.active {
+  background-color: #004a8f;
+  color: white;
+  border-color: #004a8f;
+}
+
+/* ===== ESTILOS FULLCALENDAR ===== */
 .fc {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
 
 .fc-header-toolbar {
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 1.25rem !important;
   padding-bottom: 1rem;
   border-bottom: 1px solid #eaeaea;
 }
@@ -190,6 +163,10 @@
   padding: 0.5rem 0;
 }
 
+.fc-timegrid-slot {
+  height: 40px !important; /* Altura aumentada para slots de tempo */
+}
+
 .fc-timegrid-slot-label {
   font-size: 0.85rem;
   color: #666;
@@ -229,14 +206,7 @@
   text-overflow: ellipsis !important;
 }
 
-.fc-event-content-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.fc-event-info {
+.fc-event-text {
   font-size: 0.8rem;
   opacity: 0.8;
   white-space: nowrap;
@@ -244,50 +214,71 @@
   text-overflow: ellipsis;
 }
 
-/* Opções de visualização do calendário */
-.view-options {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+/* Melhorar a visualização em lista */
+.fc-list-day-cushion {
+  background-color: #f0f7ff !important;
 }
 
-.view-options .btn-group {
-  display: flex;
-  border-radius: var(--border-radius);
-  overflow: hidden;
+.fc-list-event {
+  cursor: pointer !important;
 }
 
-.view-option {
-  padding: 0.5rem 1rem;
+.fc-list-event-title {
+  font-weight: 600 !important;
+}
+
+.fc-list-event-dot {
+  border-color: inherit !important;
+}
+
+/* Eventos por status */
+.fc-event.event-status-pendente,
+.fc-daygrid-event.event-status-pendente {
+  background-color: var(--warning-color) !important;
+  border-color: #e0a800 !important;
+  color: #000 !important;
+}
+
+.fc-event.event-status-realizado,
+.fc-daygrid-event.event-status-realizado {
+  background-color: var(--success-color) !important;
+  border-color: #218838 !important;
+  color: #fff !important;
+  opacity: 0.7 !important;
+}
+
+.fc-event.event-status-cancelado,
+.fc-daygrid-event.event-status-cancelado {
+  background-color: var(--danger-color) !important;
+  border-color: #bd2130 !important;
+  text-decoration: line-through !important;
+  color: #fff !important;
+  opacity: 0.7 !important;
+}
+
+.fc-event.event-status-aguardando_aprovacao,
+.fc-daygrid-event.event-status-aguardando_aprovacao {
+  background-color: var(--info-color) !important;
+  border-color: #138496 !important;
+  color: #fff !important;
+}
+
+/* ===== ESTADOS VAZIOS E NOTIFICAÇÕES ===== */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
   background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #333;
-  transition: background-color 0.2s;
+  border-radius: 10px;
+  margin: 2rem 0;
 }
 
-.view-option:hover {
-  background-color: #e9ecef;
+.empty-state p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
 }
 
-.view-option.active {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.view-option:first-child {
-  border-top-left-radius: var(--border-radius);
-  border-bottom-left-radius: var(--border-radius);
-}
-
-.view-option:last-child {
-  border-top-right-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
-}
-
-/* Modal de detalhes do evento */
+/* ===== MODAL DE DETALHES ===== */
 .event-details-header {
   margin-bottom: 15px;
   padding-left: 12px;
@@ -329,61 +320,17 @@
   border: 1px solid #eee;
 }
 
-/* Melhorar a visualização em lista */
-.fc-list-day-cushion {
-  background-color: #f0f7ff !important;
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 992px) {
+  .timeline-container {
+    min-height: 550px;
+  }
+
+  #calendar {
+    min-height: 500px;
+  }
 }
 
-.fc-list-event {
-  cursor: pointer !important;
-}
-
-.fc-list-event-title {
-  font-weight: 600 !important;
-}
-
-.fc-list-event-dot {
-  border-color: inherit !important;
-}
-
-/* Estado vazio */
-.empty-state {
-  text-align: center;
-  padding: 3rem 2rem;
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  margin: 2rem 0;
-}
-
-.empty-state p {
-  color: #6c757d;
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-}
-
-/* Auto-update indicator */
-.auto-update-indicator {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: rgba(0, 74, 143, 0.85);
-  color: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: 50px;
-  font-size: 0.9rem;
-  z-index: 1000;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.auto-update-indicator.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Responsividade */
 @media (max-width: 768px) {
   .fc-header-toolbar {
     flex-direction: column;
@@ -400,41 +347,35 @@
     margin-bottom: 15px;
   }
 
-  .filter-row {
-    flex-direction: column;
+  .timeline-container {
+    min-height: 500px;
   }
 
-  .filter-group,
-  .filter-actions {
-    width: 100%;
-  }
-
-  .filter-actions {
-    margin-top: 1rem;
-    justify-content: stretch;
-  }
-
-  .filter-actions .btn {
-    flex: 1;
+  #calendar {
+    min-height: 450px;
   }
 }
 
 @media (max-width: 576px) {
+  .timeline-container {
+    padding: 1rem;
+    min-height: 450px;
+  }
+
+  #calendar {
+    min-height: 400px;
+  }
+
   .page-header h1 {
     font-size: 1.5rem;
   }
 
-  .current-time-indicator {
-    padding: 0.5rem 1rem;
+  .agendas-filter-container {
+    max-height: 180px;
   }
 
-  .time-label {
-    font-size: 0.95rem;
-  }
-
-  .fc-header-toolbar {
-    padding: 0 !important;
-    margin-bottom: 1rem !important;
+  .agendas-scroll-area {
+    max-height: 100px;
   }
 
   .fc .fc-toolbar-title {
