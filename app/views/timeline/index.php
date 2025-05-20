@@ -14,66 +14,6 @@
         </div>
     </div>
 
-    <!-- Seção de Depuração -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Informações de Depuração</h5>
-        </div>
-        <div class="card-body">
-            <h6>Parâmetros recebidos:</h6>
-            <ul>
-                <li><strong>Data selecionada:</strong> <?= $date->format('Y-m-d') ?></li>
-                <li><strong>Agenda ID selecionada:</strong> <?= isset($_GET['agenda_id']) ? htmlspecialchars($_GET['agenda_id']) : 'Todas' ?></li>
-                <li><strong>Termo de pesquisa:</strong> <?= !empty($searchQuery) ? htmlspecialchars($searchQuery) : 'Nenhum' ?></li>
-            </ul>
-            
-            <h6>Agendas públicas disponíveis (<?= count($publicAgendas) ?>):</h6>
-            <?php if (empty($publicAgendas)): ?>
-                <div class="alert alert-warning">Nenhuma agenda pública encontrada! Este é o problema.</div>
-            <?php else: ?>
-                <ul>
-                <?php foreach ($publicAgendas as $idx => $agenda): ?>
-                    <li>
-                        ID: <?= $agenda['id'] ?> - 
-                        Título: <?= htmlspecialchars($agenda['title']) ?> - 
-                        Dono: <?= htmlspecialchars($agenda['owner_name'] ?? 'Desconhecido') ?>
-                    </li>
-                <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-            
-            <h6>Compromissos encontrados (<?= count($allEvents) ?>):</h6>
-            <?php if (empty($allEvents)): ?>
-                <div class="alert alert-danger">Nenhum compromisso encontrado para esta data nas agendas públicas.</div>
-            <?php else: ?>
-                <table class="table table-sm table-bordered">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Título</th>
-                            <th>Agenda</th>
-                            <th>Status</th>
-                            <th>Horário</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($allEvents as $event): ?>
-                        <tr>
-                            <td><?= $event['id'] ?></td>
-                            <td><?= htmlspecialchars($event['title']) ?></td>
-                            <td><?= htmlspecialchars($event['agenda_info']['title'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($event['status']) ?></td>
-                            <td>
-                                <?= (new DateTime($event['start_datetime']))->format('H:i') ?> - 
-                                <?= (new DateTime($event['end_datetime']))->format('H:i') ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
 
     <!-- Filtros da timeline -->
     <div class="timeline-filters">
@@ -177,8 +117,7 @@ window.timelineEvents = [
     <?php endforeach; ?>
 ];
 
-// Debug info
-console.log('Total de eventos disponíveis:', window.timelineEvents.length);
+
 </script>
 
 <!-- Carregar o script externo da timeline -->
