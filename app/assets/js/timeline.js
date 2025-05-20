@@ -1,14 +1,6 @@
-/**
- * Timeline.js - Script para a funcionalidade da Linha do Tempo
- */
 document.addEventListener("DOMContentLoaded", function () {
-  // Inicializar a visualização do calendário
   initTimelineCalendar();
 
-  // Alternar entre visualizações de lista e calendário
-  initViewToggle();
-
-  // Inicializar filtros rápidos
   initFilters();
 });
 
@@ -16,21 +8,24 @@ document.addEventListener("DOMContentLoaded", function () {
  * Inicializa o calendário da timeline
  */
 function initTimelineCalendar() {
-  var calendarEl = document.getElementById("timeline-calendar");
-  if (!calendarEl) return;
-
-  // Verificar se temos eventos para exibir
-  if (!window.timelineEvents || window.timelineEvents.length === 0) {
+  const calendarEl = document.getElementById("calendar");
+  if (!calendarEl) {
+    console.error("Elemento do calendário não encontrado");
     return;
   }
 
-  // Processar eventos para o formato do FullCalendar
-  var events = window.timelineEvents.map(function (event) {
-    var startDateTime = new Date(event.start_datetime);
-    var endDateTime = new Date(event.end_datetime);
+  // Verificar se temos eventos para exibir
+  if (!window.timelineEvents || window.timelineEvents.length === 0) {
+    console.log("Nenhum evento disponível para exibir");
+    return;
+  }
 
+  console.log("Total de eventos carregados:", window.timelineEvents.length);
+
+  // Processar eventos para o formato do FullCalendar
+  const events = window.timelineEvents.map(function (event) {
     // Definir cores com base no status
-    var backgroundColor, borderColor, textColor;
+    let backgroundColor, borderColor, textColor;
 
     switch (event.status) {
       case "pendente":
@@ -54,8 +49,8 @@ function initTimelineCalendar() {
         textColor = "#fff";
         break;
       default:
-        backgroundColor = event.agenda_info.color;
-        borderColor = event.agenda_info.color;
+        backgroundColor = event.agendaInfo.color || "#3788d8";
+        borderColor = event.agendaInfo.color || "#3788d8";
         textColor = "#fff";
     }
 
@@ -63,8 +58,8 @@ function initTimelineCalendar() {
     return {
       id: event.id,
       title: event.title,
-      start: startDateTime,
-      end: endDateTime,
+      start: event.start,
+      end: event.end,
       backgroundColor: backgroundColor,
       borderColor: borderColor,
       textColor: textColor,
@@ -72,27 +67,24 @@ function initTimelineCalendar() {
         description: event.description,
         location: event.location,
         status: event.status,
-        agendaInfo: event.agenda_info,
+        agendaInfo: event.agendaInfo,
       },
     };
   });
 
   // Inicializar o FullCalendar
-  var calendar = new FullCalendar.Calendar(calendarEl, {
+  const calendar = new FullCalendar.Calendar(calendarEl, {
     locale: "pt-br",
+    initialView: "timeGridDay",
     headerToolbar: {
       left: "prev,next today",
       center: "title",
-      right: "timeGridDay,listDay",
+      right: "", // Removido pois temos botões personalizados
     },
-    initialView: "timeGridDay",
-    navLinks: true,
-    selectable: false,
-    selectMirror: true,
-    dayMaxEvents: true,
-    nowIndicator: true,
-    slotMinTime: "07:00:00",
+    slotMinTime: "06:00:00",
     slotMaxTime: "22:00:00",
+    allDaySlot: false,
+    nowIndicator: true,
     height: "auto",
     events: events,
     eventTimeFormat: {
@@ -105,173 +97,121 @@ function initTimelineCalendar() {
     },
   });
 
-  // Renderizar o calendário
   calendar.render();
 
-  // Ajustar as cores dos eventos baseados no status
-  setTimeout(function () {
-    updateEventStyles();
-  }, 100);
+  // Manipular botões de visualização
+  document.querySelectorAll(".view-option").forEach((button) => {
+    button.addEventListener("click", function () {
+      const view = this.getAttribute("data-view");
+      calendar.changeView(view);
+
+      // Atualizar estilo dos botões
+      document.querySelectorAll(".view-option").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      this.classList.add("active");
+    });
+  });
 }
 
 /**
  * Mostra detalhes de um evento em um popup
  */
 function showEventDetails(event) {
-  // Obter propriedades estendidas
-  var extendedProps = event.extendedProps;
+  const modal = document.getElementById("event-modal");
+  const detailsContainer = document.getElementById("event-details");
 
-  // Criar conteúdo do modal
-  var modalContent = '<div class="event-detail-popup">';
-  modalContent += '<div class="event-header">';
-  modalContent += "<h4>" + event.title + "</h4>";
-
-  // Status do evento
-  var statusClass = "";
-  var statusText = "";
-
-  switch (extendedProps.status) {
-    case "pendente":
-      statusClass = "badge-pendente";
-      statusText = "Pendente";
-      break;
-    case "realizado":
-      statusClass = "badge-realizado";
-      statusText = "Realizado";
-      break;
-    case "cancelado":
-      statusClass = "badge-cancelado";
-      statusText = "Cancelado";
-      break;
-    case "aguardando_aprovacao":
-      statusClass = "badge-aguardando_aprovacao";
-      statusText = "Aguardando Aprovação";
-      break;
-  }
-
-  modalContent += '<span class="' + statusClass + '">' + statusText + "</span>";
-  modalContent += "</div>";
-
-  // Informações da agenda
-  modalContent += '<div class="agenda-info">';
-  modalContent +=
-    '<span class="agenda-color-dot" style="background-color: ' +
-    extendedProps.agendaInfo.color +
-    '"></span>';
-  modalContent += "Agenda: " + extendedProps.agendaInfo.title;
-  modalContent += " (" + extendedProps.agendaInfo.owner_name + ")";
-  modalContent += "</div>";
-
-  // Detalhes do evento
-  modalContent += '<div class="event-details">';
-
-  // Data e hora
-  var startTime = event.start ? formatDateTime(event.start) : "";
-  var endTime = event.end ? formatDateTime(event.end) : "";
-
-  modalContent +=
-    "<p><strong>Horário:</strong> " + startTime + " até " + endTime + "</p>";
-
-  // Local
-  if (extendedProps.location) {
-    modalContent +=
-      "<p><strong>Local:</strong> " + extendedProps.location + "</p>";
-  }
-
-  // Descrição
-  if (extendedProps.description) {
-    modalContent +=
-      "<p><strong>Descrição:</strong><br>" +
-      formatDescription(extendedProps.description) +
-      "</p>";
-  }
-
-  modalContent += "</div>";
-
-  // Adicionar botões de ação
-  modalContent += '<div class="modal-actions">';
-  modalContent +=
-    '<a href="' +
-    baseUrl +
-    "/compromissos?agenda_id=" +
-    extendedProps.agendaInfo.id +
-    '" class="btn btn-primary">Ver na Agenda</a>';
-  modalContent += "</div>";
-
-  modalContent += "</div>";
-
-  // Exibir o modal (usando biblioteca ou função personalizada)
-  alert(
-    event.title +
-      "\n\nHorário: " +
-      startTime +
-      " até " +
-      endTime +
-      "\n" +
-      (extendedProps.location
-        ? "Local: " + extendedProps.location + "\n"
-        : "") +
-      (extendedProps.description
-        ? "Descrição: " + extendedProps.description
-        : "")
-  );
-}
-
-/**
- * Formata data e hora para exibição
- */
-function formatDateTime(date) {
-  if (!date) return "";
-
-  var hours = date.getHours().toString().padStart(2, "0");
-  var minutes = date.getMinutes().toString().padStart(2, "0");
-
-  return hours + ":" + minutes;
-}
-
-/**
- * Formata descrição para exibição em HTML
- */
-function formatDescription(description) {
-  if (!description) return "";
-
-  // Substituir quebras de linha por <br>
-  return description.replace(/\n/g, "<br>");
-}
-
-/**
- * Inicializa o toggle entre visualização de lista e calendário
- */
-function initViewToggle() {
-  var viewOptions = document.querySelectorAll(".view-option");
-  var calendarContainer = document.getElementById("calendar-container");
-  var eventsList = document.querySelector(".events-list");
-
-  if (!viewOptions || !calendarContainer || !eventsList) return;
-
-  viewOptions.forEach(function (option) {
-    option.addEventListener("click", function () {
-      // Remover classe ativa de todas as opções
-      viewOptions.forEach(function (opt) {
-        opt.classList.remove("active");
-      });
-
-      // Adicionar classe ativa à opção clicada
-      this.classList.add("active");
-
-      // Alternar visualização
-      if (this.dataset.view === "list") {
-        calendarContainer.style.display = "none";
-        eventsList.style.display = "block";
-      } else {
-        calendarContainer.style.display = "block";
-        eventsList.style.display = "none";
-
-        // Disparar redimensionamento para ajustar o calendário
-        window.dispatchEvent(new Event("resize"));
-      }
+  if (modal && detailsContainer) {
+    const startTime = new Date(event.start).toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
-  });
+    const endTime = event.end
+      ? new Date(event.end).toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
+
+    let content = `
+            <div class="event-details-header" style="border-left: 4px solid ${
+              event.backgroundColor
+            }; padding-left: 10px;">
+                <h4>${event.title}</h4>
+                <span class="badge badge-${event.extendedProps.status}">
+                    ${getStatusLabel(event.extendedProps.status)}
+                </span>
+            </div>
+            <div class="event-details-body">
+                <p>
+                    <i class="fas fa-clock"></i> <strong>Horário:</strong> 
+                    ${startTime} ${endTime ? `até ${endTime}` : ""}
+                </p>`;
+
+    if (event.extendedProps.agendaInfo) {
+      content += `
+                <p>
+                    <i class="fas fa-calendar"></i> <strong>Agenda:</strong> 
+                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${event.extendedProps.agendaInfo.color}; margin-right: 5px;"></span>
+                    ${event.extendedProps.agendaInfo.title} 
+                    <span style="font-style: italic; color: #777;">(${event.extendedProps.agendaInfo.owner})</span>
+                </p>`;
+    }
+
+    if (event.extendedProps.location) {
+      content += `<p><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> ${event.extendedProps.location}</p>`;
+    }
+
+    if (event.extendedProps.description) {
+      content += `
+                <div class="description-section mt-3 pt-3" style="border-top: 1px solid #eee;">
+                    <strong>Descrição:</strong>
+                    <div class="p-2 mt-2 bg-light rounded">${event.extendedProps.description.replace(
+                      /\n/g,
+                      "<br>"
+                    )}</div>
+                </div>`;
+    }
+
+    content += `</div>`;
+
+    // Inserir conteúdo no modal
+    detailsContainer.innerHTML = content;
+
+    // Abrir o modal
+    $(modal).modal("show");
+  } else {
+    // Fallback se o modal não estiver disponível
+    alert(
+      `${event.title}\n\nHorário: ${startTime} ${
+        endTime ? `até ${endTime}` : ""
+      }\n` +
+        (event.extendedProps.location
+          ? `Local: ${event.extendedProps.location}\n`
+          : "") +
+        (event.extendedProps.description
+          ? `Descrição: ${event.extendedProps.description}`
+          : "")
+    );
+  }
+}
+
+/**
+ * Retorna o rótulo para o status do evento
+ */
+function getStatusLabel(status) {
+  switch (status) {
+    case "pendente":
+      return "Pendente";
+    case "realizado":
+      return "Realizado";
+    case "cancelado":
+      return "Cancelado";
+    case "aguardando_aprovacao":
+      return "Aguardando Aprovação";
+    default:
+      return status;
+  }
 }
 
 /**
@@ -279,47 +219,18 @@ function initViewToggle() {
  */
 function initFilters() {
   // Filtro de data
-  var dateFilter = document.getElementById("date");
-  if (dateFilter) {
-    dateFilter.addEventListener("change", function () {
-      document.getElementById("timeline-filter-form").submit();
+  const datePicker = document.getElementById("date-picker");
+  if (datePicker) {
+    datePicker.addEventListener("change", function () {
+      document.querySelector(".filter-form").submit();
     });
   }
 
   // Filtro de agendas
-  var agendaFilters = document.querySelectorAll('input[name="agendas[]"]');
-  if (agendaFilters) {
-    agendaFilters.forEach(function (filter) {
-      filter.addEventListener("change", function () {
-        document.getElementById("timeline-filter-form").submit();
-      });
+  const agendaSelect = document.getElementById("agenda-select");
+  if (agendaSelect) {
+    agendaSelect.addEventListener("change", function () {
+      document.querySelector(".filter-form").submit();
     });
   }
 }
-
-/**
- * Atualiza estilos dos eventos no calendário baseado no status
- */
-function updateEventStyles() {
-  // Selecionar todos os eventos no calendário
-  var eventElements = document.querySelectorAll(".fc-event");
-
-  // Para cada evento, adicionar classe baseada no status
-  eventElements.forEach(function (element) {
-    var eventId = element.getAttribute("data-event-id");
-    if (!eventId) return;
-
-    // Encontrar o evento nos dados
-    var event = window.timelineEvents.find(function (ev) {
-      return ev.id == eventId;
-    });
-
-    if (event) {
-      // Adicionar classe baseada no status
-      element.classList.add("event-status-" + event.status);
-    }
-  });
-}
-
-// Variável global para URL base
-var baseUrl = window.location.origin + "/agenda_ufpr";

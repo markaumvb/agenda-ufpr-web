@@ -1,5 +1,5 @@
 <?php
-// app/views/timeline/index.php - Versão corrigida usando CSS existente e garantindo exibição dos eventos
+// app/views/timeline/index.php - Versão com depuração avançada
 ?>
 
 <div class="container">
@@ -11,6 +11,67 @@
                     <i class="fas fa-arrow-left"></i> Voltar
                 </a>
             </div>
+        </div>
+    </div>
+
+    <!-- Seção de Depuração -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Informações de Depuração</h5>
+        </div>
+        <div class="card-body">
+            <h6>Parâmetros recebidos:</h6>
+            <ul>
+                <li><strong>Data selecionada:</strong> <?= $date->format('Y-m-d') ?></li>
+                <li><strong>Agenda ID selecionada:</strong> <?= isset($_GET['agenda_id']) ? htmlspecialchars($_GET['agenda_id']) : 'Todas' ?></li>
+                <li><strong>Termo de pesquisa:</strong> <?= !empty($searchQuery) ? htmlspecialchars($searchQuery) : 'Nenhum' ?></li>
+            </ul>
+            
+            <h6>Agendas públicas disponíveis (<?= count($publicAgendas) ?>):</h6>
+            <?php if (empty($publicAgendas)): ?>
+                <div class="alert alert-warning">Nenhuma agenda pública encontrada! Este é o problema.</div>
+            <?php else: ?>
+                <ul>
+                <?php foreach ($publicAgendas as $idx => $agenda): ?>
+                    <li>
+                        ID: <?= $agenda['id'] ?> - 
+                        Título: <?= htmlspecialchars($agenda['title']) ?> - 
+                        Dono: <?= htmlspecialchars($agenda['owner_name'] ?? 'Desconhecido') ?>
+                    </li>
+                <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+            
+            <h6>Compromissos encontrados (<?= count($allEvents) ?>):</h6>
+            <?php if (empty($allEvents)): ?>
+                <div class="alert alert-danger">Nenhum compromisso encontrado para esta data nas agendas públicas.</div>
+            <?php else: ?>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Agenda</th>
+                            <th>Status</th>
+                            <th>Horário</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($allEvents as $event): ?>
+                        <tr>
+                            <td><?= $event['id'] ?></td>
+                            <td><?= htmlspecialchars($event['title']) ?></td>
+                            <td><?= htmlspecialchars($event['agenda_info']['title'] ?? 'N/A') ?></td>
+                            <td><?= htmlspecialchars($event['status']) ?></td>
+                            <td>
+                                <?= (new DateTime($event['start_datetime']))->format('H:i') ?> - 
+                                <?= (new DateTime($event['end_datetime']))->format('H:i') ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -57,19 +118,15 @@
     <!-- Opções de visualização do calendário -->
     <div class="view-options mb-4">
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline view-option active" data-view="timeGridDay">Dia</button>
-            <button type="button" class="btn btn-outline view-option" data-view="listDay">Lista</button>
+            <button type="button" class="btn btn-outline-primary view-option active" data-view="timeGridDay">Dia</button>
+            <button type="button" class="btn btn-outline-primary view-option" data-view="listDay">Lista</button>
         </div>
     </div>
 
-    <!-- Debug - Para verificar se os eventos estão sendo recuperados -->
+    <!-- Mensagem quando não há eventos -->
     <?php if (empty($allEvents)): ?>
     <div class="alert alert-info">
         <p>Nenhum compromisso encontrado para esta data.</p>
-    </div>
-    <?php else: ?>
-    <div class="alert alert-success d-none">
-        <p>Encontrado(s) <?= count($allEvents) ?> compromisso(s) para exibição.</p>
     </div>
     <?php endif; ?>
 
@@ -97,158 +154,32 @@
     </div>
 </div>
 
-<!-- Script para inicializar o FullCalendar -->
+<!-- Script para passar os dados dos eventos para o JavaScript -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-submeter o formulário quando mudar a data
-    const datePicker = document.getElementById('date-picker');
-    if (datePicker) {
-        datePicker.addEventListener('change', function() {
-            document.querySelector('.filter-form').submit();
-        });
-    }
-
-    // Auto-submeter o formulário quando mudar a agenda
-    const agendaSelect = document.getElementById('agenda-select');
-    if (agendaSelect) {
-        agendaSelect.addEventListener('change', function() {
-            document.querySelector('.filter-form').submit();
-        });
-    }
-
-    // Inicializar o FullCalendar
-    const calendarEl = document.getElementById('calendar');
-    if (!calendarEl) {
-        console.error('Elemento do calendário não encontrado');
-        return;
-    }
-
-    // Preparar eventos para o FullCalendar
-    const events = [];
-    
-    <?php foreach ($allEvents as $event): 
-        // Filtrar apenas eventos pendentes ou realizados
-        if (!in_array($event['status'], ['pendente', 'realizado'])) continue;
-        
-        // Usar a cor da agenda para o evento
-        $colorHex = !empty($event['agenda_info']['color']) ? 
-            $event['agenda_info']['color'] : 
-            ($event['status'] === 'pendente' ? '#ffc107' : '#28a745');
-    ?>
-    events.push({
+// Preparar eventos para o JavaScript
+window.timelineEvents = [
+    <?php foreach ($allEvents as $event): ?>
+    {
         id: <?= json_encode($event['id']) ?>,
         title: <?= json_encode($event['title']) ?>,
         start: <?= json_encode($event['start_datetime']) ?>,
         end: <?= json_encode($event['end_datetime']) ?>,
-        backgroundColor: <?= json_encode($colorHex) ?>,
-        borderColor: <?= json_encode($colorHex) ?>,
-        textColor: '#fff',
         description: <?= json_encode($event['description'] ?? '') ?>,
         location: <?= json_encode($event['location'] ?? '') ?>,
         status: <?= json_encode($event['status']) ?>,
         agendaInfo: {
+            id: <?= json_encode($event['agenda_info']['id'] ?? '') ?>,
             title: <?= json_encode($event['agenda_info']['title'] ?? 'Agenda') ?>,
             color: <?= json_encode($event['agenda_info']['color'] ?? '#ccc') ?>,
             owner: <?= json_encode($event['agenda_info']['owner_name'] ?? 'Desconhecido') ?>
         }
-    });
+    },
     <?php endforeach; ?>
+];
 
-    console.log('Total de eventos encontrados:', events.length);
-
-    // Criar o calendário
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'pt-br',
-        initialView: 'timeGridDay', // Vista padrão: dia
-        initialDate: '<?= $date->format('Y-m-d') ?>',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: ''  // Removido pois temos botões personalizados
-        },
-        slotMinTime: '06:00:00',
-        slotMaxTime: '22:00:00',
-        allDaySlot: false,
-        height: 'auto',
-        events: events,
-        eventTimeFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        },
-        eventClick: function(info) {
-            showEventDetails(info.event);
-        }
-    });
-
-    calendar.render();
-    
-    // Manipular botões de visualização
-    document.querySelectorAll('.view-option').forEach(button => {
-        button.addEventListener('click', function() {
-            const view = this.getAttribute('data-view');
-            calendar.changeView(view);
-            
-            // Atualizar estilo dos botões
-            document.querySelectorAll('.view-option').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            this.classList.add('active');
-        });
-    });
-
-    // Função para mostrar os detalhes do evento
-    function showEventDetails(event) {
-        const modal = document.getElementById('event-modal');
-        const detailsContainer = document.getElementById('event-details');
-        
-        if (modal && detailsContainer) {
-            const startTime = new Date(event.start).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
-            const endTime = new Date(event.end).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
-            
-            let content = `
-                <div class="event-details-header" style="border-left: 4px solid ${event.backgroundColor}; padding-left: 10px;">
-                    <h4>${event.title}</h4>
-                    <span class="badge badge-${event.extendedProps.status}">
-                        ${event.extendedProps.status === 'pendente' ? 'Pendente' : 'Realizado'}
-                    </span>
-                </div>
-                <div class="event-details-body">
-                    <p>
-                        <i class="fas fa-clock"></i> <strong>Horário:</strong> 
-                        ${startTime} até ${endTime}
-                    </p>`;
-                    
-            if (event.extendedProps.agendaInfo) {
-                content += `
-                    <p>
-                        <i class="fas fa-calendar"></i> <strong>Agenda:</strong> 
-                        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${event.extendedProps.agendaInfo.color}; margin-right: 5px;"></span>
-                        ${event.extendedProps.agendaInfo.title} 
-                        <span style="font-style: italic; color: #777;">(${event.extendedProps.agendaInfo.owner})</span>
-                    </p>`;
-            }
-            
-            if (event.extendedProps.location) {
-                content += `<p><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> ${event.extendedProps.location}</p>`;
-            }
-            
-            if (event.extendedProps.description) {
-                content += `
-                    <div class="description-section mt-3 pt-3" style="border-top: 1px solid #eee;">
-                        <strong>Descrição:</strong>
-                        <div class="p-2 mt-2 bg-light rounded">${event.extendedProps.description.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-            }
-            
-            content += `</div>`;
-            
-            // Inserir conteúdo no modal
-            detailsContainer.innerHTML = content;
-            
-            // Abrir o modal
-            $(modal).modal('show');
-        }
-    }
-});
+// Debug info
+console.log('Total de eventos disponíveis:', window.timelineEvents.length);
 </script>
+
+<!-- Carregar o script externo da timeline -->
+<script src="<?= PUBLIC_URL ?>/app/assets/js/timeline.js"></script>

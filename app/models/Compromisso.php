@@ -8,32 +8,39 @@ class Compromisso {
     }
     
 
-    public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
-        try {
-            $query = "
-                SELECT * 
-                FROM compromissos 
-                WHERE agenda_id = :agenda_id 
-                AND (
-                    (DATE(start_datetime) BETWEEN :start_date AND :end_date)
-                    OR (DATE(end_datetime) BETWEEN :start_date AND :end_date)
-                    OR (DATE(start_datetime) <= :start_date AND DATE(end_datetime) >= :end_date)
-                )
-                ORDER BY start_datetime
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
-            $stmt->bindParam(':start_date', $startDate, PDO::PARAM_STR);
-            $stmt->bindParam(':end_date', $endDate, PDO::PARAM_STR);
-            $stmt->execute();
-            
-            return $stmt->fetchAll();
-        } catch (PDOException $e) {
-            error_log('Erro ao buscar compromissos: ' . $e->getMessage());
-            return [];
-        }
+public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
+    try {
+        // Extrair apenas a parte da data para garantir compatibilidade
+        $startDateOnly = substr($startDate, 0, 10);
+        $endDateOnly = substr($endDate, 0, 10);
+        
+        error_log("Buscando compromissos para agenda_id=$agendaId em $startDateOnly até $endDateOnly");
+        
+        // Consulta SQL corrigida - simplificar para garantir que está buscando corretamente
+        $query = "
+            SELECT * 
+            FROM compromissos 
+            WHERE agenda_id = :agenda_id 
+            AND DATE(start_datetime) <= :end_date
+            AND DATE(end_datetime) >= :start_date
+            ORDER BY start_datetime
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
+        $stmt->bindParam(':start_date', $startDateOnly, PDO::PARAM_STR);
+        $stmt->bindParam(':end_date', $endDateOnly, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        $results = $stmt->fetchAll();
+        error_log("Encontrados " . count($results) . " compromissos para agenda_id=$agendaId");
+        
+        return $results;
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar compromissos: ' . $e->getMessage());
+        return [];
     }
+}
     
 
     public function getAllByAgenda($agendaId) {
