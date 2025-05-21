@@ -31,7 +31,7 @@
 /* Agendas filter com barra de rolagem */
 .agendas-filter-container {
   max-height: 220px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
   background-color: #f8f9fa;
@@ -41,6 +41,7 @@
   max-height: 130px;
   overflow-y: auto;
   margin-top: 5px;
+  padding-right: 5px;
 }
 
 .agendas-filter-container .form-check {
@@ -66,6 +67,27 @@
 .agenda-item {
   display: flex;
   align-items: center;
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.form-check-input {
+  margin-top: 0;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.form-check-label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .agenda-item .form-check-input {
@@ -318,6 +340,13 @@
   border: 1px solid #eee;
 }
 
+input[type="date"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  padding: 0.5rem;
+  height: auto;
+}
+
 .fc-event[data-status="pendente"] {
   /* Use agenda color as main color */
 }
@@ -325,10 +354,28 @@
 .fc-event[data-status="realizado"] {
   opacity: 0.7 !important;
 }
+input[type="date"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  padding: 0.5rem;
+  height: auto;
+}
+
+.fc-no-event-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6c757d;
+  font-size: 1.1rem;
+  text-align: center;
+}
 
 .fc-event[data-status="cancelado"] {
-  text-decoration: line-through !important;
-  opacity: 0.7 !important;
+  border-radius: 4px;
+  border-left-width: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  margin: 1px 0;
 }
 
 /* ===== RESPONSIVIDADE ===== */

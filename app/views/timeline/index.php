@@ -35,10 +35,10 @@
                 <div class="col-md-4 mb-3">
                     <label>Agendas</label>
                     <div class="agendas-filter-container">
-                        <div class="form-check mb-2">
+                        <div class="form-check mb-2 d-flex align-items-center">
                             <input class="form-check-input" type="checkbox" id="select-all-agendas" 
                                 <?= empty($selectedAgendas) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="select-all-agendas">
+                            <label class="form-check-label ms-2" for="select-all-agendas">
                                 <strong>Selecionar Todas</strong>
                             </label>
                         </div>
@@ -81,15 +81,17 @@
         </div>
     </div>
 
-    <!-- Mensagem quando não há eventos -->
-    <?php if (empty($allEvents)): ?>
-    <div class="alert alert-info">
-        <p>Nenhum compromisso encontrado para esta data.</p>
-    </div>
-    <?php else: ?>
-    <!-- Calendário FullCalendar -->
+    <!-- Sempre exibir o calendário, mesmo sem eventos -->
     <div class="timeline-container">
         <div id="calendar" style="min-height: 500px;"></div>
+    </div>
+
+    <!-- Mensagem quando não há eventos (exibida dentro do calendário) -->
+    <?php if (empty($allEvents)): ?>
+    <div id="no-events-message" class="d-none">
+        <div class="alert alert-info mt-3">
+            <p class="mb-0">Nenhum compromisso encontrado para esta data.</p>
+        </div>
     </div>
     <?php endif; ?>
 
@@ -111,6 +113,22 @@
         </div>
     </div>
 </div>
+
+<!-- Adicionar estilos inline para garantir alinhamento correto -->
+<style>
+    .form-check-input {
+        margin-top: 0;
+        margin-right: 0.5rem;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+    }
+    .form-check-label {
+        display: flex;
+        align-items: center;
+    }
+</style>
 
 <!-- Script para passar os dados dos eventos para o JavaScript -->
 <script>
@@ -168,13 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
             checkbox.addEventListener('change', updateSelectAllCheckbox);
         });
         
-        // Auto-submeter o formulário quando mudar a data
-        const datePicker = document.getElementById('date-picker');
-        if (datePicker) {
-            datePicker.addEventListener('change', function() {
-                document.querySelector('.filter-form').submit();
-            });
-        }
     }
 });
 </script>

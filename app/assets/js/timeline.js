@@ -86,7 +86,13 @@ function initTimelineCalendar() {
         const status = info.event.extendedProps.status;
         let color = info.event.extendedProps.agendaInfo.color;
 
-        // Modify color based on status
+        // Apply colors - always use the agenda color as the base
+        info.el.style.backgroundColor = color;
+        info.el.style.borderColor = color;
+        info.el.style.borderLeftWidth = "4px";
+        info.el.style.borderLeftStyle = "solid";
+
+        // Modify appearance based on status
         if (status === "realizado") {
           // Lighter version for completed events
           info.el.style.opacity = "0.7";
@@ -95,10 +101,25 @@ function initTimelineCalendar() {
           info.el.style.textDecoration = "line-through";
           info.el.style.opacity = "0.7";
         }
+      }
+    },
+    // Show a message when no events are available
+    noEventsContent: function () {
+      return "Nenhum compromisso para esta data";
+    },
+    datesSet: function () {
+      // Check if there are any events
+      const hasEvents = events && events.length > 0;
 
-        // Apply colors
-        info.el.style.backgroundColor = color;
-        info.el.style.borderLeftColor = color;
+      // If there's a no-events message element, show it when appropriate
+      const noEventsMsg = document.getElementById("no-events-message");
+      if (noEventsMsg && !hasEvents) {
+        // Move the message into the calendar's day view
+        const dayGrid = document.querySelector(".fc-view-harness");
+        if (dayGrid) {
+          noEventsMsg.classList.remove("d-none");
+          dayGrid.appendChild(noEventsMsg);
+        }
       }
     },
   });
@@ -106,6 +127,7 @@ function initTimelineCalendar() {
   // renderizar o calendário
   calendar.render();
 
+  // Setup view buttons
   document.querySelectorAll(".view-option").forEach((button) => {
     button.addEventListener("click", function () {
       const view = this.getAttribute("data-view");
@@ -198,9 +220,6 @@ function showEventDetails(event) {
   $(modal).modal("show");
 }
 
-/**
- * Returns the label for event status
- */
 function getStatusLabel(status) {
   const labels = {
     pendente: "Pendente",
