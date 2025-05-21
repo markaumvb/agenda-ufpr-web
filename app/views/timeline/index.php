@@ -17,22 +17,15 @@
                 <!-- Linha superior: Data e Busca lado a lado -->
                 <div class="col-md-8 mb-3">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label for="date-picker">Data</label>
                             <input type="date" id="date-picker" name="date" class="form-control" 
                                    value="<?= htmlspecialchars($date->format('Y-m-d')) ?>">
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <label for="search-input">Buscar</label>
-                            <div class="input-group">
-                                <input type="text" id="search-input" name="search" class="form-control" 
-                                       placeholder="Título, local ou descrição" value="<?= htmlspecialchars($searchQuery) ?>">
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search"></i> Buscar
-                                    </button>
-                                </div>
-                            </div>
+                            <input type="text" id="search-input" name="search" class="form-control" 
+                                  placeholder="Título, local ou descrição" value="<?= htmlspecialchars($searchQuery) ?>">
                         </div>
                     </div>
                 </div>
@@ -68,6 +61,15 @@
                 </div>
                 <?php endif; ?>
             </div>
+            
+            <!-- Botão de busca movido para o final do filtro -->
+            <div class="row">
+                <div class="col-12 text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -86,8 +88,8 @@
     </div>
     <?php else: ?>
     <!-- Calendário FullCalendar -->
-    <div class="calendar-container">
-        <div id="calendar"></div>
+    <div class="timeline-container">
+        <div id="calendar" style="min-height: 500px;"></div>
     </div>
     <?php endif; ?>
 
@@ -132,6 +134,9 @@ window.timelineEvents = [
     },
     <?php endforeach; ?>
 ];
+
+// Guardar a data selecionada para usar no calendário
+window.selectedDate = '<?= $date->format('Y-m-d') ?>';
 
 // Lógica para o checkbox "Selecionar Todas"
 document.addEventListener('DOMContentLoaded', function() {

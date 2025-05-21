@@ -16,10 +16,13 @@ function initTimelineCalendar() {
   // Get events or initialize empty array if not available
   const events = window.timelineEvents || [];
 
+  const initialDate = window.selectedDate || new Date();
+
   // Initialize FullCalendar
   const calendar = new FullCalendar.Calendar(calendarEl, {
     locale: "pt-br",
-    initialView: "timeGridDay", // Start with day view
+    initialView: "timeGridDay",
+    initialDate: initialDate, // Set the selected date as the initial date
     headerToolbar: {
       left: "prev,next today",
       center: "title",
