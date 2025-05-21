@@ -1,7 +1,7 @@
 <?php
 // Determinar se estamos em uma página de autenticação
 $current_url = $_SERVER['REQUEST_URI'];
-$auth_pages = ['/login', '/register', '/login-process', '/register-process','/timeline'];
+$auth_pages = ['/login', '/register', '/login-process', '/register-process']; // Remover '/timeline' desta lista
 $is_auth_page = false;
 
 if (isset($_SESSION['user_id']) && !isset($notificationModel)) {
@@ -69,6 +69,11 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
     }
+    
+    // Adicionar CSS do timeline
+    if (strpos($currentUri, '/timeline') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/modules/timeline.css">';
+    }
     ?>
     
     <!-- CSS para eventos do calendário -->
@@ -110,6 +115,10 @@ $body_class = $is_auth_page ? 'auth-page' : '';
         border-color: var(--info-color) !important;
     }
     </style>
+    
+    <!-- Bootstrap e jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body class="<?php echo $body_class; ?>">
     <?php if (!$is_auth_page): ?>
@@ -130,6 +139,14 @@ $body_class = $is_auth_page ? 'auth-page' : '';
                         <a href="<?= PUBLIC_URL ?>/" class="sidebar-link">
                             <i class="fas fa-home"></i>
                             <span>Início</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Link para Timeline (acessível para todos) -->
+                    <li class="sidebar-item">
+                        <a href="<?= PUBLIC_URL ?>/timeline" class="sidebar-link">
+                            <i class="fas fa-stream"></i>
+                            <span>Linha do Tempo</span>
                         </a>
                     </li>
                     
@@ -202,21 +219,6 @@ $body_class = $is_auth_page ? 'auth-page' : '';
                                 <span>Todas as Agendas</span>
                             </a>
                         </li>
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <li class="sidebar-item">
-                                <a href="<?= PUBLIC_URL ?>/timeline" class="sidebar-link">
-                                    <i class="fas fa-stream"></i>
-                                    <span>Linha do Tempo</span>
-                                </a>
-                            </li>
-                        <?php else: ?>
-                            <li class="sidebar-item">
-                                <a href="<?= PUBLIC_URL ?>/timeline" class="sidebar-link">
-                                    <i class="fas fa-stream"></i>
-                                    <span>Linha do Tempo</span>
-                                </a>
-                            </li>
-                        <?php endif; ?>
                         
                         <li class="sidebar-item sidebar-bottom">
                             <a href="<?= PUBLIC_URL ?>/logout" class="sidebar-link">

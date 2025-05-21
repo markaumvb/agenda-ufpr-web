@@ -330,6 +330,11 @@ $routes = [
     'action' => 'newPublic',
     'method' => 'GET'
 ],
+'/timeline' => [
+    'controller' => 'TimelineController',
+    'action' => 'index',
+    'method' => 'GET'
+],
 
 ];
 
