@@ -199,8 +199,6 @@
 .fc-event-title {
   font-weight: 600 !important;
   margin-bottom: 3px !important;
-  font-size: 0.9rem !important;
-  line-height: 1.3 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -320,6 +318,19 @@
   border: 1px solid #eee;
 }
 
+.fc-event[data-status="pendente"] {
+  /* Use agenda color as main color */
+}
+
+.fc-event[data-status="realizado"] {
+  opacity: 0.7 !important;
+}
+
+.fc-event[data-status="cancelado"] {
+  text-decoration: line-through !important;
+  opacity: 0.7 !important;
+}
+
 /* ===== RESPONSIVIDADE ===== */
 @media (max-width: 992px) {
   .timeline-container {
@@ -348,11 +359,19 @@
   }
 
   .timeline-container {
-    min-height: 500px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    min-height: 600px;
+    display: block !important;
   }
 
   #calendar {
-    min-height: 450px;
+    width: 100%;
+    min-height: 550px;
+    display: block !important;
   }
 }
 

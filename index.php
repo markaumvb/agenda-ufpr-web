@@ -331,7 +331,7 @@ $routes = [
     'method' => 'GET'
 ],
 '/timeline' => [
-    'controller' => 'TimelineController',
+    'controller' => 'TimeLineController',
     'action' => 'index',
     'method' => 'GET'
 ],

@@ -1,7 +1,3 @@
-<?php
-// Versão corrigida e simplificada do app/views/timeline/index.php
-?>
-
 <div class="container">
     <div class="page-header">
         <div class="header-container">
