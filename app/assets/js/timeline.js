@@ -103,19 +103,16 @@ function initTimelineCalendar() {
     },
   });
 
-  // Render the calendar
+  // renderizar o calendário
   calendar.render();
 
-  // Set up view switching buttons
   document.querySelectorAll(".view-option").forEach((button) => {
     button.addEventListener("click", function () {
       const view = this.getAttribute("data-view");
 
-      // Switch view if valid
       if (view && calendar) {
         calendar.changeView(view);
 
-        // Update active button
         document.querySelectorAll(".view-option").forEach((btn) => {
           btn.classList.remove("active");
         });
