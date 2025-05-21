@@ -202,13 +202,21 @@ $body_class = $is_auth_page ? 'auth-page' : '';
                                 <span>Todas as Agendas</span>
                             </a>
                         </li>
-
-                        <li class="sidebar-item">
-                            <a href="<?= PUBLIC_URL ?>/timeline" class="sidebar-link">
-                                <i class="fas fa-stream"></i>
-                                <span>Linha do Tempo</span>
-                            </a>
-                        </li>
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <li class="sidebar-item">
+                                <a href="<?= PUBLIC_URL ?>/timeline" class="sidebar-link">
+                                    <i class="fas fa-stream"></i>
+                                    <span>Linha do Tempo</span>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="sidebar-item">
+                                <a href="<?= PUBLIC_URL ?>/timeline" class="sidebar-link">
+                                    <i class="fas fa-stream"></i>
+                                    <span>Linha do Tempo</span>
+                                </a>
+                            </li>
+                        <?php endif; ?>
                         
                         <li class="sidebar-item sidebar-bottom">
                             <a href="<?= PUBLIC_URL ?>/logout" class="sidebar-link">
