@@ -15,7 +15,7 @@ class TimelineController extends BaseController {
         $this->userModel = new User();
         
         // Verificar se o usuário está logado
-        $this->checkAuth();
+        //$this->checkAuth();
     }
     
     /**
