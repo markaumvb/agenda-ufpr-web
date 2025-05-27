@@ -46,5 +46,12 @@ if (strpos($currentUri, '/notifications') !== false) {
     echo '<script src="' . PUBLIC_URL . '/app/assets/js/notifications-page.js"></script>';
 }
 ?>
+
+<?php 
+// Carregar JavaScript específico para página de compromissos
+if (strpos($currentUri, '/compromissos') !== false && strpos($currentUri, '/meuscompromissos') === false) {
+    echo '<script src="' . PUBLIC_URL . '/app/assets/js/compromissos-calendar.js"></script>';
+}
+?>
 </body>
 </html>

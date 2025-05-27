@@ -267,3 +267,79 @@
 <!-- Incluir o novo JavaScript do calendário -->
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/fullcalendar.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/index.js"></script>
+
+<script>
+// Configurar URL base para JavaScript
+window.BASE_URL = '<?= BASE_URL ?>';
+
+// Preparar dados dos compromissos para o calendário
+window.compromissosEvents = [
+    <?php if (isset($compromissos) && !empty($compromissos)): ?>
+        <?php foreach ($compromissos as $compromisso): ?>
+            {
+                id: <?= json_encode($compromisso['id']) ?>,
+                title: <?= json_encode($compromisso['title']) ?>,
+                start: <?= json_encode($compromisso['start_datetime']) ?>,
+                end: <?= json_encode($compromisso['end_datetime']) ?>,
+                description: <?= json_encode($compromisso['description'] ?? '') ?>,
+                location: <?= json_encode($compromisso['location'] ?? '') ?>,
+                status: <?= json_encode($compromisso['status']) ?>,
+                repeat_type: <?= json_encode($compromisso['repeat_type'] ?? 'none') ?>,
+                repeat_until: <?= json_encode($compromisso['repeat_until'] ?? '') ?>,
+                can_edit: <?= json_encode($canEdit ?? false) ?>,
+                created_by: <?= json_encode($compromisso['created_by'] ?? '') ?>,
+                // Cor baseada no status ou na agenda
+                backgroundColor: '<?php 
+                    switch($compromisso['status']) {
+                        case 'pendente':
+                            echo '#ffc107'; // warning-color
+                            break;
+                        case 'realizado':
+                            echo '#28a745'; // success-color
+                            break;
+                        case 'cancelado':
+                            echo '#dc3545'; // danger-color
+                            break;
+                        case 'aguardando_aprovacao':
+                            echo '#17a2b8'; // info-color
+                            break;
+                        default:
+                            echo isset($agenda['color']) ? $agenda['color'] : '#007bff';
+                    }
+                ?>',
+                borderColor: '<?php 
+                    switch($compromisso['status']) {
+                        case 'pendente':
+                            echo '#e0a800';
+                            break;
+                        case 'realizado':
+                            echo '#218838';
+                            break;
+                        case 'cancelado':
+                            echo '#bd2130';
+                            break;
+                        case 'aguardando_aprovacao':
+                            echo '#138496';
+                            break;
+                        default:
+                            echo isset($agenda['color']) ? $agenda['color'] : '#007bff';
+                    }
+                ?>',
+                textColor: '<?php 
+                    echo in_array($compromisso['status'], ['realizado', 'cancelado', 'aguardando_aprovacao']) ? '#ffffff' : '#000000';
+                ?>'
+            }<?= next($compromissos) ? ',' : '' ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+];
+
+// Informações da agenda atual
+window.currentAgenda = {
+    id: <?= json_encode($agenda['id'] ?? '') ?>,
+    title: <?= json_encode($agenda['title'] ?? '') ?>,
+    color: <?= json_encode($agenda['color'] ?? '#007bff') ?>,
+    canEdit: <?= json_encode($canEdit ?? false) ?>,
+    isOwner: <?= json_encode($isOwner ?? false) ?>
+};
+
+</script>
