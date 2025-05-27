@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     window.allCompromissos.forEach((compromisso) => {
       const event = {
         id: compromisso.id,
-        title: compromisso.title || "Sem título", // Garantir que sempre tenha um título
+        title: compromisso.title || "Sem título",
         start: compromisso.start_datetime,
         end: compromisso.end_datetime,
         allDay: false,
@@ -43,8 +43,10 @@ document.addEventListener("DOMContentLoaded", function () {
         borderColor: statusColors[compromisso.status] || "#3788d8",
         textColor: compromisso.status === "pendente" ? "#000" : "#fff",
         classNames: ["event-status-" + compromisso.status],
-        // IMPORTANTE: Só permitir edição de eventos pendentes ou aguardando aprovação
-        editable: !["cancelado", "realizado"].includes(compromisso.status),
+        // IMPORTANTE: DESABILITAR EDIÇÃO COMPLETAMENTE
+        editable: false,
+        startEditable: false,
+        durationEditable: false,
       };
 
       // Para eventos cancelados, adicionar estilo visual
@@ -95,8 +97,10 @@ document.addEventListener("DOMContentLoaded", function () {
         borderColor: statusColors[status] || "#3788d8",
         textColor: status === "pendente" ? "#000" : "#fff",
         classNames: ["event-status-" + status],
-        // IMPORTANTE: Só permitir edição de eventos pendentes ou aguardando aprovação
-        editable: !["cancelado", "realizado"].includes(status),
+        // IMPORTANTE: DESABILITAR EDIÇÃO COMPLETAMENTE
+        editable: false,
+        startEditable: false,
+        durationEditable: false,
       };
 
       // Para eventos cancelados, adicionar estilo visual
@@ -120,22 +124,31 @@ document.addEventListener("DOMContentLoaded", function () {
       right: "", // Removido pois temos botões personalizados para visualizações
     },
     weekNumbers: false,
-    navLinks: true, // Permite clicar nos nomes de dias/semanas para navegar
-    editable: canEdit, // Só permite edição se o usuário tiver permissão
+    navLinks: true,
+
+    // DESABILITAR COMPLETAMENTE A EDIÇÃO E ARRASTAR
+    editable: false,
     selectable: canEdit,
-    dayMaxEvents: false, // Importante! Permite que os eventos sejam exibidos completamente
-    eventMaxStack: 6, // Limitar número de eventos visíveis por dia antes do link "mais"
+    eventStartEditable: false,
+    eventDurationEditable: false,
+    eventResizableFromStart: false,
+    eventDragStart: function () {
+      return false; // Bloquear início do arrasto
+    },
+
+    dayMaxEvents: false,
+    eventMaxStack: 6,
     height: "auto",
     events: events,
 
-    // Estas opções são cruciais para exibir adequadamente os eventos
+    // Formatação de eventos
     eventTimeFormat: {
       hour: "2-digit",
       minute: "2-digit",
       meridiem: false,
     },
 
-    // Personalização de eventos - esta é a chave para garantir que títulos sejam exibidos
+    // Personalização de eventos
     eventContent: function (info) {
       const status = info.event.extendedProps.status || "pendente";
 
@@ -171,73 +184,40 @@ document.addEventListener("DOMContentLoaded", function () {
       return { domNodes: [wrapper] };
     },
 
-    // Callback quando um evento é clicado
+    // CALLBACK QUANDO UM EVENTO É CLICADO - MOSTRAR MODAL
     eventClick: function (info) {
-      showEventDetails(info.event);
-
-      // Evitar redirecionamento padrão
+      // Prevenir comportamento padrão
       info.jsEvent.preventDefault();
+
+      // Mostrar modal com detalhes do evento
+      showEventModal(info.event);
     },
 
     // Callback quando um espaço do calendário é clicado (para criar novo evento)
     dateClick: function (info) {
       if (canEdit) {
+        const clickedDate = info.date;
+        const now = new Date();
+
+        // Verificar se a data está no passado
+        if (clickedDate < now) {
+          alert("Não é possível criar compromissos em datas passadas.");
+          return;
+        }
+
         const date = info.dateStr;
         window.location.href = `${baseUrl}/compromissos/new?agenda_id=${agendaId}&date=${date}`;
       }
     },
 
-    // Callback quando um evento é arrastado e reposicionado
-    eventDrop: function (info) {
-      // Verificar o status do evento
-      const status = info.event.extendedProps.status || "pendente";
-
-      // Se for cancelado ou realizado, reverter e alertar (isso é uma defesa adicional,
-      // mesmo que a edição já esteja desabilitada para esses eventos via propriedade editable)
-      if (["cancelado", "realizado"].includes(status)) {
-        info.revert();
-        alert(
-          "Não é possível alterar a data de compromissos cancelados ou realizados."
-        );
-        return;
-      }
-
-      // Continuar normalmente para eventos que podem ser editados
-      if (canEdit && confirm("Confirma alterar a data do compromisso?")) {
-        updateEventDate(info.event.id, info.event.start, info.event.end);
-      } else {
-        info.revert();
-      }
-    },
-
-    // Callback quando um evento é redimensionado
-    eventResize: function (info) {
-      // Verificar o status do evento
-      const status = info.event.extendedProps.status || "pendente";
-
-      // Se for cancelado ou realizado, reverter e alertar
-      if (["cancelado", "realizado"].includes(status)) {
-        info.revert();
-        alert(
-          "Não é possível alterar a duração de compromissos cancelados ou realizados."
-        );
-        return;
-      }
-
-      // Continuar normalmente
-      if (canEdit && confirm("Confirma alterar a duração do compromisso?")) {
-        updateEventDate(info.event.id, info.event.start, info.event.end);
-      } else {
-        info.revert();
-      }
-    },
+    // REMOVER COMPLETAMENTE OS EVENTOS DE DRAG E DROP
+    // (não incluir eventDrop e eventResize)
 
     // Garantir que o título seja sempre exibido
-    displayEventTime: false, // Ocultar o horário do evento para dar mais espaço ao título
+    displayEventTime: false,
 
     // Após o calendário ter sido renderizado, adicionar classes às células
     viewDidMount: function () {
-      // Adicionar classes para destaque em dias com eventos
       setTimeout(function () {
         document
           .querySelectorAll(".fc-daygrid-day-events")
@@ -256,87 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Renderizar o calendário
   calendar.render();
 
-  let minTimeBefore = 0;
-  const agendaElement = document.querySelector(".calendar-container");
-
-  if (agendaElement && agendaElement.dataset.minTimeBefore) {
-    minTimeBefore = parseInt(agendaElement.dataset.minTimeBefore) || 0;
-  }
-
-  // Calcular data mínima para seleção
-  const now = new Date();
-  const minDate = new Date(now);
-  if (minTimeBefore > 0) {
-    minDate.setHours(minDate.getHours() + minTimeBefore);
-  }
-
-  // Definir validação de datas selecionáveis
-  calendar.setOption("selectAllow", function (selectInfo) {
-    return selectInfo.start >= minDate;
-  });
-
-  // Desabilitar datas passadas na visualização de mês
-  calendar.setOption("dayCellClassNames", function (arg) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Se a data for anterior à data atual, adicionar classe
-    if (arg.date < today) {
-      return ["fc-day-disabled", "past-day"];
-    }
-
-    // Se a data for anterior ao tempo mínimo de antecedência
-    if (minTimeBefore > 0 && arg.date < minDate) {
-      return ["fc-day-disabled", "min-time-before"];
-    }
-
-    return [];
-  });
-
-  // Adicionar CSS personalizado
-  const style = document.createElement("style");
-  style.textContent = `
-    .fc-day-disabled {
-        background-color: #f5f5f5 !important;
-        opacity: 0.6;
-        cursor: not-allowed !important;
-    }
-    .past-day {
-        text-decoration: line-through;
-        color: #999 !important;
-    }
-    .min-time-before {
-        background-color: #fff3cd !important;
-    }
-`;
-  document.head.appendChild(style);
-
-  // Modificar o comportamento do clique em dia para respeitar as restrições
-  calendar.setOption("dateClick", function (info) {
-    const clickedDate = info.date;
-
-    // Verificar se a data está no passado
-    if (clickedDate < now) {
-      alert("Não é possível criar compromissos em datas passadas.");
-      return;
-    }
-
-    // Verificar tempo mínimo de antecedência
-    if (minTimeBefore > 0 && clickedDate < minDate) {
-      alert(
-        `Esta agenda requer ${minTimeBefore} horas de antecedência para criar compromissos.`
-      );
-      return;
-    }
-
-    // Se passou nas validações, redirecionar para criação
-    const agendaId = agendaElement.dataset.agendaId;
-    const dateStr = info.dateStr;
-
-    window.location.href = `${BASE_URL}/compromissos/new?agenda_id=${agendaId}&date=${dateStr}`;
-  });
-
-  // Após a renderização, aplicar destaque ao texto dos eventos
+  // Após a renderização, aplicar destaque ao texto dos eventos e remover cursors de drag
   setTimeout(function () {
     document.querySelectorAll(".fc-event-title").forEach(function (el) {
       el.style.whiteSpace = "nowrap";
@@ -347,25 +247,14 @@ document.addEventListener("DOMContentLoaded", function () {
       el.style.fontSize = "0.9em";
     });
 
-    // Destacar visualmente quais eventos são arrastáveis
+    // IMPORTANTE: Garantir que nenhum evento seja arrastável
     document.querySelectorAll(".fc-event").forEach(function (eventEl) {
-      // Verificar status do evento
-      const status = eventEl.classList.contains("event-status-cancelado")
-        ? "cancelado"
-        : eventEl.classList.contains("event-status-realizado")
-        ? "realizado"
-        : null;
+      eventEl.style.cursor = "pointer"; // Apenas pointer, não move
+      eventEl.title = "Clique para ver detalhes";
 
-      if (status === "cancelado" || status === "realizado") {
-        eventEl.style.cursor = "not-allowed";
-        eventEl.style.opacity = "0.7";
-
-        // Adicionar título explicativo
-        eventEl.title = `Compromisso ${status} - não pode ser movido`;
-      } else {
-        eventEl.style.cursor = "move";
-        eventEl.title = "Arraste para alterar a data";
-      }
+      // Remover qualquer handle de redimensionamento
+      const resizers = eventEl.querySelectorAll(".fc-event-resizer");
+      resizers.forEach((resizer) => resizer.remove());
     });
   }, 500);
 
@@ -394,99 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Configurar filtros para atualizar o calendário
   setupFilters(calendar, events);
 
-  // Função para exibir detalhes de um evento em um modal ou tooltip
-  function showEventDetails(event) {
-    // Obter ID do evento
-    const eventId = event.id;
-
-    // Buscar o card correspondente
-    const eventCard = document.querySelector(
-      `.event-card[data-id="${eventId}"]`
-    );
-
-    if (!eventCard) return;
-
-    // Abrir modal com detalhes
-    const modal = document.getElementById("event-modal");
-    if (modal) {
-      // Garantir que o modal esteja escondido inicialmente
-      modal.style.display = "none";
-      const modalBody = document.getElementById("event-modal-body");
-
-      // Limpar conteúdo anterior
-      modalBody.innerHTML = "";
-
-      // Clonar o conteúdo do card para o modal
-      const eventDetails = eventCard.cloneNode(true);
-      modalBody.appendChild(eventDetails);
-
-      // Exibir modal
-      modal.style.display = "block";
-
-      // Configurar botão de fechar
-      const closeBtn = document.querySelector(".event-modal-close");
-      if (closeBtn) {
-        closeBtn.onclick = function () {
-          modal.style.display = "none";
-        };
-      }
-
-      // Fechar quando clicar fora do modal
-      window.onclick = function (event) {
-        if (event.target == modal) {
-          modal.style.display = "none";
-        }
-      };
-    }
-  }
-
-  // Função para atualizar a data de um evento
-  function updateEventDate(eventId, startDate, endDate) {
-    const start = startDate ? startDate.toISOString() : "";
-    const end = endDate ? endDate.toISOString() : "";
-
-    // Criar FormData com os nomes de campos CORRETOS conforme o controlador PHP
-    const formData = new FormData();
-    formData.append("id", eventId);
-    formData.append("start", start); // O controller espera 'start', não 'start_datetime'
-    formData.append("end", end); // O controller espera 'end', não 'end_datetime'
-
-    // Enviar requisição
-    fetch(`${baseUrl}/compromissos/update-date`, {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => {
-        // Verificar status da resposta
-        if (!response.ok) {
-          console.error("Status HTTP:", response.status);
-          return response.text().then((text) => {
-            console.error("Resposta completa:", text);
-            throw new Error(`Erro HTTP: ${response.status}`);
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Resposta do servidor:", data);
-        if (data.success) {
-          console.log("Evento atualizado com sucesso");
-        } else {
-          console.error("Erro ao atualizar evento:", data.message);
-          alert("Erro ao atualizar o compromisso: " + data.message);
-          // Recarregar eventos para restaurar estado original
-          calendar.refetchEvents();
-        }
-      })
-      .catch((error) => {
-        console.error("Erro na requisição:", error);
-        alert("Erro ao comunicar com o servidor: " + error.message);
-        // Recarregar eventos para restaurar estado original
-        calendar.refetchEvents();
-      });
-  }
-
-  // Função para filtragem do calendário
+  // Função para filtração do calendário
   function setupFilters(calendar, allEvents) {
     // Obter elementos de filtro
     const filterStatus = document.getElementById("filter-status");
@@ -531,24 +328,15 @@ document.addEventListener("DOMContentLoaded", function () {
       calendar.removeAllEvents();
       calendar.addEventSource(filteredEvents);
 
-      // Após adicionar os eventos filtrados, aplicar os estilos novamente
+      // Após adicionar os eventos filtrados, garantir que não sejam arrastáveis
       setTimeout(function () {
         document.querySelectorAll(".fc-event").forEach(function (eventEl) {
-          // Verificar status do evento
-          const status = eventEl.classList.contains("event-status-cancelado")
-            ? "cancelado"
-            : eventEl.classList.contains("event-status-realizado")
-            ? "realizado"
-            : null;
+          eventEl.style.cursor = "pointer";
+          eventEl.title = "Clique para ver detalhes";
 
-          if (status === "cancelado" || status === "realizado") {
-            eventEl.style.cursor = "not-allowed";
-            eventEl.style.opacity = "0.7";
-            eventEl.title = `Compromisso ${status} - não pode ser movido`;
-          } else {
-            eventEl.style.cursor = "move";
-            eventEl.title = "Arraste para alterar a data";
-          }
+          // Remover handles de redimensionamento
+          const resizers = eventEl.querySelectorAll(".fc-event-resizer");
+          resizers.forEach((resizer) => resizer.remove());
         });
       }, 200);
     }
@@ -571,23 +359,173 @@ document.addEventListener("DOMContentLoaded", function () {
         // Reaplicar estilos após limpar filtros
         setTimeout(function () {
           document.querySelectorAll(".fc-event").forEach(function (eventEl) {
-            const status = eventEl.classList.contains("event-status-cancelado")
-              ? "cancelado"
-              : eventEl.classList.contains("event-status-realizado")
-              ? "realizado"
-              : null;
+            eventEl.style.cursor = "pointer";
+            eventEl.title = "Clique para ver detalhes";
 
-            if (status === "cancelado" || status === "realizado") {
-              eventEl.style.cursor = "not-allowed";
-              eventEl.style.opacity = "0.7";
-              eventEl.title = `Compromisso ${status} - não pode ser movido`;
-            } else {
-              eventEl.style.cursor = "move";
-              eventEl.title = "Arraste para alterar a data";
-            }
+            // Remover handles de redimensionamento
+            const resizers = eventEl.querySelectorAll(".fc-event-resizer");
+            resizers.forEach((resizer) => resizer.remove());
           });
         }, 200);
       });
     }
   }
 });
+
+/**
+ * FUNÇÃO PARA MOSTRAR MODAL DE DETALHES DO EVENTO
+ */
+function showEventModal(event) {
+  // Verificar se o modal já existe, se não, criar
+  let modal = document.getElementById("event-details-modal");
+
+  if (!modal) {
+    modal = createEventModal();
+    document.body.appendChild(modal);
+  }
+
+  // Preencher o conteúdo do modal
+  populateEventModal(modal, event);
+
+  // Mostrar o modal usando Bootstrap
+  if (typeof $ !== "undefined" && $.fn.modal) {
+    $(modal).modal("show");
+  } else {
+    // Fallback se jQuery/Bootstrap não estiver disponível
+    modal.style.display = "block";
+    modal.classList.add("show");
+  }
+}
+
+/**
+ * CRIAR O MODAL DE DETALHES DO EVENTO
+ */
+function createEventModal() {
+  const modal = document.createElement("div");
+  modal.className = "modal fade";
+  modal.id = "event-details-modal";
+  modal.tabIndex = -1;
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-labelledby", "eventModalLabel");
+  modal.setAttribute("aria-hidden", "true");
+
+  modal.innerHTML = `
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="eventModalLabel">Detalhes do Compromisso</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Fechar" onclick="closeEventModal()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="event-modal-body">
+          <!-- Conteúdo será inserido aqui -->
+        </div>
+        <div class="modal-footer" id="event-modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeEventModal()">
+            <i class="fas fa-times"></i> Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Adicionar evento de clique no overlay para fechar
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) {
+      closeEventModal();
+    }
+  });
+
+  return modal;
+}
+
+/**
+ * PREENCHER O MODAL COM OS DADOS DO EVENTO
+ */
+function populateEventModal(modal, event) {
+  const modalBody = modal.querySelector("#event-modal-body");
+  const modalTitle = modal.querySelector("#eventModalLabel");
+
+  // Atualizar título do modal
+  modalTitle.textContent = event.title;
+
+  // Formatar datas
+  const startDate = event.start ? event.start.toLocaleDateString("pt-BR") : "";
+  const startTime = event.start
+    ? event.start.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+  const endTime = event.end
+    ? event.end.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+
+  // Obter status e formatar
+  const status = event.extendedProps.status || "pendente";
+  const statusLabels = {
+    pendente: "Pendente",
+    realizado: "Realizado",
+    cancelado: "Cancelado",
+    aguardando_aprovacao: "Aguardando Aprovação",
+  };
+  const statusLabel = statusLabels[status] || status;
+
+  // Criar conteúdo do modal
+  let content = `
+    <div class="event-details">
+      <div class="row">
+        <div class="col-md-8">
+          <h4 class="event-title">${event.title}</h4>
+          <div class="event-info mt-3">
+            <p><i class="fas fa-calendar-alt text-primary"></i> <strong>Data:</strong> ${startDate}</p>
+            <p><i class="fas fa-clock text-primary"></i> <strong>Horário:</strong> ${startTime}${
+    endTime ? ` às ${endTime}` : ""
+  }</p>
+            ${
+              event.extendedProps.location
+                ? `<p><i class="fas fa-map-marker-alt text-primary"></i> <strong>Local:</strong> ${event.extendedProps.location}</p>`
+                : ""
+            }
+          </div>
+        </div>
+        <div class="col-md-4 text-right">
+          <span class="badge badge-${status} badge-lg">${statusLabel}</span>
+        </div>
+      </div>
+  `;
+
+  // Adicionar descrição se existir
+  if (event.extendedProps.description) {
+    content += `
+      <div class="mt-4">
+        <h6><i class="fas fa-align-left text-primary"></i> Descrição:</h6>
+        <div class="description-content bg-light p-3 rounded">
+          ${event.extendedProps.description.replace(/\n/g, "<br>")}
+        </div>
+      </div>
+    `;
+  }
+
+  content += "</div>";
+  modalBody.innerHTML = content;
+}
+
+/**
+ * FECHAR O MODAL
+ */
+function closeEventModal() {
+  const modal = document.getElementById("event-details-modal");
+  if (modal) {
+    if (typeof $ !== "undefined" && $.fn.modal) {
+      $(modal).modal("hide");
+    } else {
+      modal.style.display = "none";
+      modal.classList.remove("show");
+    }
+  }
+}
