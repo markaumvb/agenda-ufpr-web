@@ -1,17 +1,10 @@
 
-na visualização pública da agenda, deverá ter um botão de criar compromisso:
-esse botão deverá  abrir a tela de novo compromisso, exatamente como está, mas o status deverá estar fixo em aguardando aprovação (pode sapenas um texto escrito) sem o combo, para criar o evento, o usuário deverá fazer o login no fluxo padrão, e após o login, ele irá para essa tela de compromisso. Em resumo qualquer pessoa pode criar um evento em uma agenda pública, se a pessoa for o dono, o status é pendente, se for outro usuário, deverá ter o status de aguardando a aprovação, e considere que o usuário deverá fazer o login para identificação do usuário que está criando o evento
-
-
-
-
 em agendas compartilhadas, (apenas visualização) não se pode modificar nenhum compromisso da agenda...
 
 temos que criar uma tela que liste os compromissos em todas as agendas públicas, de forma linear (uma linha do tempo uma barra de linha do tempo de forma vertical... e essa barra deve ir atualizando com o decorrer do tempo (de meia em meia hora) a pessoa, ao abrir essa tela, pegará os eventos do dia!, mas logo acima podemos criar um filtro para: escolher a data, escolher a agenda (multiseleção) e pesquisar por descrição do evento. Além disso preciso de um script ou alguma forma de que obanco de dados atualize de forma automática, ou seja, eventos pendentes que sejam < que a data/hora atual devem ficar finalizados se forma automática sem intervenção humana... algum script ou processo que faça isso de forma agendada de meia em meia 
 
 - COMPROMISSOS SEM VERIFICAÇÕES DE DATA E HORA INICIAL E FINAL, DEVE-SE SEMPRE VERIFICAR ANTES DE CRIAR QUALQUER COMPROMISSO SE JÁ EXISTE COMPROMISSO NAQUELA DATA E HORA (OBEDECENDO O INTERVALO DE TEMPO)
 
-- https://200.238.174.7/agenda_ufpr/compromissos?agenda_id=6 tela de compromisso, no calendário não permitir clicar e arrastar os eventos. Ao clicar em um evento ele está apareceno no final da tela os detalhes do evento, antes ele aparecia em uma tela de formato modal, quero que volte a ser desse jeito....
 
  - quando criei um compromisso que se repete diariamente até um dia... o sistema crioui um monte de notificações de compromisso.... 
 
