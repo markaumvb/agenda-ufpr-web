@@ -13,9 +13,9 @@ class TimelineController extends BaseController {
         $this->agendaModel = new Agenda();
         $this->compromissoModel = new Compromisso();
         $this->userModel = new User();
-        
-        // Timeline é pública, não verificar autenticação
-        // $this->checkAuth();
+
+        setlocale(LC_TIME, 'pt_BR.UTF-8', 'pt_BR', 'portuguese');
+
     }
     
     /**

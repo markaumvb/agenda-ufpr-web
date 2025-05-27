@@ -81,20 +81,6 @@
         </form>
     </div>
 
-    <!-- Informações da data selecionada -->
-    <div class="date-info">
-        <div class="selected-date-display">
-            <h3>
-                <i class="fas fa-calendar-day"></i> 
-                <?= $date->format('l, d \d\e F \d\e Y') ?>
-            </h3>
-            <?php if (!empty($allEvents)): ?>
-                <span class="events-count">
-                    <?= count($allEvents) ?> compromisso<?= count($allEvents) !== 1 ? 's' : '' ?> encontrado<?= count($allEvents) !== 1 ? 's' : '' ?>
-                </span>
-            <?php endif; ?>
-        </div>
-    </div>
 
     <!-- Opções de visualização aprimoradas -->
     <div class="view-options">

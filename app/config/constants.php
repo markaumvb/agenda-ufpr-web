@@ -54,3 +54,6 @@ if (ENVIRONMENT === 'production') {
     ini_set('display_errors', 0);
     error_reporting(0);
 }
+
+setlocale(LC_TIME, 'pt_BR.UTF-8', 'pt_BR', 'portuguese');
+setlocale(LC_CTYPE, 'pt_BR.UTF-8', 'pt_BR', 'portuguese');
