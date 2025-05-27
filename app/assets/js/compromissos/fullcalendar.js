@@ -128,10 +128,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // DESABILITAR COMPLETAMENTE A EDIÇÃO E ARRASTAR
     editable: false,
-    selectable: canEdit,
+    selectable: false, // Desabilitado para evitar qualquer interação de edição
     eventStartEditable: false,
     eventDurationEditable: false,
     eventResizableFromStart: false,
+    eventResourceEditable: false,
+
+    // BLOQUEAR TODOS OS EVENTOS DE DRAG/DROP
+    eventAllow: function () {
+      return false; // Nunca permitir mover eventos
+    },
+
     eventDragStart: function () {
       return false; // Bloquear início do arrasto
     },
@@ -184,13 +191,13 @@ document.addEventListener("DOMContentLoaded", function () {
       return { domNodes: [wrapper] };
     },
 
-    // CALLBACK QUANDO UM EVENTO É CLICADO - MOSTRAR MODAL
+    // CALLBACK QUANDO UM EVENTO É CLICADO - MOSTRAR MODAL CUSTOMIZADO
     eventClick: function (info) {
       // Prevenir comportamento padrão
       info.jsEvent.preventDefault();
 
-      // Mostrar modal com detalhes do evento
-      showEventModal(info.event);
+      // Mostrar modal customizado com detalhes do evento
+      showEventModalCustom(info.event);
     },
 
     // Callback quando um espaço do calendário é clicado (para criar novo evento)
@@ -209,9 +216,6 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = `${baseUrl}/compromissos/new?agenda_id=${agendaId}&date=${date}`;
       }
     },
-
-    // REMOVER COMPLETAMENTE OS EVENTOS DE DRAG E DROP
-    // (não incluir eventDrop e eventResize)
 
     // Garantir que o título seja sempre exibido
     displayEventTime: false,
@@ -252,9 +256,23 @@ document.addEventListener("DOMContentLoaded", function () {
       eventEl.style.cursor = "pointer"; // Apenas pointer, não move
       eventEl.title = "Clique para ver detalhes";
 
+      // Remover atributo draggable se existir
+      eventEl.draggable = false;
+      eventEl.setAttribute("draggable", "false");
+
       // Remover qualquer handle de redimensionamento
       const resizers = eventEl.querySelectorAll(".fc-event-resizer");
       resizers.forEach((resizer) => resizer.remove());
+
+      // Bloquear eventos de mouse que iniciam drag
+      eventEl.addEventListener("mousedown", function (e) {
+        e.stopPropagation();
+      });
+
+      eventEl.addEventListener("dragstart", function (e) {
+        e.preventDefault();
+        return false;
+      });
     });
   }, 500);
 
@@ -333,10 +351,22 @@ document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".fc-event").forEach(function (eventEl) {
           eventEl.style.cursor = "pointer";
           eventEl.title = "Clique para ver detalhes";
+          eventEl.draggable = false;
+          eventEl.setAttribute("draggable", "false");
 
           // Remover handles de redimensionamento
           const resizers = eventEl.querySelectorAll(".fc-event-resizer");
           resizers.forEach((resizer) => resizer.remove());
+
+          // Bloquear eventos de drag
+          eventEl.addEventListener("mousedown", function (e) {
+            e.stopPropagation();
+          });
+
+          eventEl.addEventListener("dragstart", function (e) {
+            e.preventDefault();
+            return false;
+          });
         });
       }, 200);
     }
@@ -361,10 +391,22 @@ document.addEventListener("DOMContentLoaded", function () {
           document.querySelectorAll(".fc-event").forEach(function (eventEl) {
             eventEl.style.cursor = "pointer";
             eventEl.title = "Clique para ver detalhes";
+            eventEl.draggable = false;
+            eventEl.setAttribute("draggable", "false");
 
             // Remover handles de redimensionamento
             const resizers = eventEl.querySelectorAll(".fc-event-resizer");
             resizers.forEach((resizer) => resizer.remove());
+
+            // Bloquear eventos de drag
+            eventEl.addEventListener("mousedown", function (e) {
+              e.stopPropagation();
+            });
+
+            eventEl.addEventListener("dragstart", function (e) {
+              e.preventDefault();
+              return false;
+            });
           });
         }, 200);
       });
@@ -373,82 +415,18 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /**
- * FUNÇÃO PARA MOSTRAR MODAL DE DETALHES DO EVENTO
+ * FUNÇÃO PARA MOSTRAR MODAL CUSTOMIZADO (SEM BOOTSTRAP)
  */
-function showEventModal(event) {
-  // Verificar se o modal já existe, se não, criar
-  let modal = document.getElementById("event-details-modal");
+function showEventModalCustom(event) {
+  // Usar o modal customizado que já existe na view
+  const modal = document.getElementById("event-modal");
+  const modalBody = document.getElementById("event-modal-body");
+  const closeBtn = document.querySelector(".event-modal-close");
 
-  if (!modal) {
-    modal = createEventModal();
-    document.body.appendChild(modal);
+  if (!modal || !modalBody) {
+    console.error("Modal customizado não encontrado na página");
+    return;
   }
-
-  // Preencher o conteúdo do modal
-  populateEventModal(modal, event);
-
-  // Mostrar o modal usando Bootstrap
-  if (typeof $ !== "undefined" && $.fn.modal) {
-    $(modal).modal("show");
-  } else {
-    // Fallback se jQuery/Bootstrap não estiver disponível
-    modal.style.display = "block";
-    modal.classList.add("show");
-  }
-}
-
-/**
- * CRIAR O MODAL DE DETALHES DO EVENTO
- */
-function createEventModal() {
-  const modal = document.createElement("div");
-  modal.className = "modal fade";
-  modal.id = "event-details-modal";
-  modal.tabIndex = -1;
-  modal.setAttribute("role", "dialog");
-  modal.setAttribute("aria-labelledby", "eventModalLabel");
-  modal.setAttribute("aria-hidden", "true");
-
-  modal.innerHTML = `
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="eventModalLabel">Detalhes do Compromisso</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Fechar" onclick="closeEventModal()">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body" id="event-modal-body">
-          <!-- Conteúdo será inserido aqui -->
-        </div>
-        <div class="modal-footer" id="event-modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="closeEventModal()">
-            <i class="fas fa-times"></i> Fechar
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Adicionar evento de clique no overlay para fechar
-  modal.addEventListener("click", function (e) {
-    if (e.target === modal) {
-      closeEventModal();
-    }
-  });
-
-  return modal;
-}
-
-/**
- * PREENCHER O MODAL COM OS DADOS DO EVENTO
- */
-function populateEventModal(modal, event) {
-  const modalBody = modal.querySelector("#event-modal-body");
-  const modalTitle = modal.querySelector("#eventModalLabel");
-
-  // Atualizar título do modal
-  modalTitle.textContent = event.title;
 
   // Formatar datas
   const startDate = event.start ? event.start.toLocaleDateString("pt-BR") : "";
@@ -477,34 +455,32 @@ function populateEventModal(modal, event) {
 
   // Criar conteúdo do modal
   let content = `
-    <div class="event-details">
-      <div class="row">
-        <div class="col-md-8">
-          <h4 class="event-title">${event.title}</h4>
-          <div class="event-info mt-3">
-            <p><i class="fas fa-calendar-alt text-primary"></i> <strong>Data:</strong> ${startDate}</p>
-            <p><i class="fas fa-clock text-primary"></i> <strong>Horário:</strong> ${startTime}${
+    <div class="event-details-header" style="border-left-color: ${
+      event.backgroundColor
+    };">
+      <h4>${event.title}</h4>
+      <span class="badge badge-${status}">${statusLabel}</span>
+    </div>
+    
+    <div class="event-details-body">
+      <p><i class="fas fa-calendar-alt"></i> <strong>Data:</strong> ${startDate}</p>
+      <p><i class="fas fa-clock"></i> <strong>Horário:</strong> ${startTime}${
     endTime ? ` às ${endTime}` : ""
   }</p>
-            ${
-              event.extendedProps.location
-                ? `<p><i class="fas fa-map-marker-alt text-primary"></i> <strong>Local:</strong> ${event.extendedProps.location}</p>`
-                : ""
-            }
-          </div>
-        </div>
-        <div class="col-md-4 text-right">
-          <span class="badge badge-${status} badge-lg">${statusLabel}</span>
-        </div>
-      </div>
+      
+      ${
+        event.extendedProps.location
+          ? `<p><i class="fas fa-map-marker-alt"></i> <strong>Local:</strong> ${event.extendedProps.location}</p>`
+          : ""
+      }
   `;
 
   // Adicionar descrição se existir
   if (event.extendedProps.description) {
     content += `
-      <div class="mt-4">
-        <h6><i class="fas fa-align-left text-primary"></i> Descrição:</h6>
-        <div class="description-content bg-light p-3 rounded">
+      <div class="description-section">
+        <h6><i class="fas fa-align-left"></i> Descrição:</h6>
+        <div class="bg-light">
           ${event.extendedProps.description.replace(/\n/g, "<br>")}
         </div>
       </div>
@@ -513,19 +489,41 @@ function populateEventModal(modal, event) {
 
   content += "</div>";
   modalBody.innerHTML = content;
+
+  // Mostrar o modal
+  modal.style.display = "block";
+
+  // Configurar evento de fechar
+  if (closeBtn) {
+    closeBtn.onclick = function () {
+      closeEventModalCustom();
+    };
+  }
+
+  // Fechar ao clicar fora do modal
+  window.onclick = function (event) {
+    if (event.target === modal) {
+      closeEventModalCustom();
+    }
+  };
+
+  // Fechar com ESC
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeEventModalCustom();
+    }
+  });
 }
 
 /**
- * FECHAR O MODAL
+ * FECHAR O MODAL CUSTOMIZADO
  */
-function closeEventModal() {
-  const modal = document.getElementById("event-details-modal");
+function closeEventModalCustom() {
+  const modal = document.getElementById("event-modal");
   if (modal) {
-    if (typeof $ !== "undefined" && $.fn.modal) {
-      $(modal).modal("hide");
-    } else {
-      modal.style.display = "none";
-      modal.classList.remove("show");
-    }
+    modal.style.display = "none";
   }
+
+  // Remover listeners de teclado
+  document.removeEventListener("keydown", arguments.callee);
 }
