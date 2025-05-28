@@ -433,17 +433,12 @@
 }
 
 /* ===== STATUS ESPECÍFICOS ===== */
-.fc-event.event-status-pendente {
-  border-left: 4px solid #f6ad55 !important;
-}
 
 .fc-event.event-status-realizado {
-  border-left: 4px solid #48bb78 !important;
   opacity: 0.8 !important;
 }
 
 .fc-event.event-status-cancelado {
-  border-left: 4px solid #f56565 !important;
   opacity: 0.7 !important;
 }
 
@@ -452,7 +447,6 @@
 }
 
 .fc-event.event-status-aguardando_aprovacao {
-  border-left: 4px solid #4299e1 !important;
   animation: pulse-approval 2s infinite !important;
 }
 

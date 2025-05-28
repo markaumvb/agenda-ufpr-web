@@ -166,7 +166,7 @@
                     <h5 class="modal-title" id="eventModalLabel">
                         <i class="fas fa-info-circle"></i> Detalhes do Compromisso
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar">
+                    <button type="button" class="close" onclick="closeModal()" aria-label="Fechar">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -174,7 +174,7 @@
                     <!-- Detalhes do evento serão inseridos aqui via JavaScript -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
                         <i class="fas fa-times"></i> Fechar
                     </button>
                 </div>

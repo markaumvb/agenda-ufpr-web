@@ -1,11 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Initialize the calendar as soon as the DOM is ready
   initTimelineCalendar();
+  setupModalClose();
 });
 
-/**
- * Initializes the timeline calendar with improved functionality
- */
 function initTimelineCalendar() {
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) {
@@ -42,6 +39,19 @@ function initTimelineCalendar() {
       left: "prev,next today",
       center: "title",
       right: "", // We use custom buttons instead
+    },
+
+    datesSet: function (info) {
+      // Atualizar o campo de data quando navegar
+      const dateInput = document.getElementById("date-picker");
+      if (dateInput) {
+        const newDate = info.start.toISOString().split("T")[0];
+        if (dateInput.value !== newDate) {
+          dateInput.value = newDate;
+          // Auto-submit do formulário
+          dateInput.closest("form").submit();
+        }
+      }
     },
 
     // Time settings for better visualization
@@ -262,9 +272,44 @@ function getContrastTextColor(hexColor) {
   return brightness > 128 ? "#000000" : "#FFFFFF";
 }
 
-/**
- * Setup view buttons with enhanced functionality
- */
+function setupModalClose() {
+  const modal = document.getElementById("event-modal");
+  const closeBtn = document.querySelector(
+    ".btn-close, .modal .close, [data-bs-dismiss='modal']"
+  );
+
+  // Close button click
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function () {
+      closeModal();
+    });
+  }
+
+  // Click outside modal
+  if (modal) {
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  }
+
+  // ESC key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && modal && modal.classList.contains("show")) {
+      closeModal();
+    }
+  });
+}
+
+function closeModal() {
+  const modal = document.getElementById("event-modal");
+  if (modal) {
+    modal.classList.remove("show");
+    modal.style.display = "none";
+  }
+}
+
 function setupViewButtons(calendar) {
   document.querySelectorAll(".view-option").forEach((button) => {
     button.addEventListener("click", function () {
