@@ -280,11 +280,11 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                     INSERT INTO compromissos (
                         agenda_id, title, description, start_datetime, end_datetime, 
                         location, repeat_type, repeat_until, repeat_days, status,
-                        created_at, created_by
+                        created_at, created_by, is_external, external_email, external_name
                     ) VALUES (
                         :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                         :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                        NOW(), :created_by
+                        NOW(), :created_by, :is_external, :external_email, :external_name
                     )
                 ";
                 
@@ -300,6 +300,9 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                 $stmt->bindParam(':repeat_days', $data['repeat_days'], PDO::PARAM_STR);
                 $stmt->bindParam(':status', $data['status'], PDO::PARAM_STR);
                 $stmt->bindParam(':created_by', $createdBy, PDO::PARAM_INT);
+                $stmt->bindParam(':is_external', $data['is_external'], PDO::PARAM_BOOL);
+                $stmt->bindParam(':external_email', $data['external_email'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_name', $data['external_name'], PDO::PARAM_STR);
                 
                 if ($stmt->execute()) {
                     $newId = $this->db->lastInsertId();
@@ -325,11 +328,11 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                 INSERT INTO compromissos (
                     agenda_id, title, description, start_datetime, end_datetime, 
                     location, repeat_type, repeat_until, repeat_days, status,
-                    created_at, group_id, is_recurring, created_by
+                    created_at, group_id, is_recurring, created_by, is_external, external_email, external_name
                 ) VALUES (
                     :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                     :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                    NOW(), :group_id, 1, :created_by
+                    NOW(), :group_id, 1, :created_by, :is_external, :external_email, :external_name
                 )
             ";
             
@@ -346,6 +349,9 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
             $stmt->bindParam(':status', $data['status'], PDO::PARAM_STR);
             $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
             $stmt->bindParam(':created_by', $createdBy, PDO::PARAM_INT);
+            $stmt->bindParam(':is_external', $data['is_external'], PDO::PARAM_BOOL);
+            $stmt->bindParam(':external_email', $data['external_email'], PDO::PARAM_STR);
+            $stmt->bindParam(':external_name', $data['external_name'], PDO::PARAM_STR);
             
             if (!$stmt->execute()) {
                 $this->db->rollBack();
@@ -372,13 +378,14 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                     INSERT INTO compromissos (
                         agenda_id, title, description, start_datetime, end_datetime, 
                         location, repeat_type, repeat_until, repeat_days, status,
-                        created_at, group_id, is_recurring, parent_id, created_by
+                        created_at, group_id, is_recurring, parent_id, created_by, is_external, external_email, external_name
                     ) VALUES (
                         :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                         :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                        NOW(), :group_id, 1, :parent_id, :created_by
+                        NOW(), :group_id, 1, :parent_id, :created_by, :is_external, :external_email, :external_name
                     )
                 ";
+
                 
                 $stmt = $this->db->prepare($query);
                 $stmt->bindParam(':agenda_id', $data['agenda_id'], PDO::PARAM_INT);
@@ -394,6 +401,9 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                 $stmt->bindParam(':group_id', $groupId, PDO::PARAM_STR);
                 $stmt->bindParam(':parent_id', $parentId, PDO::PARAM_INT);
                 $stmt->bindParam(':created_by', $createdBy, PDO::PARAM_INT);
+                $stmt->bindParam(':is_external', $data['is_external'], PDO::PARAM_BOOL);
+                $stmt->bindParam(':external_email', $data['external_email'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_name', $data['external_name'], PDO::PARAM_STR);
                 
                 if (!$stmt->execute()) {
                     $this->db->rollBack();
@@ -424,117 +434,145 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
      * @param int $compromissoId ID do compromisso criado
      * @return bool Resultado da operação
      */
-    private function createNotificationForAgendaOwner($compromissoId) {
-    try {
-        // Obter o compromisso
-        $compromisso = $this->getById($compromissoId);
-        if (!$compromisso) {
-            return false;
-        }
-        
-        // Obter a agenda
-        $query = "SELECT a.*, u.id as owner_id, u.name as owner_name FROM agendas a 
-                 JOIN users u ON a.user_id = u.id 
-                 WHERE a.id = :agenda_id LIMIT 1";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':agenda_id', $compromisso['agenda_id'], PDO::PARAM_INT);
-        $stmt->execute();
-        $agenda = $stmt->fetch();
-        
-        if (!$agenda) {
-            return false;
-        }
-        
-        // Se o usuário atual não for o dono da agenda, criar notificação
-        if ($_SESSION['user_id'] != $agenda['owner_id']) {
-            // Verificar se o módulo de notificação está disponível
-            if (!class_exists('Notification')) {
-                require_once __DIR__ . '/Notification.php';
-            }
-            
-            $notificationModel = new Notification();
-            
-            // Verificar se é um evento recorrente
-            $isRecurring = !empty($compromisso['group_id']);
-            
-            // Para eventos recorrentes, verificar se já existe uma notificação para este grupo
-            if ($isRecurring) {
-                // Verificar se já existe notificação para este grupo_id
-                $checkQuery = "SELECT COUNT(*) FROM notifications 
-                              WHERE user_id = :user_id
-                              AND compromisso_id IN (
-                                  SELECT id FROM compromissos 
-                                  WHERE group_id = :group_id
-                              )";
-                $checkStmt = $this->db->prepare($checkQuery);
-                $checkStmt->bindParam(':user_id', $agenda['owner_id'], PDO::PARAM_INT);
-                $checkStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
-                $checkStmt->execute();
-                
-                if ($checkStmt->fetchColumn() > 0) {
-                    // Já existe notificação para este grupo, não criar outra
-                    return true;
-                }
-                
-                // Contar total de ocorrências no grupo
-                $countQuery = "SELECT COUNT(*) FROM compromissos WHERE group_id = :group_id";
-                $countStmt = $this->db->prepare($countQuery);
-                $countStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
-                $countStmt->execute();
-                $occurrenceCount = $countStmt->fetchColumn();
-                
-                // Informações sobre recorrência para incluir na mensagem
-                $recurrenceInfo = "";
-                
-                if ($compromisso['repeat_until']) {
-                    $untilDate = new DateTime($compromisso['repeat_until']);
-                    $formattedUntil = $untilDate->format('d/m/Y');
-                    
-                    switch($compromisso['repeat_type']) {
-                        case 'daily':
-                            $recurrenceInfo = " (se repete diariamente até {$formattedUntil} - {$occurrenceCount} ocorrências)";
-                            break;
-                        case 'weekly':
-                            $recurrenceInfo = " (se repete semanalmente até {$formattedUntil} - {$occurrenceCount} ocorrências)";
-                            break;
-                        case 'specific_days':
-                            $daysText = $this->getFormattedWeekDays($compromisso['repeat_days']);
-                            $recurrenceInfo = " (se repete nos dias: {$daysText} até {$formattedUntil} - {$occurrenceCount} ocorrências)";
-                            break;
-                    }
-                }
-            }
-            
-            // Formatar data
-            $dateObj = new DateTime($compromisso['start_datetime']);
-            $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
-            
-            // Criar mensagem
-            $message = "Novo compromisso \"{$compromisso['title']}\" foi adicionado em sua agenda \"{$agenda['title']}\" para {$formattedDate}";
-            
-            // Adicionar informação de recorrência se aplicável
-            if (isset($recurrenceInfo)) {
-                $message .= $recurrenceInfo;
-            }
-            
-            $notificationData = [
-                'user_id' => $agenda['owner_id'],
-                'compromisso_id' => $compromissoId,
-                'message' => $message,
-                'is_read' => 0
-            ];
-            
-            $notificationModel->create($notificationData);
-            
-            // Enviar e-mail (opcional)
-            $this->sendEmailNotification($agenda['owner_id'], $compromissoId);
-        }
-        
-        return true;
-    } catch (Exception $e) {
-        error_log('Erro ao criar notificação: ' . $e->getMessage());
+private function createNotificationForAgendaOwner($compromissoId) {
+try {
+    // Obter o compromisso
+    $compromisso = $this->getById($compromissoId);
+    if (!$compromisso) {
         return false;
     }
+    
+    // Obter a agenda
+    $query = "SELECT a.*, u.id as owner_id, u.name as owner_name FROM agendas a 
+             JOIN users u ON a.user_id = u.id 
+             WHERE a.id = :agenda_id LIMIT 1";
+    $stmt = $this->db->prepare($query);
+    $stmt->bindParam(':agenda_id', $compromisso['agenda_id'], PDO::PARAM_INT);
+    $stmt->execute();
+    $agenda = $stmt->fetch();
+    
+    if (!$agenda) {
+        return false;
+    }
+    
+    // Determinar se é usuário externo ou interno
+    $isExternalUser = (bool)$compromisso['is_external'];
+    
+    // Se for usuário externo OU usuário interno diferente do dono, criar notificação
+    if ($isExternalUser || (!$isExternalUser && isset($_SESSION['user_id']) && $_SESSION['user_id'] != $agenda['owner_id'])) {
+        // Verificar se o módulo de notificação está disponível
+        if (!class_exists('Notification')) {
+            require_once __DIR__ . '/Notification.php';
+        }
+        
+        $notificationModel = new Notification();
+        
+        // Verificar se é um evento recorrente
+        $isRecurring = !empty($compromisso['group_id']);
+        
+        // Para eventos recorrentes, verificar se já exists notificação para este grupo
+        if ($isRecurring) {
+            // Verificar se já existe notificação para este grupo_id
+            $checkQuery = "SELECT COUNT(*) FROM notifications 
+                          WHERE user_id = :user_id
+                          AND compromisso_id IN (
+                              SELECT id FROM compromissos 
+                              WHERE group_id = :group_id
+                          )";
+            $checkStmt = $this->db->prepare($checkQuery);
+            $checkStmt->bindParam(':user_id', $agenda['owner_id'], PDO::PARAM_INT);
+            $checkStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+            $checkStmt->execute();
+            
+            if ($checkStmt->fetchColumn() > 0) {
+                // Já existe notificação para este grupo, não criar outra
+                return true;
+            }
+            
+            // Contar total de ocorrências no grupo
+            $countQuery = "SELECT COUNT(*) FROM compromissos WHERE group_id = :group_id";
+            $countStmt = $this->db->prepare($countQuery);
+            $countStmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
+            $countStmt->execute();
+            $occurrenceCount = $countStmt->fetchColumn();
+            
+            // Informações sobre recorrência para incluir na mensagem
+            $recurrenceInfo = "";
+            
+            if ($compromisso['repeat_until']) {
+                $untilDate = new DateTime($compromisso['repeat_until']);
+                $formattedUntil = $untilDate->format('d/m/Y');
+                
+                switch($compromisso['repeat_type']) {
+                    case 'daily':
+                        $recurrenceInfo = " (se repete diariamente até {$formattedUntil} - {$occurrenceCount} ocorrências)";
+                        break;
+                    case 'weekly':
+                        $recurrenceInfo = " (se repete semanalmente até {$formattedUntil} - {$occurrenceCount} ocorrências)";
+                        break;
+                    case 'specific_days':
+                        $daysText = $this->getFormattedWeekDays($compromisso['repeat_days']);
+                        $recurrenceInfo = " (se repete nos dias: {$daysText} até {$formattedUntil} - {$occurrenceCount} ocorrências)";
+                        break;
+                }
+            }
+        }
+        
+        // Formatar data
+        $dateObj = new DateTime($compromisso['start_datetime']);
+        $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+        
+        // Determinar quem criou o compromisso para a mensagem
+        if ($isExternalUser) {
+            $creatorName = $compromisso['external_name'];
+            $creatorInfo = "usuário externo";
+        } else {
+            // Buscar nome do usuário interno
+            $userQuery = "SELECT name FROM users WHERE id = :user_id LIMIT 1";
+            $userStmt = $this->db->prepare($userQuery);
+            $userStmt->bindParam(':user_id', $compromisso['created_by'], PDO::PARAM_INT);
+            $userStmt->execute();
+            $user = $userStmt->fetch();
+            $creatorName = $user ? $user['name'] : 'Usuário';
+            $creatorInfo = "usuário do sistema";
+        }
+        
+        // Criar mensagem
+        $message = "Novo compromisso \"{$compromisso['title']}\" foi solicitado por {$creatorName} ({$creatorInfo}) em sua agenda \"{$agenda['title']}\" para {$formattedDate}";
+        
+        // Adicionar informação de recorrência se aplicável
+        if (isset($recurrenceInfo)) {
+            $message .= $recurrenceInfo;
+        }
+        
+        // Adicionar informação de status se for aguardando aprovação
+        if ($compromisso['status'] === 'aguardando_aprovacao') {
+            $message .= ". Status: Aguardando sua aprovação.";
+        }
+        
+        $notificationData = [
+            'user_id' => $agenda['owner_id'],
+            'compromisso_id' => $compromissoId,
+            'message' => $message,
+            'is_read' => 0
+        ];
+        
+        $notificationModel->create($notificationData);
+        
+        // Enviar e-mail para o dono da agenda
+        $this->sendEmailNotificationToOwner($agenda['owner_id'], $compromissoId);
+        
+        // Se for usuário externo, enviar e-mail de confirmação para ele também
+        if ($isExternalUser) {
+            $this->sendEmailNotificationToExternal($compromissoId);
+        }
+    }
+    
+    return true;
+} catch (Exception $e) {
+    error_log('Erro ao criar notificação: ' . $e->getMessage());
+    return false;
+}
 }
     
     /**
@@ -1191,6 +1229,139 @@ private function getFormattedWeekDays($repeatDays) {
     }
     
     return implode(', ', $formattedDays);
+}
+
+
+private function sendEmailNotificationToOwner($userId, $compromissoId) {
+    try {
+        // Verificar se o serviço de e-mail está disponível
+        if (!class_exists('EmailService')) {
+            require_once __DIR__ . '/../services/EmailService.php';
+        }
+        
+        // Obter dados do usuário dono da agenda
+        $query = "SELECT * FROM users WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $user = $stmt->fetch();
+        
+        if (!$user || empty($user['email'])) {
+            return false;
+        }
+        
+        // Obter dados do compromisso
+        $compromisso = $this->getById($compromissoId);
+        if (!$compromisso) {
+            return false;
+        }
+        
+        // Obter dados da agenda
+        $query = "SELECT * FROM agendas WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $compromisso['agenda_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $agenda = $stmt->fetch();
+        
+        if (!$agenda) {
+            return false;
+        }
+        
+        // Determinar tipo de solicitante
+        $isExternal = (bool)$compromisso['is_external'];
+        $solicitanteName = $isExternal ? $compromisso['external_name'] : 'Usuário do sistema';
+        $solicitanteEmail = $isExternal ? $compromisso['external_email'] : '';
+        
+        // Formatar data
+        $dateObj = new DateTime($compromisso['start_datetime']);
+        $formattedDate = $dateObj->format('d/m/Y \à\s H:i');
+        
+        // Enviar e-mail usando EmailService
+        $emailService = new EmailService();
+        return $emailService->sendNewCompromissoNotificationToOwner(
+            $user, 
+            $compromisso, 
+            $agenda, 
+            $solicitanteName, 
+            $solicitanteEmail,
+            $isExternal
+        );
+    } catch (Exception $e) {
+        error_log('Erro ao enviar e-mail para dono da agenda: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Envia e-mail de confirmação para usuário externo
+ * 
+
+ */
+private function sendEmailNotificationToExternal($compromissoId) {
+    try {
+        // Verificar se o serviço de e-mail está disponível
+        if (!class_exists('EmailService')) {
+            require_once __DIR__ . '/../services/EmailService.php';
+        }
+        
+        // Obter dados do compromisso
+        $compromisso = $this->getById($compromissoId);
+        if (!$compromisso || !$compromisso['is_external']) {
+            return false;
+        }
+        
+        // Obter dados da agenda
+        $query = "SELECT * FROM agendas WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $compromisso['agenda_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $agenda = $stmt->fetch();
+        
+        if (!$agenda) {
+            return false;
+        }
+        
+        // Enviar e-mail usando EmailService
+        $emailService = new EmailService();
+        return $emailService->sendExternalUserConfirmation($compromisso, $agenda);
+    } catch (Exception $e) {
+        error_log('Erro ao enviar e-mail para usuário externo: ' . $e->getMessage());
+        return false;
+    }
+}
+
+
+public function sendDecisionEmailToExternal($compromissoId, $decision, $ownerName) {
+    try {
+        // Verificar se o serviço de e-mail está disponível
+        if (!class_exists('EmailService')) {
+            require_once __DIR__ . '/../services/EmailService.php';
+        }
+        
+        // Obter dados do compromisso
+        $compromisso = $this->getById($compromissoId);
+        if (!$compromisso || !$compromisso['is_external']) {
+            return false;
+        }
+        
+        // Obter dados da agenda
+        $query = "SELECT * FROM agendas WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $compromisso['agenda_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $agenda = $stmt->fetch();
+        
+        if (!$agenda) {
+            return false;
+        }
+        
+        // Enviar e-mail usando EmailService
+        $emailService = new EmailService();
+        return $emailService->sendExternalUserDecision($compromisso, $agenda, $decision, $ownerName);
+    } catch (Exception $e) {
+        error_log('Erro ao enviar e-mail de decisão para usuário externo: ' . $e->getMessage());
+        return false;
+    }
 }
 
     

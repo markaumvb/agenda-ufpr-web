@@ -329,6 +329,9 @@ public function store() {
         $endDatetime = date('Y-m-d H:i:s', strtotime($endDatetime));
     }
     
+    $isExternal = false;
+    $externalEmail = '';
+    $externalName = '';
     // Criar o compromisso com tipos corretos
     $compromissoData = [
         'agenda_id' => (int)$agendaId,
@@ -341,7 +344,10 @@ public function store() {
         'created_by' => (int)$userId,
         'repeat_type' => $repeatType,
         'repeat_days' => is_array($repeatDays) ? implode(',', $repeatDays) : '',
-        'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null
+        'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null,
+        'is_external' => $isExternal,
+        'external_email' => $externalEmail,
+        'external_name' => $externalName
     ];
     
     // Salvar o compromisso (agora o model já lida com recorrências)
@@ -999,5 +1005,344 @@ private function validateCompromissoData($data, $compromissoId = null) {
     header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
     exit;
 }
+/**
+     * Formulário para captura de dados de usuários externos
+     */
+    public function externalForm() {
+        // Obter ID da agenda
+        $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
+        
+        if (!$agendaId) {
+            $_SESSION['flash_message'] = 'Agenda não especificada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Carregar dados da agenda
+        $agenda = $this->agendaModel->getById($agendaId);
+        
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Verificar se a agenda é pública e ativa
+        if (!$agenda['is_public'] || !$agenda['is_active']) {
+            $_SESSION['flash_message'] = 'Esta agenda não permite solicitações externas';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Exibir a view
+        require_once __DIR__ . '/../views/compromissos/external-form.php';
+    }
+    
+    /**
+     * Processar dados externos e redirecionar para criação
+     */
+    public function externalCreate() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Obter dados do formulário
+        $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
+        $externalName = filter_input(INPUT_POST, 'external_name', FILTER_SANITIZE_STRING);
+        $externalEmail = filter_input(INPUT_POST, 'external_email', FILTER_SANITIZE_EMAIL);
+        
+        // Validar dados
+        $errors = [];
+        
+        if (!$agendaId) {
+            $errors[] = 'Agenda não especificada';
+        }
+        
+        if (empty($externalName)) {
+            $errors[] = 'Nome é obrigatório';
+        }
+        
+        if (empty($externalEmail) || !filter_var($externalEmail, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'E-mail válido é obrigatório';
+        }
+        
+        if (!empty($errors)) {
+            $_SESSION['validation_errors'] = $errors;
+            $_SESSION['form_data'] = $_POST;
+            header('Location: ' . BASE_URL . '/compromissos/external-form?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Verificar se a agenda existe e é pública
+        $agenda = $this->agendaModel->getById($agendaId);
+        
+        if (!$agenda || !$agenda['is_public'] || !$agenda['is_active']) {
+            $_SESSION['flash_message'] = 'Esta agenda não permite solicitações externas';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Armazenar dados na sessão para uso no formulário de compromisso
+        $_SESSION['external_user'] = [
+            'name' => $externalName,
+            'email' => $externalEmail,
+            'agenda_id' => $agendaId
+        ];
+        
+        // Redirecionar para o formulário de criação de compromisso
+        header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+        exit;
+    }
+    
+    /**
+     * Formulário de criação de compromisso para usuários externos
+     */
+    public function externalNew() {
+        // Verificar se temos dados do usuário externo na sessão
+        if (!isset($_SESSION['external_user'])) {
+            $_SESSION['flash_message'] = 'Sessão expirada. Tente novamente.';
+            $_SESSION['flash_type'] = 'warning';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        $externalUser = $_SESSION['external_user'];
+        $agendaId = $externalUser['agenda_id'];
+        
+        // Carregar dados da agenda
+        $agenda = $this->agendaModel->getById($agendaId);
+        
+        if (!$agenda || !$agenda['is_public'] || !$agenda['is_active']) {
+            unset($_SESSION['external_user']);
+            $_SESSION['flash_message'] = 'Esta agenda não permite solicitações externas';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Verificar se há erros de validação da sessão
+        $errors = [];
+        if (isset($_SESSION['validation_errors'])) {
+            $errors = $_SESSION['validation_errors'];
+            unset($_SESSION['validation_errors']);
+        }
+        
+        // Recuperar dados do formulário da sessão
+        $formData = [];
+        if (isset($_SESSION['form_data'])) {
+            $formData = $_SESSION['form_data'];
+            unset($_SESSION['form_data']);
+        }
+        
+        // Definir data e hora padrão considerando a antecedência mínima
+        $currentDate = new DateTime();
+        
+        // Verificar se a agenda tem um tempo mínimo de antecedência
+        $minTimeBefore = isset($agenda['min_time_before']) ? (int)$agenda['min_time_before'] : 0;
+        
+        if ($minTimeBefore > 0) {
+            $currentDate->add(new DateInterval("PT{$minTimeBefore}H"));
+        }
+        
+        // Se a data tiver sido passada na URL, usar essa
+        $selectedDate = isset($_GET['date']) ? $_GET['date'] : null;
+        if ($selectedDate) {
+            $selectedDateTime = new DateTime($selectedDate);
+            $currentDate->setDate(
+                $selectedDateTime->format('Y'),
+                $selectedDateTime->format('m'),
+                $selectedDateTime->format('d')
+            );
+        }
+        
+        $endDate = clone $currentDate;
+        $endDate->add(new DateInterval('PT1H'));
+        
+        // Formatar datas para o formato HTML datetime-local
+        $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
+        $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
+        
+        // Exibir a view
+        require_once __DIR__ . '/../views/compromissos/external-create.php';
+    }
+    
+    /**
+     * Armazenar compromisso de usuário externo
+     */
+    public function externalStore() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Verificar se temos dados do usuário externo na sessão
+        if (!isset($_SESSION['external_user'])) {
+            $_SESSION['flash_message'] = 'Sessão expirada. Tente novamente.';
+            $_SESSION['flash_type'] = 'warning';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        $externalUser = $_SESSION['external_user'];
+        
+        // Obter dados do formulário
+        $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
+        $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
+        $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
+        $startDatetime = filter_input(INPUT_POST, 'start_datetime', FILTER_SANITIZE_STRING);
+        $endDatetime = filter_input(INPUT_POST, 'end_datetime', FILTER_SANITIZE_STRING);
+        $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_STRING);
+        $repeatType = filter_input(INPUT_POST, 'repeat_type', FILTER_SANITIZE_STRING);
+        $repeatUntil = filter_input(INPUT_POST, 'repeat_until', FILTER_SANITIZE_STRING);
+        $repeatDays = isset($_POST['repeat_days']) && is_array($_POST['repeat_days']) ? $_POST['repeat_days'] : [];
+        
+        // Validar dados
+        $data = [
+            'agenda_id' => $agendaId,
+            'title' => $title,
+            'description' => $description,
+            'start_datetime' => $startDatetime,
+            'end_datetime' => $endDatetime,
+            'location' => $location,
+            'repeat_type' => $repeatType,
+            'repeat_until' => $repeatUntil,
+            'repeat_days' => $repeatDays
+        ];
+        
+        $errors = $this->validateCompromissoData($data);
+        
+        if (!empty($errors)) {
+            $_SESSION['validation_errors'] = $errors;
+            $_SESSION['form_data'] = $_POST;
+            header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Verificar se a agenda existe e está ativa
+        $agenda = $this->agendaModel->getById($agendaId);
+        
+        if (!$agenda || !$agenda['is_public'] || !$agenda['is_active']) {
+            unset($_SESSION['external_user']);
+            $_SESSION['flash_message'] = 'Esta agenda não permite solicitações externas';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Para eventos recorrentes, verificar conflitos
+        if ($repeatType !== 'none') {
+            $conflicts = $this->compromissoModel->checkRecurringConflicts(
+                $repeatType,
+                $startDatetime, 
+                $endDatetime, 
+                $repeatUntil,
+                isset($repeatDays) && is_array($repeatDays) ? implode(',', $repeatDays) : '',
+                $agendaId
+            );
+            
+            if (!empty($conflicts)) {
+                $_SESSION['validation_errors'] = $conflicts;
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+                exit;
+            }
+        } else {
+            // Verificar conflito para evento único
+            if ($this->compromissoModel->hasTimeConflict($agendaId, $startDatetime, $endDatetime)) {
+                $conflictingEvent = $this->compromissoModel->getConflictingEvent($agendaId, $startDatetime, $endDatetime);
+                
+                if ($conflictingEvent) {
+                    $conflictDate = new DateTime($startDatetime);
+                    $error = "Conflito no dia " . $conflictDate->format('d/m/Y') . 
+                             " às " . $conflictDate->format('H:i') . 
+                             ": \"" . $conflictingEvent['title'] . "\"";
+                    
+                    $_SESSION['validation_errors'] = [$error];
+                    $_SESSION['form_data'] = $_POST;
+                    header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+                    exit;
+                }
+            }
+        }
+        
+        // Garantir que as datas estão no formato correto
+        if (!empty($startDatetime)) {
+            $startDatetime = date('Y-m-d H:i:s', strtotime($startDatetime));
+        }
+        if (!empty($endDatetime)) {
+            $endDatetime = date('Y-m-d H:i:s', strtotime($endDatetime));
+        }
+        
+        // Criar o compromisso externo
+        $compromissoData = [
+            'agenda_id' => (int)$agendaId,
+            'title' => $title,
+            'description' => $description ?: '',
+            'start_datetime' => $startDatetime,
+            'end_datetime' => $endDatetime,
+            'location' => $location ?: '',
+            'status' => 'aguardando_aprovacao', // Sempre aguardando aprovação para externos
+            'created_by' => null, // Usuário externo não tem ID no sistema
+            'repeat_type' => $repeatType,
+            'repeat_days' => is_array($repeatDays) ? implode(',', $repeatDays) : '',
+            'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null,
+            // Campos específicos para usuários externos
+            'is_external' => true,
+            'external_email' => $externalUser['email'],
+            'external_name' => $externalUser['name']
+        ];
+        
+        // Salvar o compromisso
+        $compromissoId = $this->compromissoModel->create($compromissoData);
+        
+        if (!$compromissoId) {
+            $_SESSION['flash_message'] = 'Erro ao criar o compromisso';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Limpar dados da sessão
+        unset($_SESSION['external_user']);
+        
+        // Redirecionar para página de sucesso
+        $_SESSION['flash_message'] = 'Sua solicitação foi enviada com sucesso! Você receberá um e-mail de confirmação.';
+        $_SESSION['flash_type'] = 'success';
+        header('Location: ' . BASE_URL . '/compromissos/external-success?id=' . $compromissoId);
+        exit;
+    }
+    
+    /**
+     * Página de sucesso para usuários externos
+     */
+    public function externalSuccess() {
+        $compromissoId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        
+        if (!$compromissoId) {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Buscar o compromisso
+        $compromisso = $this->compromissoModel->getById($compromissoId);
+        
+        if (!$compromisso || !$compromisso['is_external']) {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Buscar dados da agenda
+        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+        
+        // Exibir a view de sucesso
+        require_once __DIR__ . '/../views/compromissos/external-success.php';
+    }
     
 }

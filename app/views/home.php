@@ -50,6 +50,9 @@
                                     <a href="<?= BASE_URL ?>/public-agenda/<?= $agenda['public_hash'] ?>" class="btn btn-primary btn-sm">
                                         <i class="fas fa-eye"></i> Visualizar
                                     </a>
+                                    <a href="<?= BASE_URL ?>/compromissos/external-form?agenda_id=<?= $agenda['id'] ?>" class="btn btn-success btn-sm">
+                                        <i class="fas fa-plus"></i> Criar Compromisso
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

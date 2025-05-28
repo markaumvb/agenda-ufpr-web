@@ -335,6 +335,31 @@ $routes = [
     'action' => 'index',
     'method' => 'GET'
 ],
+'/compromissos/external-form' => [
+    'controller' => 'CompromissoController',
+    'action' => 'externalForm',
+    'method' => 'GET'
+],
+'/compromissos/external-create' => [
+    'controller' => 'CompromissoController',
+    'action' => 'externalCreate',
+    'method' => 'GET'
+],
+'/compromissos/external-store' => [
+    'controller' => 'CompromissoController',
+    'action' => 'externalStore',
+    'method' => 'POST'
+],
+'/compromissos/external-new' => [
+    'controller' => 'CompromissoController',
+    'action' => 'externalNew',  
+    'method' => 'GET'
+],
+'/compromissos/external-success' => [
+    'controller' => 'CompromissoController',
+    'action' => 'externalSuccess',
+    'method' => 'GET'
+],
 
 ];
 
