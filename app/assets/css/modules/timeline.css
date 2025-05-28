@@ -1,9 +1,3 @@
-/* 
- * Timeline CSS - Versão Melhorada e Modernizada
- * app/assets/css/modules/timeline.css
- */
-
-/* ===== ANIMAÇÕES E KEYFRAMES ===== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -126,7 +120,7 @@
 
 /* ===== FILTRO DE AGENDAS MELHORADO ===== */
 .agendas-filter-container {
-  max-height: 280px;
+  max-height: 240px;
   padding: 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
@@ -135,7 +129,7 @@
 }
 
 .agendas-scroll-area {
-  max-height: 180px;
+  max-height: 160px;
   overflow-y: auto;
   margin-top: 0.5rem;
   padding-right: 8px;
@@ -163,9 +157,9 @@
 .form-check {
   display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
-  padding: 0.5rem;
-  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
@@ -206,10 +200,48 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 10px;
   flex-shrink: 0;
   border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+/* Agenda item específico - espaçamento reduzido */
+.agenda-item {
+  margin-bottom: 0.3rem !important;
+}
+
+.agenda-details strong {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* ===== BOTÕES MELHORADOS ===== */
+.btn-clear-filters {
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-clear-filters:hover {
+  background-color: #5a6268 !important;
+  border-color: #545b62 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  text-decoration: none;
+}
+
+.btn-clear-filters:focus {
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+  color: #ffffff !important;
 }
 
 /* ===== BOTÕES DE VISUALIZAÇÃO ===== */
@@ -764,11 +796,11 @@
   }
 
   .agendas-filter-container {
-    max-height: 220px;
+    max-height: 200px;
   }
 
   .agendas-scroll-area {
-    max-height: 140px;
+    max-height: 120px;
   }
 
   .event-details-header {

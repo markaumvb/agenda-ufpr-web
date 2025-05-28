@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/modal.css">
+<link rel="stylesheet" href="<?= PUBLIC_URL ?>/app/assets/css/compromissos.css">
 <div class="page-header">
 <div class="header-container">
     <h1><?= htmlspecialchars($agenda['title'] ?? '') ?></h1>

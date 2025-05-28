@@ -18,13 +18,13 @@
                 <!-- Primeira linha: Data e Busca -->
                 <div class="col-lg-8 mb-3">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="date-picker">📅 Data Selecionada</label>
                             <input type="date" id="date-picker" name="date" class="form-control" 
                                    value="<?= htmlspecialchars($date->format('Y-m-d')) ?>"
                                    onchange="this.form.submit()">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-8 mb-3">
                             <label for="search-input">🔍 Buscar Compromissos</label>
                             <input type="text" id="search-input" name="search" class="form-control" 
                                   placeholder="Digite título, descrição ou local..." 
@@ -56,7 +56,6 @@
                                     <span class="agenda-color-dot" style="background-color: <?= htmlspecialchars($agenda['color']) ?>;"></span>
                                     <span class="agenda-details">
                                         <strong><?= htmlspecialchars($agenda['title']) ?></strong>
-                                        <small class="text-muted d-block"><?= htmlspecialchars($agenda['owner_name']) ?></small>
                                     </span>
                                 </label>
                             </div>
@@ -73,7 +72,7 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-search"></i> Filtrar Compromissos
                     </button>
-                    <a href="<?= PUBLIC_URL ?>/timeline" class="btn btn-outline-secondary">
+                    <a href="<?= PUBLIC_URL ?>/timeline" class="btn btn-secondary btn-clear-filters">
                         <i class="fas fa-refresh"></i> Limpar Filtros
                     </a>
                 </div>
@@ -331,7 +330,34 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    /* Melhorar espaçamento entre agendas */
+    .agenda-item {
+        margin-bottom: 0.5rem !important;
+        padding: 0.4rem 0.5rem;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+    }
 
+    .agenda-item:hover {
+        background: rgba(0, 74, 143, 0.05);
+    }
+
+    /* Botão limpar filtros melhorado */
+    .btn-clear-filters {
+        background: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-clear-filters:hover {
+        background: #5a6268 !important;
+        border-color: #5a6268 !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
     @media (max-width: 768px) {
         .selected-date-display {
             flex-direction: column;
