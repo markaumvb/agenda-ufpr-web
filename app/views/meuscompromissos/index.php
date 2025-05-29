@@ -96,9 +96,14 @@
                                 <div class="appointment-meta">
                                     <?php if ($compromisso['created_by'] == $_SESSION['user_id']): ?>
                                         <span class="badge badge-info badge-sm">Criado por você</span>
-                                    <?php elseif (isset($compromisso['creator_name'])): ?>
-                                        <span class="badge badge-primary badge-sm">Criado por <?= htmlspecialchars($compromisso['creator_name']) ?></span>
-                                    <?php endif; ?>
+                                            <?php elseif (isset($compromisso['creator_name'])): ?>
+                                                <span class="badge badge-primary badge-sm" 
+                                                    <?php if (isset($compromisso['creator_email'])): ?>
+                                                        title="E-mail: <?= htmlspecialchars($compromisso['creator_email']) ?>"
+                                                    <?php endif; ?>>
+                                                    Criado por <?= htmlspecialchars($compromisso['creator_name']) ?>
+                                                </span>
+                                            <?php endif; ?>
                                     
                                     <?php if ($agendaInfo && $agendaInfo['user_id'] != $_SESSION['user_id']): ?>
                                         <span class="badge badge-secondary badge-sm">Agenda de <?= htmlspecialchars($agendaInfo['owner_name']) ?></span>

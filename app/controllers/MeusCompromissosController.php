@@ -115,8 +115,16 @@ private function getCompromissosData($userId) {
             
             // Adicionar informações do criador do compromisso se não for o usuário atual
             if ($compromisso['created_by'] != $userId) {
-                $creatorInfo = $this->userModel->getById($compromisso['created_by']);
-                $compromisso['creator_name'] = $creatorInfo ? $creatorInfo['name'] : 'Desconhecido';
+                // Verificar se é usuário externo
+                if (!empty($compromisso['is_external']) && $compromisso['is_external']) {
+                    // Para usuários externos, usar os dados externos
+                    $compromisso['creator_name'] = $compromisso['external_name'] . ' (externo)';
+                    $compromisso['creator_email'] = $compromisso['external_email'];
+                } else {
+                    // Para usuários internos, buscar no banco
+                    $creatorInfo = $this->userModel->getById($compromisso['created_by']);
+                    $compromisso['creator_name'] = $creatorInfo ? $creatorInfo['name'] : 'Desconhecido';
+                }
             }
             
             // Incluir apenas se for criado pelo usuário atual OU se a agenda pertencer ao usuário atual

@@ -343,7 +343,7 @@ $routes = [
 '/compromissos/external-create' => [
     'controller' => 'CompromissoController',
     'action' => 'externalCreate',
-    'method' => 'GET'
+    'method' => 'POST'  // <-- CORRIGIDO
 ],
 '/compromissos/external-store' => [
     'controller' => 'CompromissoController',
