@@ -21,11 +21,12 @@ class CompromissoController extends BaseController {
         $this->authService = new AuthorizationService();
         
         // Verificar se o usuário está logado
-        $this->checkAuth();
+       // $this->checkAuth(); -- aqui não precisa mais, vai ser nos méstodos, pq usuário externo pode criar compromisso também
     }
     
 
     public function index() {
+        $this->checkAuth();
         // Obter o ID da agenda da URL
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
         
@@ -109,6 +110,7 @@ class CompromissoController extends BaseController {
     
 
 public function create() {
+    $this->checkAuth();
     // Obter ID da agenda
     $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
     $isPublic = isset($_GET['public']) && $_GET['public'] == 1;
@@ -200,6 +202,7 @@ public function create() {
      * Processa o formulário de criação de compromisso
      */
 public function store() {
+    $this->checkAuth();
     // Verificar se o usuário está logado
     if (!isset($_SESSION['user_id'])) {
         header("Location: " . PUBLIC_URL . "/login");
@@ -374,6 +377,7 @@ public function store() {
     
 
 public function edit() {
+    $this->checkAuth();
     // Obter o ID do compromisso da URL
     $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     
@@ -445,7 +449,8 @@ public function edit() {
     /**
      * Atualiza um compromisso existente
      */
-    public function update() {
+public function update() {
+    $this->checkAuth();
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/agendas');
@@ -564,7 +569,8 @@ public function edit() {
         exit;
     }
 
-    public function updateDate() {
+public function updateDate() {
+    $this->checkAuth();
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Content-Type: application/json');
@@ -665,6 +671,7 @@ public function edit() {
     
 
     public function delete() {
+        $this->checkAuth();
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/agendas');
@@ -736,6 +743,7 @@ public function edit() {
     }
 
     public function cancelFuture() {
+        $this->checkAuth();
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/agendas');
@@ -806,6 +814,7 @@ public function edit() {
     }
 
     public function changeStatus() {
+        $this->checkAuth();
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/agendas');
@@ -886,6 +895,7 @@ public function edit() {
     }
 
     public function checkConflict() {
+        $this->checkAuth();
         // Obter parâmetros da requisição
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);
         $startDatetime = filter_input(INPUT_GET, 'start', FILTER_SANITIZE_STRING);
@@ -926,7 +936,10 @@ public function edit() {
     }
 
 
-private function validateCompromissoData($data, $compromissoId = null) {
+
+    private function validateCompromissoData($data, $compromissoId = null) {
+
+    
     $errors = [];
     
     // Validar campos obrigatórios
@@ -981,6 +994,7 @@ private function validateCompromissoData($data, $compromissoId = null) {
 }
 
     public function newPublic() {
+    $this->checkAuth();
     // Obter ID da agenda
     $agendaId = isset($_GET['agenda_id']) ? (int)$_GET['agenda_id'] : 0;
     
