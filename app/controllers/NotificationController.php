@@ -223,6 +223,17 @@ public function acceptCompromisso() {
                         'message' => $message,
                         'is_read' => 0
                     ]);
+                    // Se for usuário externo, enviar email de aprovação (série recorrente)
+                        if (!empty($compromisso['is_external']) && $compromisso['is_external']) {
+                            require_once __DIR__ . '/../models/Compromisso.php';
+                            $compromissoModel = new Compromisso();
+                            
+                            // Buscar informações do aprovador
+                            $owner = $this->userModel->getById($userId);
+                            $ownerName = $owner ? $owner['name'] : 'Administrador';
+                            
+                            $compromissoModel->sendDecisionEmailToExternal($compromissoId, 'approved', $ownerName);
+                        }
                 }
                 
                 $this->db->commit();
@@ -394,6 +405,16 @@ public function rejectCompromisso() {
                         'message' => $message,
                         'is_read' => 0
                     ]);
+                    if (!empty($compromisso['is_external']) && $compromisso['is_external']) {
+                        require_once __DIR__ . '/../models/Compromisso.php';
+                        $compromissoModel = new Compromisso();
+                        
+                        // Buscar informações do rejeitador
+                        $owner = $this->userModel->getById($userId);
+                        $ownerName = $owner ? $owner['name'] : 'Administrador';
+                        
+                        $compromissoModel->sendDecisionEmailToExternal($compromissoId, 'rejected', $ownerName);
+                    }
                 }
                 
                 $this->db->commit();
@@ -456,6 +477,17 @@ public function rejectCompromisso() {
                     'message' => $message,
                     'is_read' => 0
                 ]);
+
+                if (!empty($compromisso['is_external']) && $compromisso['is_external']) {
+                    require_once __DIR__ . '/../models/Compromisso.php';
+                    $compromissoModel = new Compromisso();
+                    
+                    // Buscar informações do rejeitador
+                    $owner = $this->userModel->getById($userId);
+                    $ownerName = $owner ? $owner['name'] : 'Administrador';
+                    
+                    $compromissoModel->sendDecisionEmailToExternal($compromissoId, 'rejected', $ownerName);
+                }
             }
             
             $_SESSION['flash_message'] = 'Compromisso rejeitado com sucesso';
