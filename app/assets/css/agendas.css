@@ -1,7 +1,3 @@
-/* Estilos específicos para a página de agendas */
-
-/* ===== CORREÇÕES PARA PÁGINA INICIAL ===== */
-
 /* Page header melhorado */
 .page-header {
   margin-bottom: 2rem;
@@ -80,7 +76,8 @@
   box-shadow: 0 10px 30px rgba(0, 74, 143, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 2rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible !important;
+  width: 100%;
 }
 
 .public-agendas-section::before {
@@ -135,28 +132,31 @@
   flex-shrink: 0;
 }
 
-/* ===== CONTAINER DA TABELA AMPLIADO ===== */
+/* ===== CONTAINER DA TABELA CORRIGIDO ===== */
 .public-agendas-table-container {
   width: 100% !important;
   max-width: none !important;
-  overflow-x: auto !important;
+  overflow-x: visible !important; /* CORREÇÃO: de auto para visible */
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
   margin-bottom: 1.5rem;
+  background: #ffffff;
 }
 
-/* ===== TABELA MELHORADA ===== */
+/* ===== TABELA CORRIGIDA ===== */
 .public-agendas-table {
   width: 100% !important;
-  min-width: 900px !important; /* Largura mínima aumentada */
+  /* REMOVIDO: min-width: 900px !important; */
   border-collapse: separate;
   border-spacing: 0;
   background: #ffffff;
+  table-layout: fixed !important; /* IMPORTANTE: layout fixo para controlar larguras */
 }
 
 .public-agendas-table thead {
   background: linear-gradient(135deg, #f0f7ff 0%, #e6f3ff 100%);
+  width: 100% !important;
 }
 
 .public-agendas-table th {
@@ -168,6 +168,7 @@
   font-size: 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  width: auto !important;
 }
 
 .public-agendas-table th i {
@@ -175,23 +176,38 @@
   color: var(--primary-color);
 }
 
+/* LARGURAS DAS COLUNAS RESPONSIVAS */
+.public-agendas-table th:first-child,
+.public-agendas-table td:first-child {
+  width: 22% !important; /* Agenda */
+  min-width: 180px;
+}
+
+.public-agendas-table th:nth-child(2),
+.public-agendas-table td:nth-child(2) {
+  width: 30% !important; /* Descrição */
+  min-width: 200px;
+}
+
+.public-agendas-table th:nth-child(3),
+.public-agendas-table td:nth-child(3) {
+  width: 18% !important; /* Responsável */
+  min-width: 150px;
+}
+
+.public-agendas-table th:last-child,
+.public-agendas-table td:last-child {
+  width: 30% !important; /* Ações */
+  min-width: 280px;
+  text-align: center;
+}
+
 .public-agendas-table th:first-child {
   border-top-left-radius: 12px;
-  width: 25%; /* Largura da coluna Agenda */
-}
-
-.public-agendas-table th:nth-child(2) {
-  width: 35%; /* Largura da coluna Descrição */
-}
-
-.public-agendas-table th:nth-child(3) {
-  width: 20%; /* Largura da coluna Responsável */
 }
 
 .public-agendas-table th:last-child {
   border-top-right-radius: 12px;
-  width: 20%; /* Largura da coluna Ações */
-  text-align: center;
 }
 
 .public-agendas-table td {
@@ -200,6 +216,8 @@
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .public-agendas-table td:last-child {
@@ -267,7 +285,7 @@
   font-size: 0.85rem;
 }
 
-/* ===== BOTÕES DE AÇÃO NA MESMA LINHA - CRÍTICO ===== */
+/* ===== BOTÕES DE AÇÃO CORRIGIDOS ===== */
 .action-buttons {
   display: flex !important;
   flex-direction: row !important;
@@ -275,16 +293,17 @@
   align-items: center !important;
   gap: 0.75rem !important;
   flex-wrap: nowrap !important;
-  min-width: 300px !important;
+  width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
 .action-buttons .btn {
-  flex: 0 0 auto !important; /* Não permite flex grow/shrink */
-  min-width: 140px !important;
-  padding: 0.5rem 1rem !important;
-  font-size: 0.875rem !important;
+  flex: 1 1 auto !important;
+  min-width: 120px !important;
+  max-width: 140px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
   font-weight: 600 !important;
   text-align: center !important;
   white-space: nowrap !important;
@@ -585,20 +604,31 @@
   color: #888 !important;
 }
 
-/* Responsividade */
+/* ===== RESPONSIVIDADE CORRIGIDA ===== */
 @media (max-width: 1200px) {
-  .public-agendas-table {
-    min-width: 800px !important;
+  .public-agendas-table th:first-child,
+  .public-agendas-table td:first-child {
+    width: 20% !important;
+    min-width: 160px;
   }
 
-  .action-buttons {
-    min-width: 280px !important;
+  .public-agendas-table th:nth-child(2),
+  .public-agendas-table td:nth-child(2) {
+    width: 28% !important;
+    min-width: 180px;
+  }
+
+  .public-agendas-table th:last-child,
+  .public-agendas-table td:last-child {
+    width: 32% !important;
+    min-width: 260px;
   }
 
   .action-buttons .btn {
-    min-width: 120px !important;
+    min-width: 110px !important;
+    max-width: 130px !important;
     font-size: 0.8rem !important;
-    padding: 0.4rem 0.8rem !important;
+    padding: 0.4rem 0.6rem !important;
   }
 }
 
@@ -618,14 +648,19 @@
     padding: 1.5rem;
   }
 
-  .public-agendas-table {
-    min-width: 700px !important;
-  }
-
   .header-container {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+  }
+
+  .public-agendas-table-container {
+    margin: 0 -1rem;
+    border-radius: 8px;
+  }
+
+  .public-agendas-section {
+    padding: 1.5rem 1rem;
   }
 }
 
@@ -660,30 +695,42 @@
     border-radius: 8px;
   }
 
-  .public-agendas-table {
-    min-width: 600px !important;
-  }
-
   /* Esconder colunas em dispositivos móveis */
   .public-agendas-table th:nth-child(2),
   .public-agendas-table td:nth-child(2) {
-    display: none; /* Esconde descrição */
+    display: none !important; /* Esconde descrição */
+  }
+
+  /* Reajustar larguras sem a coluna de descrição */
+  .public-agendas-table th:first-child,
+  .public-agendas-table td:first-child {
+    width: 30% !important;
+  }
+
+  .public-agendas-table th:nth-child(3),
+  .public-agendas-table td:nth-child(3) {
+    width: 25% !important;
+  }
+
+  .public-agendas-table th:last-child,
+  .public-agendas-table td:last-child {
+    width: 45% !important;
   }
 
   /* BOTÕES EM COLUNA NO MOBILE */
   .action-buttons {
     flex-direction: column !important;
     gap: 0.5rem !important;
-    min-width: auto !important;
   }
 
   .action-buttons .btn {
     width: 100% !important;
     min-width: auto !important;
+    max-width: none !important;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .agenda-grid {
     grid-template-columns: 1fr;
   }
@@ -700,14 +747,21 @@
     font-size: 1.5rem;
   }
 
-  .public-agendas-table {
-    min-width: 500px !important;
-  }
-
   /* Esconder mais colunas em telas muito pequenas */
   .public-agendas-table th:nth-child(3),
   .public-agendas-table td:nth-child(3) {
-    display: none; /* Esconde responsável */
+    display: none !important; /* Esconde responsável */
+  }
+
+  /* Reajustar larguras para mobile */
+  .public-agendas-table th:first-child,
+  .public-agendas-table td:first-child {
+    width: 40% !important;
+  }
+
+  .public-agendas-table th:last-child,
+  .public-agendas-table td:last-child {
+    width: 60% !important;
   }
 
   .welcome-section {
@@ -716,5 +770,18 @@
 
   .welcome-text {
     font-size: 1rem;
+  }
+
+  .public-agendas-section {
+    padding: 1rem 0.5rem;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .public-agendas-table-container {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }
