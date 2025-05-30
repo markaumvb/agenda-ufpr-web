@@ -79,8 +79,7 @@ class TimelineController extends BaseController {
                 $endDay
             );
             
-            error_log("Timeline: Agenda {$agenda['id']} ({$agenda['title']}) - {$events} eventos encontrados");
-            
+            error_log("Timeline: Agenda {$agenda['id']} ({$agenda['title']}) - " . count($events) . " eventos encontrados");            
             // Filtrar por query de busca, se necessário
             if (!empty($searchQuery)) {
                 $events = $this->filterEventsBySearch($events, $searchQuery);
