@@ -1,5 +1,5 @@
 <?php
-// app/services/EmailService.php
+
 
 /**
  * Serviço para envio de e-mails
@@ -20,26 +20,12 @@ class EmailService {
         $this->host = defined('MAIL_HOST') ? MAIL_HOST : 'smtp.ufpr.br';
         $this->port = defined('MAIL_PORT') ? MAIL_PORT : 587;
         $this->username = defined('MAIL_USERNAME') ? MAIL_USERNAME : 'sistema.agenda@ufpr.br';
-        $this->password = defined('MAIL_PASSWORD') ? MAIL_PASSWORD : '';
+        $this->password = defined('MAIL_PASSWORD') ? MAIL_PASSWORD : 'brvcsyqkbkkqhzmd';
         $this->fromEmail = $this->username;
         $this->fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'Sistema de Agendamento UFPR';
     }
-    
-    /**
-     * Envia um e-mail
-     * 
-     * @param string $to E-mail do destinatário
-     * @param string $subject Assunto
-     * @param string $body Corpo do e-mail
-     * @param bool $isHtml Se o corpo é HTML
-     * @return bool Resultado do envio
-     */
+
     public function send($to, $subject, $body, $isHtml = true) {
-        // Em ambiente de desenvolvimento, simular o envio
-        if (defined('ENVIRONMENT') && ENVIRONMENT === 'development') {
-            return $this->logEmail($to, $subject, $body);
-        }
-        
         // Preparar cabeçalhos
         $headers = [
             'From' => $this->fromName . ' <' . $this->fromEmail . '>',
@@ -65,14 +51,7 @@ class EmailService {
         return mail($to, $subject, $body, $headerString);
     }
     
-    /**
-     * Envia e-mail de notificação de novo compromisso
-     * 
-     * @param array $user Dados do usuário
-     * @param array $compromisso Dados do compromisso
-     * @param array $agenda Dados da agenda
-     * @return bool Resultado do envio
-     */
+
     public function sendNewCompromissoNotification($user, $compromisso, $agenda) {
         $subject = 'Novo Compromisso: ' . $compromisso['title'];
         
@@ -128,15 +107,7 @@ class EmailService {
         return $this->send($user['email'], $subject, $body);
     }
     
-    /**
-     * Envia e-mail de compartilhamento de agenda
-     * 
-     * @param array $owner Dados do proprietário da agenda
-     * @param array $user Dados do usuário com quem a agenda foi compartilhada
-     * @param array $agenda Dados da agenda
-     * @param bool $canEdit Se o usuário pode editar a agenda
-     * @return bool Resultado do envio
-     */
+
     public function sendAgendaShareNotification($owner, $user, $agenda, $canEdit) {
         $subject = 'Agenda Compartilhada: ' . $agenda['title'];
         
@@ -185,34 +156,6 @@ class EmailService {
         return $this->send($user['email'], $subject, $body);
     }
     
-    /**
-     * Registra o e-mail em um arquivo de log (para ambiente de desenvolvimento)
-     * 
-     * @param string $to Destinatário
-     * @param string $subject Assunto
-     * @param string $body Corpo do e-mail
-     * @return bool Sempre retorna true
-     */
-    private function logEmail($to, $subject, $body) {
-        $logFile = __DIR__ . '/../../logs/email.log';
-        $logDir = dirname($logFile);
-        
-        // Criar diretório de logs se não existir
-        if (!file_exists($logDir)) {
-            mkdir($logDir, 0755, true);
-        }
-        
-        // Formatar mensagem de log
-        $log = "=== E-MAIL SIMULADO - " . date('Y-m-d H:i:s') . " ===\n";
-        $log .= "Para: {$to}\n";
-        $log .= "Assunto: {$subject}\n";
-        $log .= "Corpo:\n{$body}\n\n";
-        
-        // Escrever no arquivo de log
-        file_put_contents($logFile, $log, FILE_APPEND);
-        
-        return true;
-    }
 
     public function sendExternalUserConfirmation($compromisso, $agenda) {
         $subject = 'Solicitação Recebida: ' . $compromisso['title'];
@@ -280,15 +223,7 @@ class EmailService {
         return $this->send($compromisso['external_email'], $subject, $body);
     }
     
-    /**
-     * Envia e-mail de decisão para usuário externo (aprovação/rejeição)
-     * 
-     * @param array $compromisso Dados do compromisso
-     * @param array $agenda Dados da agenda
-     * @param string $decision 'approved' ou 'rejected'
-     * @param string $ownerName Nome do responsável pela decisão
-     * @return bool Resultado do envio
-     */
+
     public function sendExternalUserDecision($compromisso, $agenda, $decision, $ownerName) {
         $isApproved = ($decision === 'approved');
         

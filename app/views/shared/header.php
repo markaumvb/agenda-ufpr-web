@@ -66,9 +66,184 @@ $body_class = $is_auth_page ? 'auth-page' : '';
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth.css">';
     }
     
-    // Página inicial
+    // Página inicial - CSS específico de agendas E CSS de correções
     if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
+        // CSS adicional para forçar correções na página inicial
+        ?>
+        <style>
+        /* ===== CORREÇÕES ESPECÍFICAS PARA PÁGINA INICIAL ===== */
+        
+        /* FORÇA APLICAÇÃO DOS ESTILOS DOS BOTÕES - MÁXIMA PRIORIDADE */
+        .public-agendas-table .action-buttons {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            flex-wrap: nowrap !important;
+            min-width: 300px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: auto !important;
+            height: auto !important;
+        }
+
+        .public-agendas-table .action-buttons .btn {
+            flex: 0 0 auto !important;
+            min-width: 140px !important;
+            max-width: 160px !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.5rem !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            text-decoration: none !important;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            margin: 0 !important;
+            float: none !important;
+            clear: none !important;
+            position: relative !important;
+        }
+
+        /* FORÇA CORES DOS BOTÕES */
+        .public-agendas-table .action-buttons .btn-primary {
+            background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid #004a8f !important;
+        }
+
+        .public-agendas-table .action-buttons .btn-primary:hover,
+        .public-agendas-table .action-buttons .btn-primary:focus,
+        .public-agendas-table .action-buttons .btn-primary:active {
+            background: linear-gradient(135deg, #003a70 0%, #004a8f 100%) !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(0, 74, 143, 0.3) !important;
+        }
+
+        .public-agendas-table .action-buttons .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid #28a745 !important;
+        }
+
+        .public-agendas-table .action-buttons .btn-success:hover,
+        .public-agendas-table .action-buttons .btn-success:focus,
+        .public-agendas-table .action-buttons .btn-success:active {
+            background: linear-gradient(135deg, #218838 0%, #1a9e77 100%) !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+        }
+
+        /* FORÇA LARGURA DA TABELA */
+        .public-agendas-table-container {
+            width: 100% !important;
+            max-width: none !important;
+            overflow-x: auto !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #e2e8f0 !important;
+            margin-bottom: 1.5rem !important;
+        }
+
+        .public-agendas-table {
+            width: 100% !important;
+            min-width: 950px !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            background: #ffffff !important;
+            table-layout: fixed !important;
+        }
+
+        /* FORÇA LARGURAS DAS COLUNAS */
+        .public-agendas-table th:first-child,
+        .public-agendas-table td:first-child {
+            width: 25% !important;
+        }
+
+        .public-agendas-table th:nth-child(2),
+        .public-agendas-table td:nth-child(2) {
+            width: 35% !important;
+        }
+
+        .public-agendas-table th:nth-child(3),
+        .public-agendas-table td:nth-child(3) {
+            width: 20% !important;
+        }
+
+        .public-agendas-table th:last-child,
+        .public-agendas-table td:last-child {
+            width: 20% !important;
+            text-align: center !important;
+        }
+
+        /* FORÇA ESTILOS DA COLUNA DE AÇÕES */
+        .public-agendas-table td:last-child {
+            padding: 1.25rem 0.5rem !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        /* REMOVE QUALQUER FLOAT OU CLEAR QUE POSSA INTERFERIR */
+        .action-buttons *,
+        .action-buttons {
+            float: none !important;
+            clear: none !important;
+        }
+
+        /* RESPONSIVIDADE ESPECÍFICA PARA PÁGINA INICIAL */
+        @media (max-width: 768px) {
+            /* Esconder descrição em mobile */
+            .public-agendas-table th:nth-child(2),
+            .public-agendas-table td:nth-child(2) {
+                display: none !important;
+            }
+            
+            /* BOTÕES EM COLUNA NO MOBILE */
+            .public-agendas-table .action-buttons {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+                min-width: auto !important;
+            }
+            
+            .public-agendas-table .action-buttons .btn {
+                width: 100% !important;
+                min-width: auto !important;
+                max-width: none !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            /* Esconder responsável em telas muito pequenas */
+            .public-agendas-table th:nth-child(3),
+            .public-agendas-table td:nth-child(3) {
+                display: none !important;
+            }
+        }
+
+        /* FORÇA APLICAÇÃO MESMO COM CSS INLINE */
+        body .public-agendas-table .action-buttons {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+
+        html body .public-agendas-table .action-buttons .btn {
+            display: inline-flex !important;
+            margin: 0 !important;
+        }
+        </style>
+        <?php
     }
     
     // Adicionar CSS do timeline

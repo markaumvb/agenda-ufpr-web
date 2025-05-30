@@ -27,4 +27,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // Adicionar cursor de ponteiro para indicar que a linha é clicável
     row.style.cursor = "pointer";
   });
+
+  // Adicionar efeitos de hover aprimorados
+  agendaRows.forEach((row) => {
+    row.addEventListener("mouseenter", function () {
+      this.style.transform = "translateY(-2px)";
+      this.style.boxShadow = "0 4px 12px rgba(0, 74, 143, 0.15)";
+    });
+
+    row.addEventListener("mouseleave", function () {
+      this.style.transform = "translateY(0)";
+      this.style.boxShadow = "";
+    });
+  });
 });

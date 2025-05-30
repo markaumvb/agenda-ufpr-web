@@ -108,9 +108,17 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
 <?php endif; ?>
 
 <script>
-// Script para página inicial (já existente)
 document.addEventListener('DOMContentLoaded', function() {
-    // Código específico da página inicial pode ficar aqui
-    console.log('Página inicial carregada');
+    // Adicionar efeito hover nas linhas da tabela
+    const tableRows = document.querySelectorAll('.public-agendas-table tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
 });
 </script>
