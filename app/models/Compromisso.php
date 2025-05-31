@@ -271,20 +271,22 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
         try {
             // Verificar se é um evento recorrente
             $isRecurring = $data['repeat_type'] !== 'none';
-
+    
             $createdBy = isset($data['created_by']) ? $data['created_by'] : (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null);
-
+    
             // Se não for recorrente, usar o método padrão de criação
             if (!$isRecurring) {
                 $query = "
                     INSERT INTO compromissos (
                         agenda_id, title, description, start_datetime, end_datetime, 
                         location, repeat_type, repeat_until, repeat_days, status,
-                        created_at, created_by, is_external, external_email, external_name
+                        created_at, created_by, is_external, external_email, external_name,
+                        external_phone, external_subject, external_company
                     ) VALUES (
                         :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                         :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                        NOW(), :created_by, :is_external, :external_email, :external_name
+                        NOW(), :created_by, :is_external, :external_email, :external_name,
+                        :external_phone, :external_subject, :external_company
                     )
                 ";
                 
@@ -303,10 +305,13 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                 $stmt->bindParam(':is_external', $data['is_external'], PDO::PARAM_BOOL);
                 $stmt->bindParam(':external_email', $data['external_email'], PDO::PARAM_STR);
                 $stmt->bindParam(':external_name', $data['external_name'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_phone', $data['external_phone'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_subject', $data['external_subject'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_company', $data['external_company'], PDO::PARAM_STR);
                 
                 if ($stmt->execute()) {
                     $newId = $this->db->lastInsertId();
-                    $this->createNotificationForAgendaOwner($parentId);                   
+                    $this->createNotificationForAgendaOwner($newId);                   
                     return $newId;
                 }
                 
@@ -318,21 +323,23 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
             
             // Gerar ID de grupo para eventos recorrentes
             $groupId = $this->generateUUID();
-
+    
             //quem criou o evento
             $createdBy = isset($data['created_by']) ? $data['created_by'] : (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null);
-
+    
             
             // Inserir o evento principal
             $query = "
                 INSERT INTO compromissos (
                     agenda_id, title, description, start_datetime, end_datetime, 
                     location, repeat_type, repeat_until, repeat_days, status,
-                    created_at, group_id, is_recurring, created_by, is_external, external_email, external_name
+                    created_at, group_id, is_recurring, created_by, is_external, 
+                    external_email, external_name, external_phone, external_subject, external_company
                 ) VALUES (
                     :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                     :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                    NOW(), :group_id, 1, :created_by, :is_external, :external_email, :external_name
+                    NOW(), :group_id, 1, :created_by, :is_external, 
+                    :external_email, :external_name, :external_phone, :external_subject, :external_company
                 )
             ";
             
@@ -352,6 +359,9 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
             $stmt->bindParam(':is_external', $data['is_external'], PDO::PARAM_BOOL);
             $stmt->bindParam(':external_email', $data['external_email'], PDO::PARAM_STR);
             $stmt->bindParam(':external_name', $data['external_name'], PDO::PARAM_STR);
+            $stmt->bindParam(':external_phone', $data['external_phone'], PDO::PARAM_STR);
+            $stmt->bindParam(':external_subject', $data['external_subject'], PDO::PARAM_STR);
+            $stmt->bindParam(':external_company', $data['external_company'], PDO::PARAM_STR);
             
             if (!$stmt->execute()) {
                 $this->db->rollBack();
@@ -378,14 +388,16 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                     INSERT INTO compromissos (
                         agenda_id, title, description, start_datetime, end_datetime, 
                         location, repeat_type, repeat_until, repeat_days, status,
-                        created_at, group_id, is_recurring, parent_id, created_by, is_external, external_email, external_name
+                        created_at, group_id, is_recurring, parent_id, created_by, is_external, 
+                        external_email, external_name, external_phone, external_subject, external_company
                     ) VALUES (
                         :agenda_id, :title, :description, :start_datetime, :end_datetime, 
                         :location, :repeat_type, :repeat_until, :repeat_days, :status,
-                        NOW(), :group_id, 1, :parent_id, :created_by, :is_external, :external_email, :external_name
+                        NOW(), :group_id, 1, :parent_id, :created_by, :is_external, 
+                        :external_email, :external_name, :external_phone, :external_subject, :external_company
                     )
                 ";
-
+    
                 
                 $stmt = $this->db->prepare($query);
                 $stmt->bindParam(':agenda_id', $data['agenda_id'], PDO::PARAM_INT);
@@ -404,6 +416,9 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
                 $stmt->bindParam(':is_external', $data['is_external'], PDO::PARAM_BOOL);
                 $stmt->bindParam(':external_email', $data['external_email'], PDO::PARAM_STR);
                 $stmt->bindParam(':external_name', $data['external_name'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_phone', $data['external_phone'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_subject', $data['external_subject'], PDO::PARAM_STR);
+                $stmt->bindParam(':external_company', $data['external_company'], PDO::PARAM_STR);
                 
                 if (!$stmt->execute()) {
                     $this->db->rollBack();
@@ -434,7 +449,8 @@ public function getByAgendaAndDateRange($agendaId, $startDate, $endDate) {
      * @param int $compromissoId ID do compromisso criado
      * @return bool Resultado da operação
      */
-private function createNotificationForAgendaOwner($compromissoId) {
+
+    private function createNotificationForAgendaOwner($compromissoId) {
 try {
     // Obter o compromisso
     $compromisso = $this->getById($compromissoId);

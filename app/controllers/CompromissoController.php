@@ -1069,6 +1069,9 @@ public function updateDate() {
         $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
         $externalName = filter_input(INPUT_POST, 'external_name', FILTER_SANITIZE_STRING);
         $externalEmail = filter_input(INPUT_POST, 'external_email', FILTER_SANITIZE_EMAIL);
+        $externalPhone = filter_input(INPUT_POST, 'external_phone', FILTER_SANITIZE_STRING);
+        $externalSubject = filter_input(INPUT_POST, 'external_subject', FILTER_SANITIZE_STRING);
+        $externalCompany = filter_input(INPUT_POST, 'external_company', FILTER_SANITIZE_STRING);
         
         // Validar dados
         $errors = [];
@@ -1083,6 +1086,36 @@ public function updateDate() {
         
         if (empty($externalEmail) || !filter_var($externalEmail, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'E-mail válido é obrigatório';
+        }
+        
+        if (empty($externalPhone)) {
+            $errors[] = 'Telefone é obrigatório';
+        } else {
+            // Validar formato do telefone (apenas números, deve ter pelo menos 10 dígitos)
+            $phoneDigits = preg_replace('/\D/', '', $externalPhone);
+            if (strlen($phoneDigits) < 10) {
+                $errors[] = 'Telefone deve ter pelo menos 10 dígitos (com DDD)';
+            }
+            if (strlen($phoneDigits) > 11) {
+                $errors[] = 'Telefone deve ter no máximo 11 dígitos';
+            }
+        }
+        
+        if (empty($externalSubject)) {
+            $errors[] = 'Motivo/Assunto é obrigatório';
+        }
+        
+        // Validações opcionais
+        if (!empty($externalCompany) && strlen($externalCompany) > 255) {
+            $errors[] = 'Nome da empresa/instituição muito longo (máximo 255 caracteres)';
+        }
+        
+        if (strlen($externalSubject) > 255) {
+            $errors[] = 'Motivo/Assunto muito longo (máximo 255 caracteres)';
+        }
+        
+        if (strlen($externalName) > 255) {
+            $errors[] = 'Nome muito longo (máximo 255 caracteres)';
         }
         
         if (!empty($errors)) {
@@ -1106,11 +1139,164 @@ public function updateDate() {
         $_SESSION['external_user'] = [
             'name' => $externalName,
             'email' => $externalEmail,
+            'phone' => $externalPhone,
+            'subject' => $externalSubject,
+            'company' => $externalCompany ?: '', // Se vazio, definir como string vazia
             'agenda_id' => $agendaId
         ];
         
         // Redirecionar para o formulário de criação de compromisso
         header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+        exit;
+    }
+    
+    /**
+     * Armazenar compromisso de usuário externo
+     */
+    public function externalStore() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Verificar se temos dados do usuário externo na sessão
+        if (!isset($_SESSION['external_user'])) {
+            $_SESSION['flash_message'] = 'Sessão expirada. Tente novamente.';
+            $_SESSION['flash_type'] = 'warning';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        $externalUser = $_SESSION['external_user'];
+        
+        // Obter dados do formulário
+        $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
+        $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING);
+        $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
+        $startDatetime = filter_input(INPUT_POST, 'start_datetime', FILTER_SANITIZE_STRING);
+        $endDatetime = filter_input(INPUT_POST, 'end_datetime', FILTER_SANITIZE_STRING);
+        $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_STRING);
+        $repeatType = filter_input(INPUT_POST, 'repeat_type', FILTER_SANITIZE_STRING);
+        $repeatUntil = filter_input(INPUT_POST, 'repeat_until', FILTER_SANITIZE_STRING);
+        $repeatDays = isset($_POST['repeat_days']) && is_array($_POST['repeat_days']) ? $_POST['repeat_days'] : [];
+        
+        // Validar dados
+        $data = [
+            'agenda_id' => $agendaId,
+            'title' => $title,
+            'description' => $description,
+            'start_datetime' => $startDatetime,
+            'end_datetime' => $endDatetime,
+            'location' => $location,
+            'repeat_type' => $repeatType,
+            'repeat_until' => $repeatUntil,
+            'repeat_days' => $repeatDays
+        ];
+        
+        $errors = $this->validateCompromissoData($data);
+        
+        if (!empty($errors)) {
+            $_SESSION['validation_errors'] = $errors;
+            $_SESSION['form_data'] = $_POST;
+            header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Verificar se a agenda existe e está ativa
+        $agenda = $this->agendaModel->getById($agendaId);
+        
+        if (!$agenda || !$agenda['is_public'] || !$agenda['is_active']) {
+            unset($_SESSION['external_user']);
+            $_SESSION['flash_message'] = 'Esta agenda não permite solicitações externas';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+        
+        // Para eventos recorrentes, verificar conflitos
+        if ($repeatType !== 'none') {
+            $conflicts = $this->compromissoModel->checkRecurringConflicts(
+                $repeatType,
+                $startDatetime, 
+                $endDatetime, 
+                $repeatUntil,
+                isset($repeatDays) && is_array($repeatDays) ? implode(',', $repeatDays) : '',
+                $agendaId
+            );
+            
+            if (!empty($conflicts)) {
+                $_SESSION['validation_errors'] = $conflicts;
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+                exit;
+            }
+        } else {
+            // Verificar conflito para evento único
+            if ($this->compromissoModel->hasTimeConflict($agendaId, $startDatetime, $endDatetime)) {
+                $conflictingEvent = $this->compromissoModel->getConflictingEvent($agendaId, $startDatetime, $endDatetime);
+                
+                if ($conflictingEvent) {
+                    $conflictDate = new DateTime($startDatetime);
+                    $error = "Conflito no dia " . $conflictDate->format('d/m/Y') . 
+                             " às " . $conflictDate->format('H:i') . 
+                             ": \"" . $conflictingEvent['title'] . "\"";
+                    
+                    $_SESSION['validation_errors'] = [$error];
+                    $_SESSION['form_data'] = $_POST;
+                    header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+                    exit;
+                }
+            }
+        }
+        
+        // Garantir que as datas estão no formato correto
+        if (!empty($startDatetime)) {
+            $startDatetime = date('Y-m-d H:i:s', strtotime($startDatetime));
+        }
+        if (!empty($endDatetime)) {
+            $endDatetime = date('Y-m-d H:i:s', strtotime($endDatetime));
+        }
+        
+        // Criar o compromisso externo com os novos campos
+        $compromissoData = [
+            'agenda_id' => (int)$agendaId,
+            'title' => $title,
+            'description' => $description ?: '',
+            'start_datetime' => $startDatetime,
+            'end_datetime' => $endDatetime,
+            'location' => $location ?: '',
+            'status' => 'aguardando_aprovacao', // Sempre aguardando aprovação para externos
+            'created_by' => null, // Usuário externo não tem ID no sistema
+            'repeat_type' => $repeatType,
+            'repeat_days' => is_array($repeatDays) ? implode(',', $repeatDays) : '',
+            'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null,
+            // Campos específicos para usuários externos
+            'is_external' => true,
+            'external_email' => $externalUser['email'],
+            'external_name' => $externalUser['name'],
+            'external_phone' => $externalUser['phone'],
+            'external_subject' => $externalUser['subject'],
+            'external_company' => $externalUser['company']
+        ];
+        
+        // Salvar o compromisso
+        $compromissoId = $this->compromissoModel->create($compromissoData);
+        
+        if (!$compromissoId) {
+            $_SESSION['flash_message'] = 'Erro ao criar o compromisso';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/compromissos/external-new?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Limpar dados da sessão
+        unset($_SESSION['external_user']);
+        
+        // Redirecionar para página de sucesso
+        $_SESSION['flash_message'] = 'Sua solicitação foi enviada com sucesso! Você receberá um e-mail de confirmação.';
+        $_SESSION['flash_type'] = 'success';
+        header('Location: ' . BASE_URL . '/compromissos/external-success?id=' . $compromissoId);
         exit;
     }
     
@@ -1302,15 +1488,18 @@ public function updateDate() {
             'start_datetime' => $startDatetime,
             'end_datetime' => $endDatetime,
             'location' => $location ?: '',
-            'status' => 'aguardando_aprovacao', // Sempre aguardando aprovação para externos
-            'created_by' => null, // Usuário externo não tem ID no sistema
+            'status' => $status,
+            'created_by' => (int)$userId,
             'repeat_type' => $repeatType,
             'repeat_days' => is_array($repeatDays) ? implode(',', $repeatDays) : '',
             'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null,
-            // Campos específicos para usuários externos
-            'is_external' => true,
-            'external_email' => $externalUser['email'],
-            'external_name' => $externalUser['name']
+            // Campos externos sempre definidos (para usuários internos serão null/false)
+            'is_external' => false, // Usuários internos não são externos
+            'external_email' => null,
+            'external_name' => null,
+            'external_phone' => null,
+            'external_subject' => null,
+            'external_company' => null
         ];
         
         // Salvar o compromisso
