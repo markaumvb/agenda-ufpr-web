@@ -426,26 +426,27 @@ class Agenda {
         }
     }
 
-    // CORREÇÃO PRINCIPAL: Método de busca SEM condição de public_hash
+    // CORREÇÃO CRÍTICA: Método de busca com uma única query concatenada
     public function searchPublicAgendas($search, $page = 1, $perPage = 10) {
         try {
             $offset = ($page - 1) * $perPage;
+            $searchParam = "%{$search}%";
             
+            // CORREÇÃO: Usar CONCAT para evitar múltiplos parâmetros
             $sql = "SELECT a.*, u.name as owner_name
                     FROM agendas a
                     INNER JOIN users u ON a.user_id = u.id
                     WHERE a.is_public = 1 
                       AND a.is_active = 1
-                      AND (
-                          a.title LIKE :search OR 
-                          a.description LIKE :search OR 
-                          u.name LIKE :search
-                      )
+                      AND CONCAT(
+                          COALESCE(a.title, ''), ' ',
+                          COALESCE(a.description, ''), ' ',
+                          COALESCE(u.name, '')
+                      ) LIKE :search
                     ORDER BY a.title
                     LIMIT :limit OFFSET :offset";
             
             $stmt = $this->db->prepare($sql);
-            $searchParam = "%{$search}%";
             $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
             $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
@@ -458,22 +459,24 @@ class Agenda {
         }
     }
 
-    // CORREÇÃO PRINCIPAL: Método de contagem SEM condição de public_hash
+    // CORREÇÃO CRÍTICA: Método de contagem com uma única query concatenada
     public function countPublicAgendasWithSearch($search) {
         try {
+            $searchParam = "%{$search}%";
+            
+            // CORREÇÃO: Usar CONCAT para evitar múltiplos parâmetros
             $sql = "SELECT COUNT(*) as total 
                     FROM agendas a
                     INNER JOIN users u ON a.user_id = u.id
                     WHERE a.is_public = 1 
                       AND a.is_active = 1
-                      AND (
-                          a.title LIKE :search OR 
-                          a.description LIKE :search OR 
-                          u.name LIKE :search
-                      )";
+                      AND CONCAT(
+                          COALESCE(a.title, ''), ' ',
+                          COALESCE(a.description, ''), ' ',
+                          COALESCE(u.name, '')
+                      ) LIKE :search";
             
             $stmt = $this->db->prepare($sql);
-            $searchParam = "%{$search}%";
             $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);

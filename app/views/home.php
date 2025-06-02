@@ -15,12 +15,12 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
         <?php endif; ?>
     </div>
     
-    <div class="welcome-section">
+<!--     <div class="welcome-section">
         <p class="welcome-text">
             <i class="fas fa-info-circle"></i>
             Bem-vindo ao sistema de agendamento da UFPR Jandaia do Sul. 
             Aqui você pode visualizar agendas públicas e criar compromissos.
-        </p>
+        </p> -->
         
         <?php if (isset($_SESSION['user_id'])): ?>
             <div class="user-info">
@@ -91,9 +91,9 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
     <div class="public-agendas-section">
         <h2><i class="fas fa-globe"></i> Agendas Públicas</h2>
         
-        <?php if (empty($paginationData['search'])): ?>
+     <!--    <?php if (empty($paginationData['search'])): ?>
             <p><i class="fas fa-info-circle"></i> Visualize os compromissos das agendas públicas disponíveis e crie novos compromissos.</p>
-        <?php endif; ?>
+        <?php endif; ?> -->
         
         <div class="public-agendas-table-container">
             <table class="public-agendas-table">
