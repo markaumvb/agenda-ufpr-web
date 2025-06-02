@@ -50,7 +50,7 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
     <?php else: ?>
         <div class="agenda-grid">
             <?php foreach ($myAgendas as $agenda): ?>
-                <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
+                <div class="agenda-card" style="border-left: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
                     <div class="agenda-card-header">
                         <h3 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h3>
                         <div class="agenda-visibility">
@@ -139,7 +139,7 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
     <?php else: ?>
         <div class="agenda-grid">
             <?php foreach ($sharedAgendas as $agenda): ?>
-                <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
+                <div class="agenda-card" style="border-left: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
                     <div class="agenda-card-header">
                         <h3 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h3>
                         <div class="agenda-visibility">

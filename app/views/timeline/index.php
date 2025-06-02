@@ -8,7 +8,6 @@
                 </a>
             </div>
         </div>
-        <p class="page-description">Visualize todos os compromissos públicos em uma linha do tempo interativa</p>
     </div>
 
     <!-- Filtros aprimorados -->
@@ -106,14 +105,6 @@
                 </div>
                 <h3>Nenhum compromisso encontrado</h3>
                 <p>Não há compromissos públicos para a data selecionada: <strong><?= $date->format('d/m/Y') ?></strong></p>
-                <div class="empty-suggestions">
-                    <p>Sugestões:</p>
-                    <ul>
-                        <li>Tente selecionar uma data diferente</li>
-                        <li>Verifique se há agendas selecionadas nos filtros</li>
-                        <li>Limpe os filtros de busca</li>
-                    </ul>
-                </div>
             </div>
         </div>
         <?php endif; ?>

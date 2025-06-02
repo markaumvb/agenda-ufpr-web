@@ -41,7 +41,7 @@
         for ($i = 0; $i < count($agendas); $i++): 
             $agenda = $agendas[$i];
         ?>
-            <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
+            <div class="agenda-card" style="border-left: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
                 <div class="agenda-card-header">
                     <h2 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h2>
                     <div class="agenda-visibility">
