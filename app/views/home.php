@@ -28,24 +28,22 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
     </div>
 </div>
 
-<!-- SEÇÃO DE BUSCA -->
-<div class="search-box">
-    <form class="search-form" method="GET" action="<?= BASE_URL ?>/">
-        <div class="search-input-group">
-            <input type="text" 
-                   name="search" 
-                   placeholder="Buscar agendas por título, descrição ou responsável..." 
-                   value="<?= htmlspecialchars($paginationData['search'] ?? '') ?>"
-                   class="form-control">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search"></i> Buscar
-            </button>
-            <?php if (!empty($paginationData['search'])): ?>
-                <a href="<?= BASE_URL ?>/" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Limpar
-                </a>
-            <?php endif; ?>
-        </div>
+<!-- CAMPO DE BUSCA -->
+<div class="search-container">
+    <form method="GET" action="<?= BASE_URL ?>/" class="search-form-home">
+        <input type="text" 
+               name="search" 
+               placeholder="Buscar agendas por título, descrição ou responsável..." 
+               value="<?= htmlspecialchars($paginationData['search'] ?? '') ?>"
+               class="search-input-large">
+        <button type="submit" class="btn btn-primary search-btn">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+        <?php if (!empty($paginationData['search'])): ?>
+            <a href="<?= BASE_URL ?>/" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Limpar
+            </a>
+        <?php endif; ?>
     </form>
 </div>
 
@@ -75,60 +73,38 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
     </div>
 <?php else: ?>
     <div class="public-agendas-section">
-        <div class="section-header">
-            <h2><i class="fas fa-globe"></i> Agendas Públicas</h2>
-            <?php if (!empty($paginationData['search'])): ?>
-                <div class="search-results-info">
-                    <p>
-                        <i class="fas fa-search"></i> 
-                        Resultados para "<strong><?= htmlspecialchars($paginationData['search']) ?></strong>": 
-                        <?= $paginationData['total_items'] ?> agenda(s) encontrada(s)
-                    </p>
-                </div>
-            <?php else: ?>
-                <p>Visualize os compromissos das agendas públicas disponíveis e crie novos compromissos.</p>
-            <?php endif; ?>
-        </div>
-        
-        <!-- INFORMAÇÕES DE PAGINAÇÃO -->
-        <?php if ($paginationData['total_items'] > 0): ?>
-            <div class="pagination-info">
-                <span>
-                    Mostrando <?= $paginationData['start_item'] ?> - <?= $paginationData['end_item'] ?> 
-                    de <?= $paginationData['total_items'] ?> agenda(s)
-                </span>
+        <h2><i class="fas fa-globe"></i> Agendas Públicas</h2>
+        <?php if (!empty($paginationData['search'])): ?>
+            <div class="search-info">
+                <i class="fas fa-search"></i> 
+                Resultados para "<strong><?= htmlspecialchars($paginationData['search']) ?></strong>": 
+                <?= $paginationData['total_items'] ?> agenda(s) encontrada(s)
             </div>
+        <?php else: ?>
+            <p>Visualize os compromissos das agendas públicas disponíveis e crie novos compromissos.</p>
         <?php endif; ?>
         
         <div class="public-agendas-table-container">
             <table class="public-agendas-table">
                 <thead>
                     <tr>
-                        <th><i class="fas fa-calendar"></i> Agenda</th>
-                        <th><i class="fas fa-align-left"></i> Descrição</th>
-                        <th><i class="fas fa-user"></i> Responsável</th>
-                        <th><i class="fas fa-cogs"></i> Ações</th>
+                        <th>Agenda</th>
+                        <th>Descrição</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($publicAgendas as $agenda): ?>
                         <tr style="border-left-color: <?= htmlspecialchars($agenda['color'] ?? '#3788d8') ?>;">
                             <td>
-                                <div class="agenda-info">
-                                    <span class="agenda-color-indicator" style="background-color: <?= htmlspecialchars($agenda['color'] ?? '#3788d8') ?>;"></span>
-                                    <strong><?= htmlspecialchars($agenda['title']) ?></strong>
-                                </div>
+                                <strong><?= htmlspecialchars($agenda['title']) ?></strong>
                             </td>
                             <td>
-                                <div class="agenda-description">
-                                    <?= htmlspecialchars($agenda['description'] ?: 'Sem descrição') ?>
-                                </div>
+                                <?= htmlspecialchars($agenda['description'] ?: 'Sem descrição') ?>
                             </td>
                             <td>
-                                <div class="agenda-owner">
-                                    <i class="fas fa-user-circle"></i>
-                                    <?= htmlspecialchars($agenda['owner_name'] ?? 'N/A') ?>
-                                </div>
+                                <?= htmlspecialchars($agenda['owner_name'] ?? 'N/A') ?>
                             </td>
                             <td>
                                 <div class="action-buttons">
@@ -139,18 +115,12 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                                         </a>
                                     <?php endif; ?>
                                     
-                                    <?php 
-                                    // MODIFICAÇÃO PRINCIPAL: Detectar se usuário está logado
-                                    if (isset($_SESSION['user_id'])): 
-                                        // Usuário LOGADO: usar rota para usuários logados
-                                    ?>
+                                    <?php if (isset($_SESSION['user_id'])): ?>
                                         <a href="<?= BASE_URL ?>/compromissos/new-public?agenda_id=<?= $agenda['id'] ?>" 
                                            class="btn btn-success btn-sm">
                                             <i class="fas fa-plus"></i> Criar Compromisso
                                         </a>
-                                    <?php else: 
-                                        // Usuário NÃO LOGADO: manter fluxo externo original
-                                    ?>
+                                    <?php else: ?>
                                         <a href="<?= BASE_URL ?>/compromissos/external-form?agenda_id=<?= $agenda['id'] ?>" 
                                            class="btn btn-success btn-sm">
                                             <i class="fas fa-plus"></i> Criar Compromisso
@@ -188,21 +158,10 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                     <?php endif; ?>
                     
                     <?php
-                    // Lógica para mostrar páginas
+                    // Páginas numeradas
                     $start = max(1, $paginationData['current_page'] - 2);
                     $end = min($paginationData['total_pages'], $paginationData['current_page'] + 2);
                     
-                    // Primeira página
-                    if ($start > 1):
-                    ?>
-                        <a href="<?= $baseUrl ?>page=1" class="pagination-link">1</a>
-                        <?php if ($start > 2): ?>
-                            <span class="pagination-ellipsis">...</span>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                    
-                    <?php
-                    // Páginas do meio
                     for ($i = $start; $i <= $end; $i++):
                         if ($i == $paginationData['current_page']):
                     ?>
@@ -213,16 +172,6 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                         endif;
                     endfor; 
                     ?>
-                    
-                    <?php
-                    // Última página
-                    if ($end < $paginationData['total_pages']):
-                        if ($end < $paginationData['total_pages'] - 1):
-                    ?>
-                            <span class="pagination-ellipsis">...</span>
-                    <?php endif; ?>
-                        <a href="<?= $baseUrl ?>page=<?= $paginationData['total_pages'] ?>" class="pagination-link"><?= $paginationData['total_pages'] ?></a>
-                    <?php endif; ?>
                     
                     <?php
                     // Botão "Próximo"
@@ -240,25 +189,18 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                 </nav>
             </div>
         <?php endif; ?>
-        
-        <!-- RESUMO -->
-        <div class="agendas-summary">
-            <p class="summary-text">
-                <i class="fas fa-info-circle"></i>
-                <strong><?= $paginationData['total_items'] ?></strong> agenda(s) pública(s) 
-                <?php if (!empty($paginationData['search'])): ?>
-                    encontrada(s) para "<strong><?= htmlspecialchars($paginationData['search']) ?></strong>"
-                <?php else: ?>
-                    disponível(is) para agendamento
-                <?php endif; ?>
-            </p>
-        </div>
     </div>
 <?php endif; ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar efeito hover nas linhas da tabela
+    // Auto-focus no campo de busca
+    const searchInput = document.querySelector('.search-input-large');
+    if (searchInput && !searchInput.value) {
+        searchInput.focus();
+    }
+    
+    // Hover nas linhas da tabela
     const tableRows = document.querySelectorAll('.public-agendas-table tbody tr');
     tableRows.forEach(row => {
         row.addEventListener('mouseenter', function() {
@@ -269,20 +211,5 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(0)';
         });
     });
-    
-    // Auto-focus no campo de busca se estiver vazio
-    const searchInput = document.querySelector('input[name="search"]');
-    if (searchInput && !searchInput.value) {
-        searchInput.focus();
-    }
-    
-    // Submeter busca ao pressionar Enter
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                this.form.submit();
-            }
-        });
-    }
 });
 </script>

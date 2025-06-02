@@ -65,15 +65,15 @@ if ($uri === '/' || $uri === '/index.php' || $uri === '') {
     $totalAgendas = 0;
     
     if (!empty($search)) {
-        // Se há busca, usar método que suporte busca
-        // Vamos adaptar o método getPublicAgendas para suportar busca
         $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage);
         $totalAgendas = $agendaModel->countPublicAgendasWithSearch($search);
     } else {
-        // Buscar todas as agendas públicas
-        $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
-        $publicAgendas = $agendaModel->getPublicAgendas($userId, true, $page, $perPage);
-        $totalAgendas = $agendaModel->countPublicAgendas($userId, true);
+        $publicAgendas = $agendaModel->getAllPublicActive();
+        $totalAgendas = count($publicAgendas);
+        
+        // Aplicar paginação manual para todas as agendas
+        $offset = ($page - 1) * $perPage;
+        $publicAgendas = array_slice($publicAgendas, $offset, $perPage);
     }
     
     // Calcular informações de paginação
@@ -439,7 +439,135 @@ if (array_key_exists($uri, $routes)) {
         $controller = new $controllerName();
         
         if (method_exists($controller, $actionName)) {
-            // Executar a ação
+            // Executar a ação/* ===== BUSCA E PAGINAÇÃO SIMPLIFICADA ===== */
+
+/* Container de busca compacto */
+.search-container {
+  background: #f8fafc;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.search-form-home {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.search-input-large {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.search-input-large:focus {
+  border-color: #004a8f;
+  outline: none;
+}
+
+.search-btn {
+  padding: 0.75rem 1.25rem;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Info de busca */
+.search-info {
+  background: #fff3cd;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: #856404;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Paginação simplificada */
+.pagination-container {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.pagination {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pagination-link {
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid #ddd;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.pagination-link:hover {
+  background: #f0f7ff;
+  border-color: #004a8f;
+  color: #004a8f;
+  text-decoration: none;
+}
+
+.pagination-link.current {
+  background: #004a8f;
+  color: white;
+  border-color: #004a8f;
+  font-weight: 600;
+}
+
+.pagination-link.disabled {
+  color: #ccc;
+  pointer-events: none;
+  background: #f8f9fa;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .search-container {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .search-form-home {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .search-input-large {
+    width: 100%;
+  }
+  
+  .search-btn {
+    width: 100%;
+  }
+  
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .pagination-link.prev,
+  .pagination-link.next {
+    order: 2;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
             $controller->$actionName();
             exit;
         }
