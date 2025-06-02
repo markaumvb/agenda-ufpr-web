@@ -33,21 +33,19 @@ $pattern = '/\/agenda_ufpr\/?(.*)$/';
 preg_match($pattern, $requestUri, $matches);
 $uri = isset($matches[1]) ? '/' . $matches[1] : '/';
 
-// Remover parâmetros de query se existirem
+// Remover parâmetros de query se existirem para análise de rota
+$uriWithoutParams = $uri;
 if (strpos($uri, '?') !== false) {
-    $uri = substr($uri, 0, strpos($uri, '?'));
+    $uriWithoutParams = substr($uri, 0, strpos($uri, '?'));
 }
 
 // Remover barra no final se existir (exceto para a home)
-if ($uri !== '/' && substr($uri, -1) === '/') {
-    $uri = rtrim($uri, '/');
+if ($uriWithoutParams !== '/' && substr($uriWithoutParams, -1) === '/') {
+    $uriWithoutParams = rtrim($uriWithoutParams, '/');
 }
 
-// Rota padrão - HOME PAGE COM BUSCA E PAGINAÇÃO
-if ($uri === '/' || $uri === '/index.php' || $uri === '') {
-    // Debug - Verificar qual rota está sendo acessada
-    error_log("URI original: " . $_SERVER['REQUEST_URI']);
-    error_log("URI processada: " . $uri);
+// CORREÇÃO: Rota padrão - HOME PAGE COM BUSCA E PAGINAÇÃO
+if ($uriWithoutParams === '/' || $uriWithoutParams === '/index.php' || $uriWithoutParams === '') {
     
     require_once __DIR__ . '/app/models/Database.php';
     require_once __DIR__ . '/app/models/Agenda.php';
@@ -69,7 +67,7 @@ if ($uri === '/' || $uri === '/index.php' || $uri === '') {
         $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage);
         $totalAgendas = $agendaModel->countPublicAgendasWithSearch($search);
     } else {
-        // Buscar todas com paginação direta no banco (método novo)
+        // Buscar todas com paginação direta no banco
         $publicAgendas = $agendaModel->getAllPublicActivePaginated($page, $perPage);
         $totalAgendas = $agendaModel->countAllPublicActive();
     }
@@ -351,51 +349,46 @@ $routes = [
         'method' => 'POST'
     ],
     '/api/check-min-time-before' => [
-    'controller' => 'ApiController',
-    'action' => 'checkMinTimeBefore',
-    'method' => 'GET'
+        'controller' => 'ApiController',
+        'action' => 'checkMinTimeBefore',
+        'method' => 'GET'
     ],
     '/timeline' => [
         'controller' => 'TimelineController',
         'action' => 'index',
         'method' => 'GET'
-],
-'/compromissos/new-public' => [
-    'controller' => 'CompromissoController',
-    'action' => 'newPublic',
-    'method' => 'GET'
-],
-'/timeline' => [
-    'controller' => 'TimeLineController',
-    'action' => 'index',
-    'method' => 'GET'
-],
-'/compromissos/external-form' => [
-    'controller' => 'CompromissoController',
-    'action' => 'externalForm',
-    'method' => 'GET'
-],
-'/compromissos/external-create' => [
-    'controller' => 'CompromissoController',
-    'action' => 'externalCreate',
-    'method' => 'POST'  // <-- CORRIGIDO
-],
-'/compromissos/external-store' => [
-    'controller' => 'CompromissoController',
-    'action' => 'externalStore',
-    'method' => 'POST'
-],
-'/compromissos/external-new' => [
-    'controller' => 'CompromissoController',
-    'action' => 'externalNew',  
-    'method' => 'GET'
-],
-'/compromissos/external-success' => [
-    'controller' => 'CompromissoController',
-    'action' => 'externalSuccess',
-    'method' => 'GET'
-],
-'/meuscompromissos/bulk-approve' => [
+    ],
+    '/compromissos/new-public' => [
+        'controller' => 'CompromissoController',
+        'action' => 'newPublic',
+        'method' => 'GET'
+    ],
+    '/compromissos/external-form' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalForm',
+        'method' => 'GET'
+    ],
+    '/compromissos/external-create' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalCreate',
+        'method' => 'POST'
+    ],
+    '/compromissos/external-store' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalStore',
+        'method' => 'POST'
+    ],
+    '/compromissos/external-new' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalNew',  
+        'method' => 'GET'
+    ],
+    '/compromissos/external-success' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalSuccess',
+        'method' => 'GET'
+    ],
+    '/meuscompromissos/bulk-approve' => [
         'controller' => 'MeusCompromissosController',
         'action' => 'bulkApprove',
         'method' => 'POST'
@@ -407,9 +400,8 @@ $routes = [
     ],
 ];
 
-
 // Verificar se a rota corresponde a um padrão de agenda pública
-if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uri, $matches)) {
+if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uriWithoutParams, $matches)) {
     $hash = $matches[1];
     require_once __DIR__ . '/app/controllers/PublicController.php';
     $controller = new PublicController();
@@ -418,8 +410,8 @@ if (preg_match('|^/public-agenda/([a-f0-9]+)$|', $uri, $matches)) {
 }
 
 // Verificar se a rota existe
-if (array_key_exists($uri, $routes)) {
-    $route = $routes[$uri];
+if (array_key_exists($uriWithoutParams, $routes)) {
+    $route = $routes[$uriWithoutParams];
     
     // Verificar se o método de requisição coincide
     if ($_SERVER['REQUEST_METHOD'] !== $route['method']) {

@@ -1,34 +1,47 @@
 <?php
-// Arquivo: agenda_ufpr/app/models/Database.php
 
-/**
- * Classe para gerenciar a conexão com o banco de dados usando PDO
- */
 class Database {
     private static $instance = null;
     private $connection;
     
-    /**
-     * Construtor privado (padrão Singleton)
-     */
     private function __construct() {
-        $config = require __DIR__ . '/../config/database.php';
-        
         try {
-            $dsn = "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}";
-            $this->connection = new PDO($dsn, $config['username'], $config['password'], [
+            // Carregar configurações do banco
+            $config = require __DIR__ . '/../config/database.php';
+            
+           
+            $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}";
+            
+    
+            $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false
-            ]);
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$config['charset']} COLLATE {$config['collation']}"
+            ];
+            
+            // Mesclar com opções do config se existirem
+            if (isset($config['options'])) {
+                $options = array_merge($options, $config['options']);
+            }
+            
+            $this->connection = new PDO(
+                $dsn,
+                $config['username'],
+                $config['password'],
+                $options
+            );
+            
+            // CORREÇÃO: Definir collation para a sessão
+            $this->connection->exec("SET collation_connection = {$config['collation']}");
+            $this->connection->exec("SET character_set_results = {$config['charset']}");
+            
         } catch (PDOException $e) {
-            die('Erro de conexão com o banco de dados: ' . $e->getMessage());
+            error_log('Erro de conexão com o banco de dados: ' . $e->getMessage());
+            throw new Exception('Erro de conexão com o banco de dados');
         }
     }
     
-    /**
-     * Obtém a instância única da classe (padrão Singleton)
-     */
     public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();
@@ -36,15 +49,15 @@ class Database {
         return self::$instance;
     }
     
-    /**
-     * Retorna a conexão PDO ativa
-     */
     public function getConnection() {
         return $this->connection;
     }
     
-    /**
-     * Impede a clonagem do objeto (padrão Singleton)
-     */
+    // Prevenir clonagem
     private function __clone() {}
+    
+    // Prevenir deserialização
+    public function __wakeup() {
+        throw new Exception("Cannot unserialize singleton");
+    }
 }

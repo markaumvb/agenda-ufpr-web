@@ -30,84 +30,69 @@ class Agenda {
         }
     }
 
-public function getAllByUser($userId, $search = null, $includeInactive = false, $page = 1, $perPage = 12) {
-    try {
-        // Modificado para usar DISTINCT
-        $sql = "SELECT DISTINCT a.* FROM agendas a WHERE a.user_id = :user_id";
-        
-        // Adicionar condição para agendas ativas/inativas
-        if (!$includeInactive) {
-            $sql .= " AND a.is_active = 1";
+    public function getAllByUser($userId, $search = null, $includeInactive = false, $page = 1, $perPage = 12) {
+        try {
+            $sql = "SELECT DISTINCT a.* FROM agendas a WHERE a.user_id = :user_id";
+            
+            if (!$includeInactive) {
+                $sql .= " AND a.is_active = 1";
+            }
+            
+            $params = [':user_id' => $userId];
+            if ($search !== null && $search !== '') {
+                $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+                $params[':search'] = "%{$search}%";
+            }
+            
+            $sql .= " ORDER BY a.is_active DESC, a.title ASC";
+            
+            $offset = ($page - 1) * $perPage;
+            $sql .= " LIMIT :limit OFFSET :offset";
+            
+            $stmt = $this->db->prepare($sql);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar agendas do usuário: ' . $e->getMessage());
+            return [];
         }
-        
-        // Adicionar condição de busca se fornecida
-        $params = [':user_id' => $userId];
-        if ($search !== null && $search !== '') {
-            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
-            $params[':search'] = "%{$search}%";
-        }
-        
-        // Ordenação
-        $sql .= " ORDER BY a.is_active DESC, a.title ASC";
-        
-        // Paginação
-        $offset = ($page - 1) * $perPage;
-        $sql .= " LIMIT :limit OFFSET :offset";
-        
-        $stmt = $this->db->prepare($sql);
-        
-        // Bind dos parâmetros
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        // Bind dos parâmetros de limite e offset
-        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log('Erro ao buscar agendas do usuário: ' . $e->getMessage());
-        return [];
     }
-}
 
-public function countByUser($userId, $search = null, $includeInactive = false) {
-    try {
-        // Remover esta linha:
-        // $conn = $this->db->getConnection();
-        
-        // Montar consulta SQL base
-        $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
-        
-        // Adicionar condição para agendas ativas/inativas
-        if (!$includeInactive) {
-            $sql .= " AND is_active = 1";
+    public function countByUser($userId, $search = null, $includeInactive = false) {
+        try {
+            $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
+            
+            if (!$includeInactive) {
+                $sql .= " AND is_active = 1";
+            }
+            
+            $params = [':user_id' => $userId];
+            if ($search !== null && $search !== '') {
+                $sql .= " AND (title LIKE :search OR description LIKE :search)";
+                $params[':search'] = "%{$search}%";
+            }
+            
+            $stmt = $this->db->prepare($sql);
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            
+            $stmt->execute();
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('Erro ao contar agendas do usuário: ' . $e->getMessage());
+            return 0;
         }
-        
-        // Adicionar condição de busca se fornecida
-        $params = [':user_id' => $userId];
-        if ($search !== null && $search !== '') {
-            $sql .= " AND (title LIKE :search OR description LIKE :search)";
-            $params[':search'] = "%{$search}%";
-        }
-        
-        $stmt = $this->db->prepare($sql);
-        
-        // Bind dos parâmetros
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        
-        $stmt->execute();
-        return $stmt->fetchColumn();
-    } catch (PDOException $e) {
-        error_log('Erro ao contar agendas do usuário: ' . $e->getMessage());
-        return 0;
     }
-}
-
 
     public function getById($id) {
         try {
@@ -118,7 +103,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             
             $agenda = $stmt->fetch();
             
-            // Garantir que is_active seja tratado como booleano
             if ($agenda) {
                 $agenda['is_active'] = (bool)(int)$agenda['is_active'];
             }
@@ -145,15 +129,8 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Cria uma nova agenda
-     * 
-     * @param array $data Dados da agenda
-     * @return int|false ID da agenda criada ou false em caso de erro
-     */
     public function create($data) {
         try {
-            // Verificar se já existe uma agenda com o mesmo título para o usuário
             $existsQuery = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id AND title = :title";
             $existsStmt = $this->db->prepare($existsQuery);
             $existsStmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
@@ -161,19 +138,15 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             $existsStmt->execute();
             
             if ((int)$existsStmt->fetchColumn() > 0) {
-                // Já existe uma agenda com esse título
                 $data['title'] = $data['title'] . ' (' . date('d/m/Y H:i') . ')';
             }
             
-            // Gerar hash público para agendas públicas
             $publicHash = '';
             if ($data['is_public']) {
                 $publicHash = md5(uniqid(rand(), true));
             }
             
-            // Definir is_active com valor padrão se não for fornecido
             $isActive = isset($data['is_active']) ? $data['is_active'] : 1;
-            //   menor tempo para criar compromissos
             $minTimeBefore = isset($data['min_time_before']) ? $data['min_time_before'] : 0;
             
             $query = "
@@ -202,22 +175,13 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Atualiza uma agenda existente
-     * 
-     * @param int $id ID da agenda
-     * @param array $data Dados a serem atualizados
-     * @return bool Resultado da operação
-     */
     public function update($id, $data) {
         try {
-            // Obter a agenda atual
             $currentAgenda = $this->getById($id);
             if (!$currentAgenda) {
                 return false;
             }
             
-            // Se estiver mudando de privada para pública, gerar hash público
             $publicHash = $currentAgenda['public_hash'];
             if ($data['is_public'] && empty($publicHash)) {
                 $publicHash = md5(uniqid(rand(), true));
@@ -253,7 +217,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
 
-    /** Ativar ou desativar  a agenda */
     public function toggleActive($id, $status) {
         try {
             $query = "UPDATE agendas SET is_active = :is_active, updated_at = NOW() WHERE id = :id";
@@ -268,15 +231,8 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Exclui uma agenda
-     * 
-     * @param int $id ID da agenda
-     * @return bool Resultado da operação
-     */
     public function delete($id) {
         try {
-            // Verificar se há compromissos pendentes ou aguardando aprovação
             $query = "
                 SELECT COUNT(*) FROM compromissos 
                 WHERE agenda_id = :agenda_id 
@@ -288,26 +244,21 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             $stmt->execute();
             
             if ((int)$stmt->fetchColumn() > 0) {
-                // Não pode excluir se houver compromissos pendentes
                 return false;
             }
             
-            // Iniciar transação para garantir consistência
             $this->db->beginTransaction();
             
-            // Excluir compartilhamentos
             $query = "DELETE FROM agenda_shares WHERE agenda_id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             
-            // Excluir compromissos
             $query = "DELETE FROM compromissos WHERE agenda_id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             
-            // Excluir a agenda
             $query = "DELETE FROM agendas WHERE id = :id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
@@ -329,12 +280,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Conta os compromissos de uma agenda por status
-     * 
-     * @param int $agendaId ID da agenda
-     * @return array Contagem de compromissos por status
-     */
     public function countCompromissosByStatus($agendaId) {
         try {
             $query = "
@@ -354,7 +299,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             
             $result = $stmt->fetch();
             
-            // Se não houver compromissos, retornar zeros
             if (!$result) {
                 return [
                     'realizados' => 0,
@@ -379,262 +323,238 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
     }
     
     public function canBeDeleted($agendaId) {
-        // Verificar se há compromissos realizados ou cancelados
         $sql = "SELECT COUNT(*) as count FROM compromissos 
                 WHERE agenda_id = ? AND status IN ('realizado', 'cancelado')";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$agendaId]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Se não existirem compromissos realizados ou cancelados, pode ser excluída
         return (int) $result['count'] === 0;
     }
 
-    public function getAllAccessibleByUser($userId, $search = null, $includeInactive = false) {
+    public function updateStatus($agendaId, $isActive) {
+        $sql = "UPDATE agendas SET is_active = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
+    }
+
+    public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPage = 10) {
+        $offset = ($page - 1) * $perPage;
+        
+        $sql = "SELECT a.*, 
+               u.name as owner_name,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+               (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+                FROM agendas a
+                INNER JOIN users u ON a.user_id = u.id
+                WHERE a.is_public = 1 
+                  AND a.user_id != :user_id
+                  AND a.id NOT IN (
+                      SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
+                  )";
+        
+        if ($activeOnly) {
+            $sql .= " AND a.is_active = 1";
+        }
+        
+        $sql .= " ORDER BY a.title
+                  LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $agendas = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['is_owner'] = false;
+            $row['can_edit'] = false;
+            $row['compromissos'] = [
+                'pendentes' => $row['pendentes'],
+                'realizados' => $row['realizados'],
+                'cancelados' => $row['cancelados'],
+                'aguardando_aprovacao' => $row['aguardando_aprovacao']
+            ];
+            $agendas[] = $row;
+        }
+        
+        return $agendas;
+    }
+
+    public function countPublicAgendas($userId, $activeOnly = true) {
+        $sql = "SELECT COUNT(*) as total 
+                FROM agendas a
+                WHERE a.is_public = 1 
+                  AND a.user_id != :user_id
+                  AND a.id NOT IN (
+                      SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
+                  )";
+        
+        if ($activeOnly) {
+            $sql .= " AND a.is_active = 1";
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $row['total'];
+    }
+
+    public function getAllPublicActive() {
         try {
-            // Verificar se o usuário existe
-            if (!$userId) {
-                return [];
-            }
-            
-            // Primeira parte da consulta: agendas do próprio usuário
             $query = "
-                SELECT 
-                    a.*,
-                    u.name as owner_name,
-                    1 as is_owner,
-                    1 as can_edit,
-                    'owner' as access_type
-                FROM agendas a
-                JOIN users u ON a.user_id = u.id
-                WHERE a.user_id = :user_id";
-                
-            // Adicionar filtro de status se necessário
-            if (!$includeInactive) {
-                $query .= " AND a.is_active = 1";
-            }
-            
-            // Segunda parte: agendas compartilhadas, com tratamento para evitar duplicatas
-            // Usamos uma subconsulta para pegar apenas o compartilhamento de maior privilégio
-            $query .= "
-                UNION
-                
-                SELECT 
-                    a.*,
-                    u.name as owner_name,
-                    0 as is_owner,
-                    s.can_edit,
-                    'shared' as access_type
-                FROM agendas a
-                JOIN users u ON a.user_id = u.id
-                JOIN (
-                    SELECT agenda_id, user_id, MAX(can_edit) as can_edit
-                    FROM agenda_shares
-                    WHERE user_id = :shared_user_id
-                    GROUP BY agenda_id, user_id
-                ) s ON a.id = s.agenda_id
-                WHERE a.user_id != :exclude_user_id";
-                
-            // Adicionar filtro de status se necessário
-            if (!$includeInactive) {
-                $query .= " AND a.is_active = 1";
-            }
-            
-            // Terceira parte: agendas públicas (que não sejam do próprio usuário e não estejam compartilhadas)
-            $query .= "
-                UNION
-                
-                SELECT 
-                    a.*,
-                    u.name as owner_name,
-                    0 as is_owner,
-                    0 as can_edit,
-                    'public' as access_type
+                SELECT a.*, u.name as owner_name
                 FROM agendas a
                 JOIN users u ON a.user_id = u.id
                 WHERE a.is_public = 1 
-                AND a.user_id != :public_user_id
-                AND NOT EXISTS (
-                    SELECT 1 
-                    FROM agenda_shares 
-                    WHERE agenda_id = a.id 
-                    AND user_id = :public_shares_user_id
-                )";
-                
-            // Adicionar filtro de status se necessário
-            if (!$includeInactive) {
-                $query .= " AND a.is_active = 1";
-            }
+                AND a.is_active = 1
+                ORDER BY a.title
+            ";
             
-            // Adicionar filtro de pesquisa se especificado
-            if ($search) {
-                $query = "SELECT * FROM ($query) as result WHERE (title LIKE :search OR description LIKE :search)";
-            }
-            
-            $query .= " ORDER BY is_owner DESC, title ASC";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':shared_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':exclude_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':public_user_id', $userId, PDO::PARAM_INT);
-            $stmt->bindParam(':public_shares_user_id', $userId, PDO::PARAM_INT);
-            
-            if ($search) {
-                $searchParam = "%{$search}%";
-                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-            }
-            
-            $stmt->execute();
+            $stmt = $this->db->query($query);
             return $stmt->fetchAll();
         } catch (PDOException $e) {
-            error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
+            error_log('Erro ao obter agendas públicas: ' . $e->getMessage());
             return [];
         }
     }
-    
-    /**
-     * Conta o total de agendas que o usuário pode acessar
-     * 
-     * @param int $userId ID do usuário
-     * @param string $search Termo de busca opcional
-     * @return int Total de agendas acessíveis
-     */
-    public function countAllAccessibleByUser($userId, $search = null) {
+
+    // CORREÇÃO PRINCIPAL: Método de busca SEM condição de public_hash
+    public function searchPublicAgendas($search, $page = 1, $perPage = 10) {
         try {
-            // Verificar se o usuário existe
-            if (!$userId) {
-                return 0;
-            }
+            $offset = ($page - 1) * $perPage;
             
-            // Buscar as agendas do usuário e compartilhadas
-            $query = "
-                SELECT COUNT(DISTINCT a.id)
-                FROM agendas a
-                LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
-                WHERE 
-                    a.user_id = :owned_user_id
-                    OR s.user_id = :accessed_user_id
-                    OR a.is_public = 1
-            ";
+            $sql = "SELECT a.*, u.name as owner_name
+                    FROM agendas a
+                    INNER JOIN users u ON a.user_id = u.id
+                    WHERE a.is_public = 1 
+                      AND a.is_active = 1
+                      AND (
+                          a.title LIKE :search OR 
+                          a.description LIKE :search OR 
+                          u.name LIKE :search
+                      )
+                    ORDER BY a.title
+                    LIMIT :limit OFFSET :offset";
             
-            $params = [
-                'shared_user_id' => $userId,
-                'owned_user_id' => $userId,
-                'accessed_user_id' => $userId
-            ];
-            
-            // Adicionar filtro de pesquisa se especificado
-            if ($search) {
-                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
-                $params['search'] = "%{$search}%";
-            }
-            
-            $stmt = $this->db->prepare($query);
-            
-            foreach ($params as $key => $value) {
-                $stmt->bindValue(':' . $key, $value);
-            }
-            
+            $stmt = $this->db->prepare($sql);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
-            return (int)$stmt->fetchColumn();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log('Erro ao contar agendas acessíveis: ' . $e->getMessage());
+            error_log('Erro ao buscar agendas públicas: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    // CORREÇÃO PRINCIPAL: Método de contagem SEM condição de public_hash
+    public function countPublicAgendasWithSearch($search) {
+        try {
+            $sql = "SELECT COUNT(*) as total 
+                    FROM agendas a
+                    INNER JOIN users u ON a.user_id = u.id
+                    WHERE a.is_public = 1 
+                      AND a.is_active = 1
+                      AND (
+                          a.title LIKE :search OR 
+                          a.description LIKE :search OR 
+                          u.name LIKE :search
+                      )";
+            
+            $stmt = $this->db->prepare($sql);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return intval($row['total']);
+        } catch (PDOException $e) {
+            error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
             return 0;
         }
     }
 
-    /**
-     * Obtém agendas acessíveis pelo usuário com paginação
-     * 
-     * @param int $userId ID do usuário
-     * @param int $offset Início da paginação
-     * @param int $limit Limite de registros
-     * @param string $search Termo de busca opcional
-     * @return array Lista de agendas
-     */
-    public function getAllAccessibleByUserPaginated($userId, $offset = 0, $limit = 10, $search = null) {
+    public function getAllPublicActivePaginated($page = 1, $perPage = 10) {
         try {
-            // Verificar se o usuário existe
-            if (!$userId) {
-                return [];
-            }
+            $offset = ($page - 1) * $perPage;
             
-            // Buscar as agendas do usuário e compartilhadas
             $query = "
-                SELECT 
-                    a.*,
-                    u.name as owner_name,
-                    CASE WHEN a.user_id = :owner_id THEN 1 ELSE 0 END as is_owner,
-                    s.can_edit
+                SELECT a.*, u.name as owner_name
                 FROM agendas a
                 JOIN users u ON a.user_id = u.id
-                LEFT JOIN agenda_shares s ON a.id = s.agenda_id AND s.user_id = :shared_user_id
-                WHERE 
-                    a.user_id = :owned_user_id
-                    OR s.user_id = :accessed_user_id
-                    OR a.is_public = 1
+                WHERE a.is_public = 1 
+                AND a.is_active = 1
+                ORDER BY a.title
+                LIMIT :limit OFFSET :offset
             ";
             
-            $params = [
-                'owner_id' => $userId,
-                'shared_user_id' => $userId,
-                'owned_user_id' => $userId,
-                'accessed_user_id' => $userId
-            ];
-            
-            // Adicionar filtro de pesquisa se especificado
-            if ($search) {
-                $query .= " AND (a.title LIKE :search OR a.description LIKE :search)";
-                $params['search'] = "%{$search}%";
-            }
-            
-            $query .= " GROUP BY a.id ORDER BY CASE WHEN a.user_id = :sort_user_id THEN 0 ELSE 1 END, a.title";
-            $params['sort_user_id'] = $userId;
-            
-            // Adicionar paginação
-            $query .= " LIMIT :offset, :limit";
-            
             $stmt = $this->db->prepare($query);
-            
-            foreach ($params as $key => $value) {
-                if ($key !== 'offset' && $key !== 'limit') {
-                    $stmt->bindValue(':' . $key, $value);
-                }
-            }
-            
-            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-            
+            $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
-            return $stmt->fetchAll();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log('Erro ao buscar agendas acessíveis: ' . $e->getMessage());
+            error_log('Erro ao obter agendas públicas paginadas: ' . $e->getMessage());
             return [];
         }
     }
+
+    public function countAllPublicActive() {
+        try {
+            $query = "
+                SELECT COUNT(*) as total
+                FROM agendas a
+                WHERE a.is_public = 1 
+                AND a.is_active = 1
+            ";
+            
+            $stmt = $this->db->query($query);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return intval($result['total']);
+        } catch (PDOException $e) {
+            error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Métodos mantidos para compatibilidade
+    public function getAllAccessibleByUser($userId, $search = null, $includeInactive = false) {
+        return $this->getAllByUser($userId, $search, $includeInactive);
+    }
     
-    /**
-     * Verifica se um usuário tem acesso à agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @param int $userId ID do usuário
-     * @return bool Se o usuário tem acesso
-     */
+    public function countAllAccessibleByUser($userId, $search = null) {
+        return $this->countByUser($userId, $search, true);
+    }
+    
+    public function getAllAccessibleByUserPaginated($userId, $offset = 0, $limit = 10, $search = null) {
+        $page = floor($offset / $limit) + 1;
+        return $this->getAllByUser($userId, $search, true, $page, $limit);
+    }
+    
     public function checkUserAccess($agendaId, $userId) {
         try {
-            // Verificar se o usuário é o dono da agenda
             if ($this->belongsToUser($agendaId, $userId)) {
                 return true;
             }
             
-            // Verificar se a agenda é pública
             $agenda = $this->getById($agendaId);
             if ($agenda && $agenda['is_public']) {
                 return true;
             }
             
-            // Verificar se a agenda foi compartilhada com o usuário
             $query = "SELECT COUNT(*) FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
@@ -648,21 +568,12 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Verifica se um usuário pode editar uma agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @param int $userId ID do usuário
-     * @return bool Se o usuário pode editar
-     */
     public function canUserEdit($agendaId, $userId) {
         try {
-            // Verificar se o usuário é o dono da agenda
             if ($this->belongsToUser($agendaId, $userId)) {
                 return true;
             }
             
-            // Verificar se a agenda foi compartilhada com o usuário com permissão de edição
             $query = "SELECT can_edit FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id LIMIT 1";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':agenda_id', $agendaId, PDO::PARAM_INT);
@@ -678,13 +589,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Atualiza o hash público de uma agenda
-     * 
-     * @param int $id ID da agenda
-     * @param string $hash Novo hash
-     * @return bool Resultado da operação
-     */
     public function updatePublicHash($id, $hash) {
         try {
             $query = "UPDATE agendas SET public_hash = :hash WHERE id = :id";
@@ -699,12 +603,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
-    /**
-     * Obtém uma agenda pelo hash público
-     * 
-     * @param string $hash Hash público da agenda
-     * @return array|bool Dados da agenda ou false se não encontrada
-     */
     public function getByPublicHash($hash) {
         try {
             $query = "SELECT * FROM agendas WHERE public_hash = :hash AND is_active = 1 LIMIT 1";
@@ -714,7 +612,6 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             
             $agenda = $stmt->fetch();
             
-            // Garantir que is_active e is_public sejam tratados como booleanos
             if ($agenda) {
                 $agenda['is_active'] = (bool)(int)$agenda['is_active'];
                 $agenda['is_public'] = (bool)(int)$agenda['is_public'];
@@ -726,200 +623,4 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
             return false;
         }
     }
-
-    public function updateStatus($agendaId, $isActive) {
-        $sql = "UPDATE agendas SET is_active = ?, updated_at = NOW() WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$isActive ? 1 : 0, $agendaId]);
-    }
-
-    public function getPublicAgendas($userId, $activeOnly = true, $page = 1, $perPage = 10) {
-    $offset = ($page - 1) * $perPage;
-    
-    $sql = "SELECT a.*, 
-           u.name as owner_name,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
-           (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
-            FROM agendas a
-            INNER JOIN users u ON a.user_id = u.id
-            WHERE a.is_public = 1 
-              AND a.user_id != :user_id
-              AND a.id NOT IN (
-                  SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
-              )";
-    
-    if ($activeOnly) {
-        $sql .= " AND a.is_active = 1";
-    }
-    
-    $sql .= " ORDER BY a.title
-              LIMIT :limit OFFSET :offset";
-    
-    $stmt = $this->db->prepare($sql);
-    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-    $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
-    $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    
-    $agendas = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $row['is_owner'] = false;
-        $row['can_edit'] = false;
-        $row['compromissos'] = [
-            'pendentes' => $row['pendentes'],
-            'realizados' => $row['realizados'],
-            'cancelados' => $row['cancelados'],
-            'aguardando_aprovacao' => $row['aguardando_aprovacao']
-        ];
-        $agendas[] = $row;
-    }
-    
-    return $agendas;
-}
-
-public function countPublicAgendas($userId, $activeOnly = true) {
-    $sql = "SELECT COUNT(*) as total 
-            FROM agendas a
-            WHERE a.is_public = 1 
-              AND a.user_id != :user_id
-              AND a.id NOT IN (
-                  SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
-              )";
-    
-    if ($activeOnly) {
-        $sql .= " AND a.is_active = 1";
-    }
-    
-    $stmt = $this->db->prepare($sql);
-    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-    $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
-    $stmt->execute();
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    return $row['total'];
-}
-
-public function getAllPublicActive() {
-    try {
-        $query = "
-            SELECT a.*, u.name as owner_name
-            FROM agendas a
-            JOIN users u ON a.user_id = u.id
-            WHERE a.is_public = 1 
-            AND a.is_active = 1
-            AND a.public_hash IS NOT NULL
-            ORDER BY a.title
-        ";
-        
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll();
-    } catch (PDOException $e) {
-        error_log('Erro ao obter agendas públicas: ' . $e->getMessage());
-        return [];
-    }
-}
-public function searchPublicAgendas($search, $page = 1, $perPage = 10) {
-    try {
-        $offset = ($page - 1) * $perPage;
-        
-        $sql = "SELECT a.*, u.name as owner_name
-                FROM agendas a
-                INNER JOIN users u ON a.user_id = u.id
-                WHERE a.is_public = 1 
-                  AND a.is_active = 1
-                  AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)
-                ORDER BY a.title
-                LIMIT :limit OFFSET :offset";
-        
-        $stmt = $this->db->prepare($sql);
-        $searchParam = "%{$search}%";
-        $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log('Erro ao buscar agendas públicas: ' . $e->getMessage());
-        return [];
-    }
-}
-
-/**
- * Conta agendas públicas que correspondem ao termo de busca
- */
-public function countPublicAgendasWithSearch($search) {
-    try {
-        $sql = "SELECT COUNT(*) as total 
-                FROM agendas a
-                INNER JOIN users u ON a.user_id = u.id
-                WHERE a.is_public = 1 
-                  AND a.is_active = 1
-                  AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
-        
-        $stmt = $this->db->prepare($sql);
-        $searchParam = "%{$search}%";
-        $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-        $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return intval($row['total']);
-    } catch (PDOException $e) {
-        error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
-        return 0;
-    }
-}
-
-public function getAllPublicActivePaginated($page = 1, $perPage = 10) {
-    try {
-        $offset = ($page - 1) * $perPage;
-        
-        $query = "
-            SELECT a.*, u.name as owner_name
-            FROM agendas a
-            JOIN users u ON a.user_id = u.id
-            WHERE a.is_public = 1 
-            AND a.is_active = 1
-            AND a.public_hash IS NOT NULL
-            ORDER BY a.title
-            LIMIT :limit OFFSET :offset
-        ";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log('Erro ao obter agendas públicas paginadas: ' . $e->getMessage());
-        return [];
-    }
-}
-
-/**
- * Conta total de agendas públicas (método novo)
- */
-public function countAllPublicActive() {
-    try {
-        $query = "
-            SELECT COUNT(*) as total
-            FROM agendas a
-            WHERE a.is_public = 1 
-            AND a.is_active = 1
-            AND a.public_hash IS NOT NULL
-        ";
-        
-        $stmt = $this->db->query($query);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return intval($result['total']);
-    } catch (PDOException $e) {
-        error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
-        return 0;
-    }
-}
 }

@@ -7,13 +7,24 @@
         <p><?= date('Y') ?> - <?= APP_NAME ?> v<?= APP_VERSION ?></p>
     </div>
 </footer>
+
 <?php 
 // Identificar a página atual
 $currentUri = $_SERVER['REQUEST_URI'];
 
-// Página inicial - adicionar JS das agendas públicas
-if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
-    echo '<script src="' . PUBLIC_URL . '/app/assets/js/public-agendas.js"></script>';
+// CORREÇÃO: Página inicial - incluir JS específico para home
+if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php' || 
+    strpos($currentUri, '/?') !== false || strpos($currentUri, '/agenda_ufpr/?') !== false) {
+    echo '<script src="' . PUBLIC_URL . '/app/assets/js/home.js"></script>';
+}
+
+// Outros JavaScripts específicos por página
+if (strpos($currentUri, '/notifications') !== false) {
+    echo '<script src="' . PUBLIC_URL . '/app/assets/js/notifications-page.js"></script>';
+}
+
+if (strpos($currentUri, '/compromissos') !== false && strpos($currentUri, '/meuscompromissos') === false) {
+    echo '<script src="' . PUBLIC_URL . '/app/assets/js/compromissos-calendar.js"></script>';
 }
 ?>
 
@@ -39,19 +50,5 @@ if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/age
 <script src="<?= PUBLIC_URL ?>/app/assets/js/main.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/sidebar.js"></script>
 
-
-<?php 
-// Carregar JavaScript específico para página de notificações
-if (strpos($currentUri, '/notifications') !== false) {
-    echo '<script src="' . PUBLIC_URL . '/app/assets/js/notifications-page.js"></script>';
-}
-?>
-
-<?php 
-// Carregar JavaScript específico para página de compromissos
-if (strpos($currentUri, '/compromissos') !== false && strpos($currentUri, '/meuscompromissos') === false) {
-    echo '<script src="' . PUBLIC_URL . '/app/assets/js/compromissos-calendar.js"></script>';
-}
-?>
 </body>
 </html>

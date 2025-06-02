@@ -31,15 +31,16 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
     </div>
 </div>
 
-<!-- CAMPO DE BUSCA CORRIGIDO -->
+<!-- CORREÇÃO: Campo de busca simplificado -->
 <div class="search-container">
-    <form method="GET" action="<?= BASE_URL ?>/" class="search-form-home">
+    <form method="GET" action="<?= BASE_URL ?>/" class="search-form-home" id="searchForm">
         <input type="text" 
                name="search" 
+               id="searchInput"
                placeholder="Buscar agendas por título, descrição ou responsável..." 
                value="<?= htmlspecialchars($paginationData['search'] ?? '') ?>"
                class="search-input-large">
-        <button type="submit" class="btn btn-primary search-btn">
+        <button type="submit" class="btn btn-primary search-btn" id="searchBtn">
             <i class="fas fa-search"></i> Buscar
         </button>
         <?php if (!empty($paginationData['search'])): ?>
@@ -50,7 +51,7 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
     </form>
 </div>
 
-<!-- RESULTADOS DA BUSCA - INFO -->
+<!-- Resultados da busca -->
 <?php if (!empty($paginationData['search'])): ?>
     <div class="search-info">
         <i class="fas fa-search"></i> 
@@ -150,7 +151,7 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
             </table>
         </div>
         
-        <!-- RESUMO DOS RESULTADOS -->
+        <!-- Resumo dos resultados -->
         <?php if ($paginationData['total_items'] > 0): ?>
             <div class="agendas-summary">
                 <p class="summary-text">
@@ -165,12 +166,11 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
             </div>
         <?php endif; ?>
         
-        <!-- PAGINAÇÃO CORRIGIDA -->
+        <!-- CORREÇÃO: Paginação simplificada -->
         <?php if ($paginationData['total_pages'] > 1): ?>
             <div class="pagination-container">
                 <nav class="pagination">
                     <?php
-                    // CORREÇÃO: Simplificar construção de URLs
                     $baseUrl = BASE_URL . '/';
                     $searchParam = !empty($paginationData['search']) ? '&search=' . urlencode($paginationData['search']) : '';
                     
@@ -189,7 +189,7 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                     <?php endif; ?>
                     
                     <?php
-                    // Páginas numeradas - lógica simplificada
+                    // Páginas numeradas
                     $start = max(1, $paginationData['current_page'] - 2);
                     $end = min($paginationData['total_pages'], $paginationData['current_page'] + 2);
                     
@@ -243,35 +243,3 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
     </div>
 <?php endif; ?>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus no campo de busca apenas se não houver valor
-    const searchInput = document.querySelector('.search-input-large');
-    if (searchInput && !searchInput.value) {
-        searchInput.focus();
-    }
-    
-    // Melhorar UX da tabela
-    const tableRows = document.querySelectorAll('.public-agendas-table tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-        });
-        
-        row.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-    
-    // Loading state no botão de busca
-    const searchForm = document.querySelector('.search-form-home');
-    const searchBtn = document.querySelector('.search-btn');
-    
-    if (searchForm && searchBtn) {
-        searchForm.addEventListener('submit', function() {
-            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
-            searchBtn.disabled = true;
-        });
-    }
-});
-</script>
