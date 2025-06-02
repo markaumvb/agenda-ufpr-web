@@ -170,25 +170,16 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
             <div class="pagination-container">
                 <nav class="pagination">
                     <?php
+                    // CORREÇÃO: Simplificar construção de URLs
                     $baseUrl = BASE_URL . '/';
-                    $queryParams = [];
-                    if (!empty($paginationData['search'])) {
-                        $queryParams['search'] = $paginationData['search'];
-                    }
-                    
-                    // Função helper para gerar URL
-                    function buildUrl($baseUrl, $params, $page = null) {
-                        if ($page !== null) {
-                            $params['page'] = $page;
-                        }
-                        return $baseUrl . (empty($params) ? '' : '?' . http_build_query($params));
-                    }
+                    $searchParam = !empty($paginationData['search']) ? '&search=' . urlencode($paginationData['search']) : '';
                     
                     // Botão "Anterior"
                     if ($paginationData['current_page'] > 1):
                         $prevPage = $paginationData['current_page'] - 1;
+                        $prevUrl = $baseUrl . '?page=' . $prevPage . $searchParam;
                     ?>
-                        <a href="<?= buildUrl($baseUrl, $queryParams, $prevPage) ?>" class="pagination-link prev">
+                        <a href="<?= $prevUrl ?>" class="pagination-link prev">
                             <i class="fas fa-chevron-left"></i> Anterior
                         </a>
                     <?php else: ?>
@@ -198,13 +189,13 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                     <?php endif; ?>
                     
                     <?php
-                    // Páginas numeradas - lógica melhorada
+                    // Páginas numeradas - lógica simplificada
                     $start = max(1, $paginationData['current_page'] - 2);
                     $end = min($paginationData['total_pages'], $paginationData['current_page'] + 2);
                     
-                    // Mostrar primeira página se não estiver no range
+                    // Primeira página
                     if ($start > 1): ?>
-                        <a href="<?= buildUrl($baseUrl, $queryParams, 1) ?>" class="pagination-link">1</a>
+                        <a href="<?= $baseUrl ?>?page=1<?= $searchParam ?>" class="pagination-link">1</a>
                         <?php if ($start > 2): ?>
                             <span class="pagination-ellipsis">...</span>
                         <?php endif; ?>
@@ -217,27 +208,28 @@ $isHomePage = ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentU
                     ?>
                             <span class="pagination-link current"><?= $i ?></span>
                     <?php else: ?>
-                            <a href="<?= buildUrl($baseUrl, $queryParams, $i) ?>" class="pagination-link"><?= $i ?></a>
+                            <a href="<?= $baseUrl ?>?page=<?= $i ?><?= $searchParam ?>" class="pagination-link"><?= $i ?></a>
                     <?php 
                         endif;
                     endfor; 
                     ?>
                     
                     <?php
-                    // Mostrar última página se não estiver no range
+                    // Última página
                     if ($end < $paginationData['total_pages']): ?>
                         <?php if ($end < $paginationData['total_pages'] - 1): ?>
                             <span class="pagination-ellipsis">...</span>
                         <?php endif; ?>
-                        <a href="<?= buildUrl($baseUrl, $queryParams, $paginationData['total_pages']) ?>" class="pagination-link"><?= $paginationData['total_pages'] ?></a>
+                        <a href="<?= $baseUrl ?>?page=<?= $paginationData['total_pages'] ?><?= $searchParam ?>" class="pagination-link"><?= $paginationData['total_pages'] ?></a>
                     <?php endif; ?>
                     
                     <?php
                     // Botão "Próximo"
                     if ($paginationData['current_page'] < $paginationData['total_pages']):
                         $nextPage = $paginationData['current_page'] + 1;
+                        $nextUrl = $baseUrl . '?page=' . $nextPage . $searchParam;
                     ?>
-                        <a href="<?= buildUrl($baseUrl, $queryParams, $nextPage) ?>" class="pagination-link next">
+                        <a href="<?= $nextUrl ?>" class="pagination-link next">
                             Próximo <i class="fas fa-chevron-right"></i>
                         </a>
                     <?php else: ?>

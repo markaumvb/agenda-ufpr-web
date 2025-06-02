@@ -66,98 +66,146 @@ $body_class = $is_auth_page ? 'auth-page' : '';
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth.css">';
     }
     
-    // Página inicial - CSS específico de agendas E CSS de correções
-if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php') {
-    echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
-    // CSS simplificado - removido o CSS problemático da tabela
-    ?>
-    <style>
-    /* ===== CSS BÁSICO PARA PÁGINA INICIAL - SEM CONFLITOS ===== */
-    
-    /* Garantir que o container principal tenha largura total */
-    .container {
-        width: 100% !important;
-        max-width: 1200px !important;
-        margin: 0 auto !important;
-        padding: 0 15px !important;
-    }
-
-    /* Page header responsivo */
-    .page-header {
-        margin-bottom: 2rem;
-        margin-top: 1rem;
-    }
-
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    /* Seção de agendas públicas */
-    .public-agendas-section {
-        width: 100%;
-        margin-top: 2rem;
-    }
-
-    /* Links e botões básicos */
-    .btn {
-        text-decoration: none !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn:hover {
-        text-decoration: none !important;
-        transform: translateY(-1px);
-    }
-
-    /* Cores dos botões */
-    .btn-primary {
-        background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%) !important;
-        color: #ffffff !important;
-        border: 1px solid #004a8f !important;
-    }
-
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #003a70 0%, #004a8f 100%) !important;
-        color: #ffffff !important;
-    }
-
-    .btn-success {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-        color: #ffffff !important;
-        border: 1px solid #28a745 !important;
-    }
-
-    .btn-success:hover {
-        background: linear-gradient(135deg, #218838 0%, #1a9e77 100%) !important;
-        color: #ffffff !important;
-    }
-
-    /* Responsividade básica */
-    @media (max-width: 768px) {
-        .header-container {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
+    // CORRIGIDO: Página inicial - CSS específico incluindo URLs com parâmetros de busca
+    if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php' || 
+        strpos($currentUri, '/?') !== false || strpos($currentUri, '/agenda_ufpr/?') !== false) {
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/modules/shares.css">';
+        ?>
+        <style>
+        /* CSS específico para página inicial - CORRIGIDO */
         .container {
-            padding: 0 10px !important;
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+            padding: 0 15px !important;
         }
-    }
-    </style>
-    <?php
-}
 
+        .page-header {
+            margin-bottom: 2rem;
+            margin-top: 1rem;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Seção de agendas públicas */
+        .public-agendas-section {
+            width: 100%;
+            margin-top: 2rem;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 74, 143, 0.08);
+            padding: 2rem;
+        }
+
+        .public-agendas-table-container {
+            width: 100% !important;
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+            background: #ffffff;
+        }
+
+        .public-agendas-table {
+            width: 100% !important;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #ffffff;
+        }
+
+        /* Botões de ação corrigidos */
+        .action-buttons {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            flex-wrap: nowrap !important;
+            width: 100% !important;
+        }
+
+        .action-buttons .btn {
+            flex: 1 1 auto !important;
+            min-width: 120px !important;
+            max-width: 140px !important;
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.5rem !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            text-decoration: none !important;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%) !important;
+            color: #ffffff !important;
+            border-color: #004a8f !important;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #003a70 0%, #004a8f 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(0, 74, 143, 0.3) !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            color: #ffffff !important;
+            border-color: #28a745 !important;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #218838 0%, #1a9e77 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .container {
+                padding: 0 10px !important;
+            }
+
+            .action-buttons {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+
+            .action-buttons .btn {
+                width: 100% !important;
+                min-width: auto !important;
+                max-width: none !important;
+            }
+        }
+        </style>
+        <?php
+    }
     
     // Adicionar CSS do timeline
     if (strpos($currentUri, '/timeline') !== false) {

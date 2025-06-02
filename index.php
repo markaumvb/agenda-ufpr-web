@@ -65,20 +65,18 @@ if ($uri === '/' || $uri === '/index.php' || $uri === '') {
     $totalAgendas = 0;
     
     if (!empty($search)) {
+        // Busca com termo específico
         $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage);
         $totalAgendas = $agendaModel->countPublicAgendasWithSearch($search);
     } else {
-        $publicAgendas = $agendaModel->getAllPublicActive();
-        $totalAgendas = count($publicAgendas);
-        
-        // Aplicar paginação manual para todas as agendas
-        $offset = ($page - 1) * $perPage;
-        $publicAgendas = array_slice($publicAgendas, $offset, $perPage);
+        // Buscar todas com paginação direta no banco (método novo)
+        $publicAgendas = $agendaModel->getAllPublicActivePaginated($page, $perPage);
+        $totalAgendas = $agendaModel->countAllPublicActive();
     }
-    
+
     // Calcular informações de paginação
     $totalPages = ceil($totalAgendas / $perPage);
-    $startItem = ($page - 1) * $perPage + 1;
+    $startItem = $totalAgendas > 0 ? (($page - 1) * $perPage + 1) : 0;
     $endItem = min($page * $perPage, $totalAgendas);
     
     // Dados para a view

@@ -872,4 +872,54 @@ public function countPublicAgendasWithSearch($search) {
         return 0;
     }
 }
+
+public function getAllPublicActivePaginated($page = 1, $perPage = 10) {
+    try {
+        $offset = ($page - 1) * $perPage;
+        
+        $query = "
+            SELECT a.*, u.name as owner_name
+            FROM agendas a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.is_public = 1 
+            AND a.is_active = 1
+            AND a.public_hash IS NOT NULL
+            ORDER BY a.title
+            LIMIT :limit OFFSET :offset
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Erro ao obter agendas públicas paginadas: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Conta total de agendas públicas (método novo)
+ */
+public function countAllPublicActive() {
+    try {
+        $query = "
+            SELECT COUNT(*) as total
+            FROM agendas a
+            WHERE a.is_public = 1 
+            AND a.is_active = 1
+            AND a.public_hash IS NOT NULL
+        ";
+        
+        $stmt = $this->db->query($query);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return intval($result['total']);
+    } catch (PDOException $e) {
+        error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
+        return 0;
+    }
+}
 }
