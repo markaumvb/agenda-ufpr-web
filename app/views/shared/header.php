@@ -44,36 +44,39 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     // Identificar a página atual
     $currentUri = $_SERVER['REQUEST_URI'];
     
-    // Carregamento condicional de CSS específicos
-    if (strpos($currentUri, '/agendas') !== false) {
+    // CORRIGIDO: Carregamento condicional de CSS específicos
+    
+    // CSS para páginas de agendas (incluindo home e all)
+    if (strpos($currentUri, '/agendas') !== false || 
+        $currentUri == '/' || 
+        $currentUri == '/agenda_ufpr/' || 
+        $currentUri == '/agenda_ufpr/index.php' || 
+        strpos($currentUri, '/?') !== false || 
+        strpos($currentUri, '/agenda_ufpr/?') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
     }
     
+    // CSS para compromissos
     if (strpos($currentUri, '/compromissos') !== false || strpos($currentUri, '/meuscompromissos') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
     }
     
+    // CSS para compartilhamento
     if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
     }
     
+    // CSS para notificações
     if (strpos($currentUri, '/notifications') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/notifications.css">';
     }
     
-    // Carregar CSS de autenticação para páginas de login/registro
+    // CSS para autenticação
     if (strpos($currentUri, '/login') !== false || strpos($currentUri, '/register') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/auth.css">';
     }
     
-    // CORREÇÃO: Página inicial - CSS específico sem duplicação
-    if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php' || 
-        strpos($currentUri, '/?') !== false || strpos($currentUri, '/agenda_ufpr/?') !== false) {
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/agendas.css">';
-        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/modules/shares.css">';
-    }
-    
-    // Adicionar CSS do timeline
+    // CSS para timeline
     if (strpos($currentUri, '/timeline') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/modules/timeline.css">';
     }

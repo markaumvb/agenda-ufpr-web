@@ -33,26 +33,19 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
 
 <!-- SEÇÃO 1: MINHAS AGENDAS -->
 <section class="agendas-section">
-    <h2 class="section-title">
-        <i class="fas fa-calendar"></i>
-        Minhas Agendas
-    </h2>
+    <h2 class="section-title">Minhas Agendas</h2>
     
     <?php if (empty($myAgendas)): ?>
         <div class="empty-state">
-            <i class="fas fa-calendar-plus"></i>
-            <h3>Nenhuma agenda encontrada</h3>
             <p>Você ainda não criou nenhuma agenda.</p>
-            <a href="<?= PUBLIC_URL ?>/agendas/new" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Criar Agenda
-            </a>
+            <a href="<?= PUBLIC_URL ?>/agendas/new" class="btn btn-primary">Criar Agenda</a>
         </div>
     <?php else: ?>
         <div class="agenda-grid">
             <?php foreach ($myAgendas as $agenda): ?>
                 <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
                     <div class="agenda-card-header">
-                        <h3 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h3>
+                        <h3><?= htmlspecialchars($agenda['title']) ?></h3>
                         <div class="agenda-visibility">
                             <?php if ($agenda['is_public']): ?>
                                 <span class="badge badge-success">Pública</span>
@@ -64,9 +57,9 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                     
                     <div class="agenda-card-body">
                         <?php if (!empty($agenda['description'])): ?>
-                            <div class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></div>
+                            <p class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></p>
                         <?php else: ?>
-                            <div class="agenda-description text-muted">Sem descrição</div>
+                            <p class="agenda-description text-muted">Sem descrição</p>
                         <?php endif; ?>
                         
                         <div class="agenda-stats">
@@ -125,15 +118,10 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
 
 <!-- SEÇÃO 2: AGENDAS COMPARTILHADAS COMIGO -->
 <section class="agendas-section">
-    <h2 class="section-title">
-        <i class="fas fa-share-alt"></i>
-        Agendas Compartilhadas Comigo
-    </h2>
+    <h2 class="section-title">Agendas Compartilhadas Comigo</h2>
     
     <?php if (empty($sharedAgendas)): ?>
         <div class="empty-state">
-            <i class="fas fa-share-alt"></i>
-            <h3>Nenhuma agenda compartilhada</h3>
             <p>Nenhuma agenda foi compartilhada com você.</p>
         </div>
     <?php else: ?>
@@ -141,7 +129,7 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
             <?php foreach ($sharedAgendas as $agenda): ?>
                 <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
                     <div class="agenda-card-header">
-                        <h3 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h3>
+                        <h3><?= htmlspecialchars($agenda['title']) ?></h3>
                         <div class="agenda-visibility">
                             <span class="badge badge-info">Compartilhada</span>
                             <?php if (isset($agenda['can_edit']) && $agenda['can_edit']): ?>
@@ -152,14 +140,14 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                     
                     <div class="agenda-card-body">
                         <?php if (!empty($agenda['description'])): ?>
-                            <div class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></div>
+                            <p class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></p>
                         <?php else: ?>
-                            <div class="agenda-description text-muted">Sem descrição</div>
+                            <p class="agenda-description text-muted">Sem descrição</p>
                         <?php endif; ?>
                         
-                        <div class="agenda-owner">
-                            <p><i class="fas fa-user"></i> Proprietário: <?= htmlspecialchars($agenda['owner_name'] ?? 'Não especificado') ?></p>
-                        </div>
+                        <p class="agenda-owner">
+                            Proprietário: <?= htmlspecialchars($agenda['owner_name'] ?? 'Não especificado') ?>
+                        </p>
                         
                         <div class="agenda-stats">
                             <div class="stat">
@@ -219,15 +207,10 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
 
 <!-- SEÇÃO 3: AGENDAS PÚBLICAS -->
 <section class="agendas-section">
-    <h2 class="section-title">
-        <i class="fas fa-globe"></i>
-        Agendas Públicas
-    </h2>
+    <h2 class="section-title">Agendas Públicas</h2>
     
     <?php if (empty($publicAgendas)): ?>
         <div class="empty-state">
-            <i class="fas fa-globe"></i>
-            <h3>Nenhuma agenda pública</h3>
             <p>Nenhuma agenda pública está disponível no momento.</p>
         </div>
     <?php else: ?>
@@ -235,7 +218,7 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
             <?php foreach ($publicAgendas as $agenda): ?>
                 <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color'] ?? '#004a8f') ?>;">
                     <div class="agenda-card-header">
-                        <h3 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h3>
+                        <h3><?= htmlspecialchars($agenda['title']) ?></h3>
                         <div class="agenda-visibility">
                             <span class="badge badge-success">Pública</span>
                         </div>
@@ -243,14 +226,14 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                     
                     <div class="agenda-card-body">
                         <?php if (!empty($agenda['description'])): ?>
-                            <div class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></div>
+                            <p class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></p>
                         <?php else: ?>
-                            <div class="agenda-description text-muted">Sem descrição</div>
+                            <p class="agenda-description text-muted">Sem descrição</p>
                         <?php endif; ?>
                         
-                        <div class="agenda-owner">
-                            <p><i class="fas fa-user"></i> Proprietário: <?= htmlspecialchars($agenda['owner_name'] ?? 'Não especificado') ?></p>
-                        </div>
+                        <p class="agenda-owner">
+                            Proprietário: <?= htmlspecialchars($agenda['owner_name'] ?? 'Não especificado') ?>
+                        </p>
                         
                         <div class="agenda-stats">
                             <div class="stat">

@@ -1,3 +1,8 @@
+/* 
+ * Arquivo: app/assets/css/shares.css
+ * Estilos específicos para o módulo de Compartilhamento de Agendas
+ */
+
 /* Cabeçalho da página */
 .agenda-meta {
   margin-top: var(--spacing-md);
@@ -11,7 +16,7 @@
   font-size: 1.25rem;
 }
 
-/* Cards e containers específicos para shares */
+/* Cards e containers */
 .card {
   background-color: #fff;
   border-radius: var(--border-radius-lg);
@@ -160,7 +165,7 @@
   margin: 0;
 }
 
-/* Agendas compartilhadas - estilos específicos */
+/* Agendas compartilhadas */
 .agenda-owner {
   font-size: 0.85rem;
   color: #666;
@@ -232,6 +237,117 @@
   gap: var(--spacing-sm);
 }
 
+/* Agendas compartilhadas */
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.agenda-card {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.agenda-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.agenda-card-header {
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.agenda-title {
+  margin: 0 0 0.7rem 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  width: 100%;
+}
+
+.agenda-visibility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  align-self: flex-start;
+}
+
+.agenda-card-body {
+  padding: var(--spacing-md) var(--spacing-lg);
+  flex: 1;
+}
+
+.agenda-description {
+  margin: 0 0 var(--spacing-md) 0;
+  color: #444;
+  font-size: 1.1rem;
+  font-weight: normal;
+  line-height: 1.3;
+}
+
+.agenda-owner p {
+  margin: 0.25rem 0;
+}
+
+.agenda-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.stat {
+  padding: var(--spacing-sm);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  margin-bottom: 0.1rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+}
+
+.agenda-card-footer {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: #fafafa;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.agenda-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  justify-content: center;
+}
+
+.agenda-actions .btn {
+  flex: 1 1 auto;
+  min-width: 110px;
+  text-align: center;
+  white-space: nowrap;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
 /* Responsividade */
 @media (max-width: var(--breakpoint-sm)) {
   .form-row {
@@ -258,6 +374,19 @@
   .public-agendas-table th:nth-child(2),
   .public-agendas-table td:nth-child(2) {
     display: none; /* Esconde a coluna de descrição em telas pequenas */
+  }
+
+  .agenda-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-actions {
+    flex-direction: column;
+  }
+
+  .agenda-actions .btn,
+  .agenda-actions form {
+    width: 100%;
   }
 }
 

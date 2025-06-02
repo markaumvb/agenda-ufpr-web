@@ -43,7 +43,7 @@
         ?>
             <div class="agenda-card" style="border-top: 4px solid <?= htmlspecialchars($agenda['color']) ?>;">
                 <div class="agenda-card-header">
-                    <h2 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h2>
+                    <h1 class="agenda-title"><?= htmlspecialchars($agenda['title']) ?></h1>
                     <div class="agenda-visibility">
                         <?php if ($agenda['is_public']): ?>
                             <span class="badge badge-success">Pública</span>
@@ -59,9 +59,9 @@
                 
                 <div class="agenda-card-body">
                     <?php if (!empty($agenda['description'])): ?>
-                        <div class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></div>
+                        <h2 class="agenda-description"><?= htmlspecialchars($agenda['description']) ?></h2>
                     <?php else: ?>
-                        <div class="agenda-description text-muted">Sem descrição</div>
+                        <h2 class="agenda-description text-muted">Sem descrição</h2>
                     <?php endif; ?>
                     
                     <div class="agenda-stats">
@@ -163,3 +163,5 @@
 
 <script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/index.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/common.js"></script>
+
+
