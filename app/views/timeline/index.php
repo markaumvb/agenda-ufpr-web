@@ -10,7 +10,6 @@
         </div>
     </div>
 
-    <!-- Filtros aprimorados -->
     <div class="timeline-filters">
         <form action="<?= PUBLIC_URL ?>/timeline" method="get" class="filter-form">
             <div class="row">
@@ -32,7 +31,6 @@
                     </div>
                 </div>
                 
-                <!-- Segunda linha: Filtro de Agendas -->
                 <?php if (!empty($publicAgendas)): ?>
                 <div class="col-lg-4 mb-3">
                     <label>🗂️ Filtrar por Agendas</label>
@@ -79,8 +77,6 @@
         </form>
     </div>
 
-
-    <!-- Opções de visualização aprimoradas -->
     <div class="view-options">
         <div class="btn-group" role="group" aria-label="Opções de visualização">
             <button type="button" class="btn btn-outline-primary view-option active" data-view="timeGridDay" title="Visualização por dia">
@@ -92,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Container do calendário sempre visível -->
     <div class="timeline-container">
         <div id="calendar"></div>
         
@@ -148,7 +143,7 @@
     </div>
     <?php endif; ?>
 
-    <!-- Modal aprimorado para detalhes do evento -->
+    <!-- Modal para detalhes do evento -->
     <div id="event-modal" class="modal fade" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -173,7 +168,7 @@
     </div>
 </div>
 
-<!-- Estilos adicionais inline para melhor integração -->
+<!-- Estilos adicionais -->
 <style>
     .page-description {
         color: #6c757d;
@@ -438,5 +433,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Carregar o script da timeline melhorado -->
+<!-- Carregar o script da timeline -->
 <script src="<?= PUBLIC_URL ?>/app/assets/js/timeline.js"></script>

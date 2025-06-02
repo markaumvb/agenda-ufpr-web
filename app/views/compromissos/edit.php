@@ -1,7 +1,3 @@
-<?php
-// Arquivo: app/views/compromissos/edit.php
-?>
-
 <div class="form-container">
     <div class="form-header">
         <h1>Editar Compromisso</h1>
