@@ -43,17 +43,54 @@ if ($uri !== '/' && substr($uri, -1) === '/') {
     $uri = rtrim($uri, '/');
 }
 
-// Rota padrão
+// Rota padrão - HOME PAGE COM BUSCA E PAGINAÇÃO
 if ($uri === '/' || $uri === '/index.php' || $uri === '') {
     // Debug - Verificar qual rota está sendo acessada
     error_log("URI original: " . $_SERVER['REQUEST_URI']);
     error_log("URI processada: " . $uri);
+    
     require_once __DIR__ . '/app/models/Database.php';
     require_once __DIR__ . '/app/models/Agenda.php';
     require_once __DIR__ . '/app/models/User.php';
     
     $agendaModel = new Agenda();
-    $publicAgendas = $agendaModel->getAllPublicActive();
+    
+    // Obter parâmetros de busca e paginação
+    $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $perPage = 10; // 10 agendas por página
+    
+    // Buscar agendas públicas com busca e paginação
+    $publicAgendas = [];
+    $totalAgendas = 0;
+    
+    if (!empty($search)) {
+        // Se há busca, usar método que suporte busca
+        // Vamos adaptar o método getPublicAgendas para suportar busca
+        $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage);
+        $totalAgendas = $agendaModel->countPublicAgendasWithSearch($search);
+    } else {
+        // Buscar todas as agendas públicas
+        $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
+        $publicAgendas = $agendaModel->getPublicAgendas($userId, true, $page, $perPage);
+        $totalAgendas = $agendaModel->countPublicAgendas($userId, true);
+    }
+    
+    // Calcular informações de paginação
+    $totalPages = ceil($totalAgendas / $perPage);
+    $startItem = ($page - 1) * $perPage + 1;
+    $endItem = min($page * $perPage, $totalAgendas);
+    
+    // Dados para a view
+    $paginationData = [
+        'current_page' => $page,
+        'total_pages' => $totalPages,
+        'per_page' => $perPage,
+        'total_items' => $totalAgendas,
+        'start_item' => $startItem,
+        'end_item' => $endItem,
+        'search' => $search
+    ];
     
     require_once __DIR__ . '/app/views/shared/header.php';
     require_once __DIR__ . '/app/views/home.php';

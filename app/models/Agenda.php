@@ -821,4 +821,76 @@ public function getAllPublicActive() {
         return [];
     }
 }
+    public function searchPublicAgendas($search, $page = 1, $perPage = 10) {
+        try {
+            $offset = ($page - 1) * $perPage;
+            
+            $sql = "SELECT a.*, 
+                   u.name as owner_name,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'pendente') as pendentes,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'realizado') as realizados,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'cancelado') as cancelados,
+                   (SELECT COUNT(*) FROM compromissos WHERE agenda_id = a.id AND status = 'aguardando_aprovacao') as aguardando_aprovacao
+                    FROM agendas a
+                    INNER JOIN users u ON a.user_id = u.id
+                    WHERE a.is_public = 1 
+                      AND a.is_active = 1
+                      AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)
+                    ORDER BY a.title
+                    LIMIT :limit OFFSET :offset";
+            
+            $stmt = $this->db->prepare($sql);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $agendas = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $row['is_owner'] = false;
+                $row['can_edit'] = false;
+                $row['compromissos'] = [
+                    'pendentes' => $row['pendentes'],
+                    'realizados' => $row['realizados'],
+                    'cancelados' => $row['cancelados'],
+                    'aguardando_aprovacao' => $row['aguardando_aprovacao']
+                ];
+                $agendas[] = $row;
+            }
+            
+            return $agendas;
+        } catch (PDOException $e) {
+            error_log('Erro ao buscar agendas públicas: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Conta agendas públicas que correspondem ao termo de busca
+     * 
+     * @param string $search Termo de busca
+     * @return int Total de agendas encontradas
+     */
+    public function countPublicAgendasWithSearch($search) {
+        try {
+            $sql = "SELECT COUNT(*) as total 
+                    FROM agendas a
+                    INNER JOIN users u ON a.user_id = u.id
+                    WHERE a.is_public = 1 
+                      AND a.is_active = 1
+                      AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
+            
+            $stmt = $this->db->prepare($sql);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return intval($row['total']);
+        } catch (PDOException $e) {
+            error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
+            return 0;
+        }
+    }
 }

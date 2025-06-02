@@ -730,6 +730,341 @@
   }
 }
 
+/* ===== ESTILOS PARA BUSCA E PAGINAÇÃO NA HOME ===== */
+
+/* Container de busca aprimorado */
+.search-box {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f3ff 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 2px solid rgba(0, 74, 143, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 74, 143, 0.08);
+}
+
+.search-input-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-input-group .form-control {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.search-input-group .form-control:focus {
+  border-color: #004a8f;
+  box-shadow: 0 0 0 3px rgba(0, 74, 143, 0.1);
+  outline: none;
+}
+
+.search-input-group .btn {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  border-radius: 12px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+/* Header da seção com busca */
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.search-results-info {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #f6ad55;
+  border-radius: 10px;
+  color: #744210;
+}
+
+.search-results-info p {
+  margin: 0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-results-info i {
+  color: #d69e2e;
+}
+
+/* Informações de paginação */
+.pagination-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+/* Container de paginação */
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Navegação de paginação melhorada */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.pagination-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background-color: #ffffff;
+  border: 2px solid #e2e8f0;
+  color: #4a5568;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 44px;
+  height: 44px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-link:hover {
+  background-color: #f0f7ff;
+  border-color: #004a8f;
+  color: #004a8f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 143, 0.15);
+  text-decoration: none;
+}
+
+.pagination-link.current {
+  background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
+  border-color: #004a8f;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 74, 143, 0.3);
+}
+
+.pagination-link.disabled {
+  color: #a0aec0;
+  pointer-events: none;
+  background-color: #f7fafc;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.pagination-link.prev,
+.pagination-link.next {
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: #ffffff;
+  border-color: #6c757d;
+}
+
+.pagination-link.prev:hover,
+.pagination-link.next:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  border-color: #495057;
+  color: #ffffff;
+}
+
+.pagination-link.prev.disabled,
+.pagination-link.next.disabled {
+  background: #f7fafc;
+  color: #a0aec0;
+  border-color: #e2e8f0;
+}
+
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  color: #a0aec0;
+  font-weight: 600;
+}
+
+/* Resumo das agendas */
+.agendas-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #e6f3ff 0%, #f0f7ff 100%);
+  border-radius: 12px;
+  border-left: 4px solid #004a8f;
+  box-shadow: 0 2px 8px rgba(0, 74, 143, 0.1);
+}
+
+.summary-text {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.summary-text i {
+  color: #004a8f;
+  font-size: 1.1rem;
+}
+
+.summary-text strong {
+  color: #004a8f;
+  font-weight: 700;
+}
+
+/* Responsividade para busca e paginação */
+@media (max-width: 768px) {
+  .search-box {
+    padding: 1.5rem 1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .search-input-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .search-input-group .form-control {
+    width: 100%;
+  }
+
+  .search-input-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pagination-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .pagination-link {
+    min-width: 40px;
+    height: 40px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .pagination-link.prev,
+  .pagination-link.next {
+    order: 2;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .search-results-info p {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .pagination-container {
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+
+  .agendas-summary {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: 4px solid #004a8f;
+    border-bottom: none;
+  }
+
+  .summary-text {
+    font-size: 0.9rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* Animação de carregamento para busca */
+.search-input-group .btn:active {
+  transform: scale(0.98);
+}
+
+/* Highlight nos resultados de busca */
+.search-highlight {
+  background-color: #fff3cd;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Estado de loading */
+.pagination-link.loading {
+  position: relative;
+  color: transparent;
+}
+
+.pagination-link.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #004a8f;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 576px) {
   .agenda-grid {
     grid-template-columns: 1fr;
