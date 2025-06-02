@@ -13,3 +13,14 @@ temos que criar uma tela que liste os compromissos em todas as agendas públicas
  - devemos ter uma tela de criar compromisso (apenas para agendas publicas), para usuários que não estejam logados no sistema. dessa forma qualquer pessoa pode criar compromisso no sistema e ficar com status aguardando aprovação, msm não tendo feito login. na tela inicial logo ao lado do botão de visualizar compromissos deverá ter o botão para criar os compromissos. as regras para criar o compromisso serão as msm... não pode ser feito compromissos antes do dia atual e obedecer o prazo da agenda. deveremos gravar na tabela compromisso um campo is_external (booelan) e external_email e external_name para gravar o e-mail do usuário externo (devemos modificar isso, para usuarios logados is_external = false (por default no banco de dados)), o fluxo será
  1 - usuário clicará em novo compromisso (deverá aparecer uma tela com um input simples para ele digitar o e-mail dele e o nome), e assim qaudno entrar na tela de fazer comrpomisso, deverá marcar is_external = true e o email delee o nome...
  2 - o usuário dono da agenda terá a notificação desse compromisso, e receberá um e-mail informando desse novo compromisso o email poderá ter um link para a notificação criada. o usuário externo receberá um e-mail informando que o pedido está com status de aguardando a solicitação, e quando a solicitação for aceita ou negada, deverá receber outro e-mail com o status final e todas as informações da solicitação
+
+
+
+a estilização ficou legal, mas antes nas agendas, tinha uma fina borda na esquerda com a cor da agenda (essa cor é cadastrada na agenda) é possível fazer isso de novo??
+
+e os quadros de estatísticas, não caberam no card, podemos diminuir eles ou aumentar os cards...
+
+e agora em agendas compartilhadas, também ficou sem estilização, devemos usar a msm....
+
+https://200.238.174.7/agenda_ufpr/ << minha estilização sumiu, e tinhamos uma bem bonita feita.....  (veja todos meus CSS, que talvez em algum deles tenha o q era...)
+
