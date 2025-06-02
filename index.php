@@ -360,6 +360,16 @@ $routes = [
     'action' => 'externalSuccess',
     'method' => 'GET'
 ],
+'/meuscompromissos/bulk-approve' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'bulkApprove',
+        'method' => 'POST'
+    ],
+    '/meuscompromissos/bulk-reject' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'bulkReject',
+        'method' => 'POST'
+    ],
 
 ];
 

@@ -52,11 +52,34 @@
         <button id="clear-filters" class="btn btn-secondary btn-sm">Limpar Filtros</button>
     </div>
 
+    <!-- NOVA DIV DE AÇÕES EM MASSA -->
+    <div class="bulk-actions-container" id="bulk-actions-container" style="display: none;">
+        <div class="bulk-actions-header">
+            <span id="selected-count">0 compromissos selecionados</span>
+            <button id="clear-selection" class="btn btn-link btn-sm">Limpar seleção</button>
+        </div>
+        <div class="bulk-actions-buttons">
+            <button id="bulk-approve" class="btn btn-success btn-sm">
+                <i class="fas fa-check"></i> Aprovar Selecionados
+            </button>
+            <button id="bulk-reject" class="btn btn-danger btn-sm">
+                <i class="fas fa-times"></i> Rejeitar Selecionados
+            </button>
+            <button id="select-all-visible" class="btn btn-primary btn-sm">
+                <i class="fas fa-check-square"></i> Selecionar Todos Visíveis
+            </button>
+        </div>
+    </div>
+
     <!-- Data Grid de Compromissos -->
     <div class="data-grid-container">
         <table class="data-grid" id="compromissos-table">
             <thead>
                 <tr>
+                    <!-- NOVA COLUNA DE CHECKBOX -->
+                    <th class="col-checkbox">
+                        <input type="checkbox" id="select-all-checkbox" class="bulk-checkbox-header">
+                    </th>
                     <th class="col-agenda">Agenda</th>
                     <th class="col-title">Título</th>
                     <th class="col-date">Data</th>
@@ -76,6 +99,9 @@
                     
                     // Adicionar classe para linhas zebradas
                     $rowClass = $index % 2 == 0 ? 'even-row' : 'odd-row';
+                    
+                    // Verificar se este compromisso pode ser selecionado para ações em massa
+                    $canBulkAction = ($compromisso['status'] === 'aguardando_aprovacao' && $agendaInfo && isset($agendaInfo['is_owner']) && $agendaInfo['is_owner']);
                 ?>
                     <tr class="compromisso-row <?= $rowClass ?> <?= $compromisso['status'] === 'cancelado' ? 'status-cancelled' : '' ?>" 
                         data-status="<?= $compromisso['status'] ?>"
@@ -83,6 +109,13 @@
                         data-date="<?= $startDate->format('Y-m-d') ?>"
                         data-id="<?= $compromisso['id'] ?>" 
                         data-search="<?= htmlspecialchars(strtolower($compromisso['title'] . ' ' . $compromisso['description'] . ' ' . $compromisso['location'])) ?>">
+                        
+                        <!-- NOVA COLUNA DE CHECKBOX -->
+                        <td class="col-checkbox">
+                            <?php if ($canBulkAction): ?>
+                                <input type="checkbox" class="bulk-checkbox" value="<?= $compromisso['id'] ?>" data-status="<?= $compromisso['status'] ?>">
+                            <?php endif; ?>
+                        </td>
                         
                         <td class="col-agenda">
                             <div class="agenda-tag" style="background-color: <?= htmlspecialchars($agendaInfo ? $agendaInfo['color'] : '#888') ?>;">
@@ -185,7 +218,7 @@
                     <!-- Linha para descrição (expandida ao clicar) -->
                     <?php if (!empty($compromisso['description'])): ?>
                     <tr class="description-row <?= $rowClass ?>" id="desc-<?= $compromisso['id'] ?>" style="display: none;">
-                        <td colspan="7" class="description-cell">
+                        <td colspan="8" class="description-cell">
                             <div class="description-content">
                                 <strong>Descrição:</strong>
                                 <div><?= nl2br(htmlspecialchars($compromisso['description'])) ?></div>
@@ -248,6 +281,15 @@
     
     <form id="deleteForm" action="<?= BASE_URL ?>/compromissos/delete" method="post" style="display: none;">
         <input type="hidden" name="id" id="delete-id">
+    </form>
+    
+    <!-- NOVOS FORMULÁRIOS PARA AÇÕES EM MASSA -->
+    <form id="bulkApproveForm" action="<?= BASE_URL ?>/meuscompromissos/bulk-approve" method="post" style="display: none;">
+        <input type="hidden" name="ids" id="bulk-approve-ids">
+    </form>
+    
+    <form id="bulkRejectForm" action="<?= BASE_URL ?>/meuscompromissos/bulk-reject" method="post" style="display: none;">
+        <input type="hidden" name="ids" id="bulk-reject-ids">
     </form>
     
     <!-- Mensagem para quando nenhum compromisso corresponder aos filtros -->

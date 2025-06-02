@@ -157,7 +157,7 @@ if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/age
     </style>
     <?php
 }
-?>
+
     
     // Adicionar CSS do timeline
     if (strpos($currentUri, '/timeline') !== false) {

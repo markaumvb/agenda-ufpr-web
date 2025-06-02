@@ -639,4 +639,245 @@ private function getCompromissosData($userId) {
         
         return $notificationModel->create($notificationData);
     }
+
+    public function bulkApprove() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/meuscompromissos');
+            exit;
+        }
+        
+        // Obter os IDs dos compromissos
+        $idsString = filter_input(INPUT_POST, 'ids', FILTER_SANITIZE_STRING);
+        
+        if (empty($idsString)) {
+            $_SESSION['flash_message'] = 'Nenhum compromisso selecionado';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/meuscompromissos');
+            exit;
+        }
+        
+        // Converter string de IDs em array
+        $ids = array_map('intval', explode(',', $idsString));
+        $ids = array_filter($ids); // Remove valores inválidos
+        
+        if (empty($ids)) {
+            $_SESSION['flash_message'] = 'IDs de compromissos inválidos';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/meuscompromissos');
+            exit;
+        }
+        
+        $userId = $_SESSION['user_id'];
+        $approvedCount = 0;
+        $errors = [];
+        
+        // Processar cada compromisso
+        foreach ($ids as $id) {
+            try {
+                // Buscar o compromisso
+                $compromisso = $this->compromissoModel->getById($id);
+                
+                if (!$compromisso) {
+                    $errors[] = "Compromisso ID {$id} não encontrado";
+                    continue;
+                }
+                
+                // Verificar se o usuário é o dono da agenda
+                $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
+                
+                if (!$isOwner) {
+                    $errors[] = "Sem permissão para aprovar compromisso ID {$id}";
+                    continue;
+                }
+                
+                // Verificar se está aguardando aprovação
+                if ($compromisso['status'] != 'aguardando_aprovacao') {
+                    $errors[] = "Compromisso ID {$id} não está aguardando aprovação";
+                    continue;
+                }
+                
+                // Preparar dados para atualizar o status
+                $data = [
+                    'title' => $compromisso['title'],
+                    'description' => $compromisso['description'],
+                    'start_datetime' => $compromisso['start_datetime'],
+                    'end_datetime' => $compromisso['end_datetime'],
+                    'location' => $compromisso['location'],
+                    'repeat_type' => $compromisso['repeat_type'],
+                    'repeat_until' => $compromisso['repeat_until'],
+                    'repeat_days' => $compromisso['repeat_days'],
+                    'status' => 'pendente' // Mudar para pendente após aprovação
+                ];
+                
+                // Atualizar o status
+                $result = $this->compromissoModel->update($id, $data);
+                
+                if ($result) {
+                    $approvedCount++;
+                    
+                    // Criar notificação para o criador do compromisso
+                    if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                        $this->createApprovalNotification($compromisso['created_by'], $id, 'approved');
+                    }
+                } else {
+                    $errors[] = "Erro ao aprovar compromisso ID {$id}";
+                }
+                
+            } catch (Exception $e) {
+                $errors[] = "Erro ao processar compromisso ID {$id}: " . $e->getMessage();
+            }
+        }
+        
+        // Definir mensagem de resultado
+        if ($approvedCount > 0) {
+            $message = $approvedCount === 1 
+                ? "1 compromisso aprovado com sucesso"
+                : "{$approvedCount} compromissos aprovados com sucesso";
+            
+            if (!empty($errors)) {
+                $message .= ". Alguns erros ocorreram: " . implode(", ", $errors);
+                $_SESSION['flash_type'] = 'warning';
+            } else {
+                $_SESSION['flash_type'] = 'success';
+            }
+            
+            $_SESSION['flash_message'] = $message;
+        } else {
+            $_SESSION['flash_message'] = 'Nenhum compromisso pôde ser aprovado. Erros: ' . implode(", ", $errors);
+            $_SESSION['flash_type'] = 'danger';
+        }
+        
+        // Preservar filtros da URL ao redirecionar
+        $redirectUrl = BASE_URL . '/meuscompromissos';
+        $queryParams = $this->getQueryParamsString();
+        if ($queryParams) {
+            $redirectUrl .= '?' . $queryParams;
+        }
+        
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
+    
+    /**
+     * Rejeita múltiplos compromissos de uma vez
+     */
+    public function bulkReject() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/meuscompromissos');
+            exit;
+        }
+        
+        // Obter os IDs dos compromissos
+        $idsString = filter_input(INPUT_POST, 'ids', FILTER_SANITIZE_STRING);
+        
+        if (empty($idsString)) {
+            $_SESSION['flash_message'] = 'Nenhum compromisso selecionado';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/meuscompromissos');
+            exit;
+        }
+        
+        // Converter string de IDs em array
+        $ids = array_map('intval', explode(',', $idsString));
+        $ids = array_filter($ids); // Remove valores inválidos
+        
+        if (empty($ids)) {
+            $_SESSION['flash_message'] = 'IDs de compromissos inválidos';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/meuscompromissos');
+            exit;
+        }
+        
+        $userId = $_SESSION['user_id'];
+        $rejectedCount = 0;
+        $errors = [];
+        
+        // Processar cada compromisso
+        foreach ($ids as $id) {
+            try {
+                // Buscar o compromisso
+                $compromisso = $this->compromissoModel->getById($id);
+                
+                if (!$compromisso) {
+                    $errors[] = "Compromisso ID {$id} não encontrado";
+                    continue;
+                }
+                
+                // Verificar se o usuário é o dono da agenda
+                $isOwner = $this->agendaModel->belongsToUser($compromisso['agenda_id'], $userId);
+                
+                if (!$isOwner) {
+                    $errors[] = "Sem permissão para rejeitar compromisso ID {$id}";
+                    continue;
+                }
+                
+                // Verificar se está aguardando aprovação
+                if ($compromisso['status'] != 'aguardando_aprovacao') {
+                    $errors[] = "Compromisso ID {$id} não está aguardando aprovação";
+                    continue;
+                }
+                
+                // Preparar dados para atualizar o status (cancelando o compromisso)
+                $data = [
+                    'title' => $compromisso['title'],
+                    'description' => $compromisso['description'],
+                    'start_datetime' => $compromisso['start_datetime'],
+                    'end_datetime' => $compromisso['end_datetime'],
+                    'location' => $compromisso['location'],
+                    'repeat_type' => $compromisso['repeat_type'],
+                    'repeat_until' => $compromisso['repeat_until'],
+                    'repeat_days' => $compromisso['repeat_days'],
+                    'status' => 'cancelado' // Cancelar o compromisso ao rejeitar
+                ];
+                
+                // Atualizar o status
+                $result = $this->compromissoModel->update($id, $data);
+                
+                if ($result) {
+                    $rejectedCount++;
+                    
+                    // Criar notificação para o criador do compromisso
+                    if (!empty($compromisso['created_by']) && $compromisso['created_by'] != $userId) {
+                        $this->createApprovalNotification($compromisso['created_by'], $id, 'rejected');
+                    }
+                } else {
+                    $errors[] = "Erro ao rejeitar compromisso ID {$id}";
+                }
+                
+            } catch (Exception $e) {
+                $errors[] = "Erro ao processar compromisso ID {$id}: " . $e->getMessage();
+            }
+        }
+        
+        // Definir mensagem de resultado
+        if ($rejectedCount > 0) {
+            $message = $rejectedCount === 1 
+                ? "1 compromisso rejeitado com sucesso"
+                : "{$rejectedCount} compromissos rejeitados com sucesso";
+            
+            if (!empty($errors)) {
+                $message .= ". Alguns erros ocorreram: " . implode(", ", $errors);
+                $_SESSION['flash_type'] = 'warning';
+            } else {
+                $_SESSION['flash_type'] = 'success';
+            }
+            
+            $_SESSION['flash_message'] = $message;
+        } else {
+            $_SESSION['flash_message'] = 'Nenhum compromisso pôde ser rejeitado. Erros: ' . implode(", ", $errors);
+            $_SESSION['flash_type'] = 'danger';
+        }
+        
+        // Preservar filtros da URL ao redirecionar
+        $redirectUrl = BASE_URL . '/meuscompromissos';
+        $queryParams = $this->getQueryParamsString();
+        if ($queryParams) {
+            $redirectUrl .= '?' . $queryParams;
+        }
+        
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
 }
