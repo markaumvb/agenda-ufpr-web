@@ -10,6 +10,13 @@ document.addEventListener("DOMContentLoaded", function () {
   if (form) {
     form.setAttribute("novalidate", "novalidate");
 
+    // NOVA: Remover atributos que podem causar validação prematura
+    const requiredInputs = form.querySelectorAll("input[required]");
+    requiredInputs.forEach((input) => {
+      input.removeAttribute("required");
+      input.setAttribute("data-required", "true"); // Manter referência para nossa validação
+    });
+
     // Validar apenas quando o formulário for enviado
     form.addEventListener("submit", function (event) {
       // Impedir o envio para validar primeiro
@@ -43,8 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // Função para sincronizar data de término quando data de início for completamente alterada
-  // (sem validação durante a mudança)
+  // MODIFICADO: Função para sincronizar data de término - SEM VALIDAÇÃO
   if (startDatetimeInput && endDatetimeInput) {
     startDatetimeInput.addEventListener("change", function () {
       if (!startDatetimeInput.value) return;
@@ -58,8 +64,20 @@ document.addEventListener("DOMContentLoaded", function () {
           newEndDate.setHours(newEndDate.getHours() + 1);
           endDatetimeInput.value = formatDateTime(newEndDate);
         }
+
+        // NOVO: Limpar mensagens de erro ao alterar campos
+        if (errorContainer) {
+          errorContainer.style.display = "none";
+        }
       } catch (e) {
         console.log("Erro ao processar data:", e);
+      }
+    });
+
+    // NOVO: Também limpar erros quando alterar data de término
+    endDatetimeInput.addEventListener("change", function () {
+      if (errorContainer) {
+        errorContainer.style.display = "none";
       }
     });
   }
@@ -106,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // 3. Validar data e hora de término
+    // 3. Validar data e hora de término APENAS se ambos os campos estiverem preenchidos
     if (!endDatetimeInput || !endDatetimeInput.value) {
       errors.push("A data e hora de término são obrigatórias");
     } else if (startDatetimeInput && startDatetimeInput.value) {
@@ -114,10 +132,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const startDate = new Date(startDatetimeInput.value);
         const endDate = new Date(endDatetimeInput.value);
 
-        if (endDate <= startDate) {
-          errors.push(
-            "A data e hora de término deve ser posterior à data e hora de início"
-          );
+        // MODIFICADO: Só validar se ambas as datas forem válidas
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          if (endDate <= startDate) {
+            errors.push(
+              "A data e hora de término deve ser posterior à data e hora de início"
+            );
+          }
         }
       } catch (e) {
         errors.push("Data de término inválida");
