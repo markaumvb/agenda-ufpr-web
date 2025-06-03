@@ -123,56 +123,57 @@
         <?php endif; ?>
         
         <div class="form-actions">
+            <!-- BOTÕES PRINCIPAIS -->
             <div class="action-group primary-actions">
+                <!-- BOTÃO 1: SALVAR ALTERAÇÕES -->
                 <button type="submit" class="btn btn-action btn-primary">
                     <i class="icon-save"></i>
                     <span>Salvar Alterações</span>
                 </button>
                 
+                <!-- BOTÃO 2: CANCELAR -->
                 <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary" id="cancel-edit-btn">
                     <i class="icon-cancel"></i>
                     <span>Cancelar</span>
                 </a>
             </div>
             
+            <!-- BOTÕES SECUNDÁRIOS (apenas se status for pendente) -->
+            <?php if ($compromisso['status'] === 'pendente'): ?>
             <div class="action-group secondary-actions">
-                <?php if ($compromisso['status'] === 'pendente'): ?>
-                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
+                <!-- BOTÃO 3: EXCLUIR COMPROMISSO -->
+                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="console.log('Formulário de delete sendo submetido', this); return confirm('Tem certeza que deseja excluir este compromisso?');">
+
+                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <button type="submit" class="btn btn-action btn-danger">
+                        <i class="icon-trash"></i>
+                        <span>Excluir Compromisso</span>
+                    </button>
+                </form>
+                
+                <!-- BOTÕES PARA EVENTOS RECORRENTES -->
+                <?php if (!empty($compromisso['group_id'])): ?>
+                    <!-- BOTÃO 4: EXCLUIR ESTE E FUTUROS -->
+                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
                         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                        <input type="hidden" name="delete_future" value="1">
                         <button type="submit" class="btn btn-action btn-danger">
-                            <i class="icon-trash"></i>
-                            <span>Excluir Compromisso</span>
+                            <i class="icon-trash-all"></i>
+                            <span>Excluir Este e Futuros</span>
                         </button>
                     </form>
                     
-                    <?php if (!empty($compromisso['group_id'])): ?>
-                        <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
-                            <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                            <input type="hidden" name="delete_future" value="1">
-                            <button type="submit" class="btn btn-action btn-danger">
-                                <i class="icon-trash-all"></i>
-                                <span>Excluir Este e Futuros</span>
-                            </button>
-                        </form>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <button type="button" class="btn btn-action btn-danger disabled" disabled>
-                        <i class="icon-trash"></i>
-                        <span>Excluir Compromisso (indisponível)</span>
-                    </button>
-                    <p class="form-text text-danger">Apenas compromissos com status pendente podem ser excluídos</p>
-                <?php endif; ?>
-                
-                <?php if (!empty($compromisso['group_id'])): ?>
-                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos futuros desta série?');">
+                    <!-- BOTÃO 5: CANCELAR TODOS OS COMPROMISSOS -->
+                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
                         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                         <button type="submit" class="btn btn-action btn-warning">
                             <i class="icon-ban"></i>
-                            <span>Cancelar Futuros</span>
+                            <span>Cancelar Todos os Compromissos</span>
                         </button>
                     </form>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
     </form>
 </div>
