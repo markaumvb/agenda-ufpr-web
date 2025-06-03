@@ -32,6 +32,9 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
+    <-- FlatPicker ->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 
     <title><?= APP_NAME ?></title>
 
@@ -125,6 +128,8 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     <!-- Bootstrap e jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 </head>
 <body class="<?php echo $body_class; ?>">
     <?php if (!$is_auth_page): ?>

@@ -29,14 +29,12 @@
         <div class="form-row">
             <div class="form-group form-group-half">
                 <label for="start_datetime">Data e Hora de Início *</label>
-                <input type="datetime-local" id="start_datetime" name="start_datetime"  class="form-control"
-                       value="<?= htmlspecialchars($compromisso['start_datetime']) ?>">
+                <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control">
             </div>
             
             <div class="form-group form-group-half">
                 <label for="end_datetime">Data e Hora de Término *</label>
-                <input type="datetime-local" id="end_datetime" name="end_datetime"  class="form-control"
-                       value="<?= htmlspecialchars($compromisso['end_datetime']) ?>">
+                <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control">
             </div>
         </div>
         
