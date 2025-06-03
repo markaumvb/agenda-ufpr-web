@@ -1,39 +1,66 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Referências aos elementos do formulário
-  const form = document.getElementById("compromisso-form");
+  console.log("Validation.js carregado");
+
+  // Buscar formulário por id primeiro, depois por classe como fallback
+  let form = document.getElementById("compromisso-form");
+  if (!form) {
+    form = document.querySelector(".compromisso-form");
+    console.log("Formulário encontrado por classe");
+  } else {
+    console.log("Formulário encontrado por id");
+  }
+
+  if (!form) {
+    console.error("Formulário não encontrado!");
+    return;
+  }
+
   const startDatetimeInput = document.getElementById("start_datetime");
   const endDatetimeInput = document.getElementById("end_datetime");
   const errorContainer = document.getElementById("error-container");
   const errorList = document.getElementById("error-list");
 
-  // IMPORTANTE: Desabilitar validação nativa do HTML5
-  if (form) {
-    form.setAttribute("novalidate", "novalidate");
+  // CRÍTICO: Desabilitar todas as validações nativas
+  form.setAttribute("novalidate", "novalidate");
 
-    // NOVA: Remover atributos que podem causar validação prematura
-    const requiredInputs = form.querySelectorAll("input[required]");
-    requiredInputs.forEach((input) => {
+  // Remover qualquer atributo required de todos os inputs
+  const allInputs = form.querySelectorAll("input, textarea, select");
+  allInputs.forEach((input) => {
+    if (input.hasAttribute("required")) {
       input.removeAttribute("required");
-      input.setAttribute("data-required", "true"); // Manter referência para nossa validação
-    });
+      input.setAttribute("data-was-required", "true");
+      console.log("Removido required de:", input.name || input.id);
+    }
 
-    // Validar apenas quando o formulário for enviado
-    form.addEventListener("submit", function (event) {
-      // Impedir o envio para validar primeiro
+    // Remover validação customizada do HTML5
+    input.setCustomValidity("");
+  });
+
+  // Interceptar submit ANTES de qualquer validação
+  form.addEventListener(
+    "submit",
+    function (event) {
+      console.log("Submit interceptado");
+
+      // SEMPRE prevenir o submit primeiro
       event.preventDefault();
+      event.stopPropagation();
 
       // Validar o formulário
       const errors = validateForm();
 
       if (errors.length > 0) {
-        // Exibir erros
+        console.log("Erros encontrados:", errors);
         displayErrors(errors);
       } else {
-        // Se não houver erros, enviar o formulário
+        console.log("Formulário válido, enviando...");
+        // Remove o listener para evitar loop infinito
+        form.removeEventListener("submit", arguments.callee);
         form.submit();
       }
-    });
-  }
+    },
+    true
+  ); // Usar capture para interceptar antes
 
   // Função para formatar data como string para datetime-local
   function formatDateTime(date) {
@@ -50,8 +77,15 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // MODIFICADO: Função para sincronizar data de término - SEM VALIDAÇÃO
+  // Sincronização de datas SEM validação
   if (startDatetimeInput && endDatetimeInput) {
+    startDatetimeInput.addEventListener("input", function () {
+      // Limpar mensagens de erro ao digitar
+      if (errorContainer) {
+        errorContainer.style.display = "none";
+      }
+    });
+
     startDatetimeInput.addEventListener("change", function () {
       if (!startDatetimeInput.value) return;
 
@@ -64,18 +98,13 @@ document.addEventListener("DOMContentLoaded", function () {
           newEndDate.setHours(newEndDate.getHours() + 1);
           endDatetimeInput.value = formatDateTime(newEndDate);
         }
-
-        // NOVO: Limpar mensagens de erro ao alterar campos
-        if (errorContainer) {
-          errorContainer.style.display = "none";
-        }
       } catch (e) {
         console.log("Erro ao processar data:", e);
       }
     });
 
-    // NOVO: Também limpar erros quando alterar data de término
-    endDatetimeInput.addEventListener("change", function () {
+    endDatetimeInput.addEventListener("input", function () {
+      // Limpar mensagens de erro ao digitar
       if (errorContainer) {
         errorContainer.style.display = "none";
       }
@@ -100,8 +129,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const startDate = new Date(startDatetimeInput.value);
         const now = new Date();
 
-        // Verificar se é uma data futura
-        if (startDate <= now) {
+        if (isNaN(startDate.getTime())) {
+          errors.push("Data de início inválida");
+        } else if (startDate <= now) {
           errors.push("A data e hora de início deve ser no futuro");
         } else {
           // Verificar antecedência mínima
@@ -124,7 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // 3. Validar data e hora de término APENAS se ambos os campos estiverem preenchidos
+    // 3. Validar data e hora de término
     if (!endDatetimeInput || !endDatetimeInput.value) {
       errors.push("A data e hora de término são obrigatórias");
     } else if (startDatetimeInput && startDatetimeInput.value) {
@@ -132,13 +162,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const startDate = new Date(startDatetimeInput.value);
         const endDate = new Date(endDatetimeInput.value);
 
-        // MODIFICADO: Só validar se ambas as datas forem válidas
-        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-          if (endDate <= startDate) {
-            errors.push(
-              "A data e hora de término deve ser posterior à data e hora de início"
-            );
-          }
+        if (isNaN(endDate.getTime())) {
+          errors.push("Data de término inválida");
+        } else if (!isNaN(startDate.getTime()) && endDate <= startDate) {
+          errors.push(
+            "A data e hora de término deve ser posterior à data e hora de início"
+          );
         }
       } catch (e) {
         errors.push("Data de término inválida");
@@ -184,7 +213,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Função para exibir erros
   function displayErrors(errors) {
-    if (!errorList || !errorContainer) return;
+    if (!errorList || !errorContainer) {
+      console.error("Containers de erro não encontrados");
+      alert("Erros encontrados:\n" + errors.join("\n"));
+      return;
+    }
 
     // Limpar erros anteriores
     errorList.innerHTML = "";
@@ -205,4 +238,6 @@ document.addEventListener("DOMContentLoaded", function () {
       behavior: "smooth",
     });
   }
+
+  console.log("Validation.js inicializado com sucesso");
 });

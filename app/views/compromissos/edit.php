@@ -10,7 +10,8 @@
         </div>
     <?php endif; ?>
     
-    <form action="<?= PUBLIC_URL ?>/compromissos/update" method="post">
+    <form action="<?= PUBLIC_URL ?>/compromissos/update" method="post" id="compromisso-form" novalidate>
+
         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
         <input type="hidden" name="agenda_id" value="<?= $compromisso['agenda_id'] ?>">
         

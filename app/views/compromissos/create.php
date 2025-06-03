@@ -13,7 +13,7 @@
     </div>
     <?php endif; ?>
     
-    <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post" class="compromisso-form">
+    <form action="<?= PUBLIC_URL ?>/compromissos/save" method="post" id="compromisso-form" class="compromisso-form" novalidate>
         <input type="hidden" name="agenda_id" value="<?= $agendaId ?>">
 
         <div id="error-container" class="alert alert-danger" style="display: <?= !empty($errors) ? 'block' : 'none' ?>;">
