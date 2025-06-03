@@ -64,21 +64,46 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (isEditForm) {
-    document.querySelectorAll(".delete-form").forEach((form) => {
+    // Event listener específico para o botão cancelar (evitar interferência)
+    const cancelBtn = document.getElementById("cancel-edit-btn");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", function (e) {
+        // Não interceptar o clique do cancelar - deixar seguir o href normalmente
+        return true;
+      });
+    }
+
+    // Event listeners apenas para formulários de delete, não para links
+    document.querySelectorAll("form.delete-form").forEach((form) => {
       form.addEventListener("submit", function (event) {
-        if (!confirm("Tem certeza que deseja excluir este compromisso?")) {
-          event.preventDefault();
+        const submitBtn = event.submitter;
+        if (
+          submitBtn &&
+          submitBtn.textContent.includes("Excluir Este e Futuros")
+        ) {
+          if (
+            !confirm(
+              "Tem certeza que deseja excluir este compromisso e todas as suas ocorrências futuras?"
+            )
+          ) {
+            event.preventDefault();
+          }
+        } else {
+          if (!confirm("Tem certeza que deseja excluir este compromisso?")) {
+            event.preventDefault();
+          }
         }
       });
     });
 
+    // Event listener para cancelar futuros
     document
-      .querySelectorAll('form[action*="delete"][action*="future"]')
+      .querySelectorAll('form[action*="cancel-future"]')
       .forEach((form) => {
         form.addEventListener("submit", function (event) {
           if (
             !confirm(
-              "Tem certeza que deseja excluir este compromisso e todas as suas ocorrências futuras?"
+              "Tem certeza que deseja cancelar todos os compromissos futuros desta série?"
             )
           ) {
             event.preventDefault();

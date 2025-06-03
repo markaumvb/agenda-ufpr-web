@@ -1167,6 +1167,121 @@ textarea.form-control {
   }
 }
 
+/* ===== ESTILIZAÇÃO MELHORADA PARA BOTÕES DE AÇÃO DO FORMULÁRIO DE EDIÇÃO ===== */
+.form-actions {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.action-group.primary-actions {
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.action-group.secondary-actions {
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  min-width: 160px;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+.btn-action.btn-primary {
+  background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
+  color: #ffffff;
+}
+
+.btn-action.btn-primary:hover {
+  background: linear-gradient(135deg, #003a70 0%, #004a8f 100%);
+  color: #ffffff;
+}
+
+.btn-action.btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: #ffffff;
+}
+
+.btn-action.btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  color: #ffffff;
+}
+
+.btn-action.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #ffffff;
+}
+
+.btn-action.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  color: #ffffff;
+}
+
+.btn-action.btn-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.btn-action.btn-warning:hover {
+  background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+  color: #212529;
+}
+
+.btn-action.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.btn-action i {
+  font-size: 1.1rem;
+}
+
+/* Responsividade para botões de ação */
+@media (max-width: 768px) {
+  .action-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-action {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
 @media (max-width: 576px) {
   .days-grid {
     grid-template-columns: repeat(3, 1fr);

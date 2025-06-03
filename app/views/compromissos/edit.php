@@ -129,7 +129,7 @@
             <span>Salvar Alterações</span>
         </button>
         
-        <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary">
+        <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary" id="cancel-edit-btn">
             <i class="icon-cancel"></i>
             <span>Cancelar</span>
         </a>

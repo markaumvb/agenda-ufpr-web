@@ -47,6 +47,11 @@ class CompromissoController extends BaseController {
             header('Location: ' . BASE_URL . '/agendas');
             exit;
         }
+
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $agendaOwner = $userModel->getById($agenda['user_id']);
+        $agenda['user_name'] = $agendaOwner ? $agendaOwner['name'] : 'Usuário';
         
         $canAccess = $agenda['is_public'] || $agenda['user_id'] == $_SESSION['user_id'];
         
