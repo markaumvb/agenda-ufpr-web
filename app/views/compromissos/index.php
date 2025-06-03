@@ -22,7 +22,7 @@
             <?= isset($agenda['is_public']) && $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?>
         </span>
         <?php if (!$isOwner): ?>
-            <span class="agenda-owner">Proprietário: <?= htmlspecialchars($agenda['user_name'] ?? 'Usuário') ?></span>
+            <span class="agenda-owner">Proprietário: <?= htmlspecialchars($agenda['owner_name'] ?? $agenda['user_name'] ?? 'Usuário') ?></span>
         <?php endif; ?>
     </div>
         <?php if (isset($agenda['is_active']) && !$agenda['is_active']): ?>

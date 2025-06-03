@@ -208,17 +208,22 @@ function toggleRepeatOptions() {
 // Inicializar as opções de recorrência
 document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
-});
-</script>
-
-<script>
-// Prevenir conflitos no botão cancelar
-document.addEventListener('DOMContentLoaded', function() {
-    const cancelLinks = document.querySelectorAll('a[href*="compromissos?agenda_id"]');
+    
+    // Prevenir conflitos apenas em formulários de delete
+    const deleteForms = document.querySelectorAll('form[action*="/delete"]');
+    deleteForms.forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Tem certeza que deseja excluir?')) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Links de cancelar NÃO devem ter confirmação
+    const cancelLinks = document.querySelectorAll('a.btn-secondary[href*="compromissos?agenda_id"]');
     cancelLinks.forEach(function(link) {
         link.addEventListener('click', function(e) {
-            // Não mostrar confirmação para links de cancelar
-            return true;
+            // Não fazer nada - deixar navegação normal
         });
     });
 });

@@ -357,8 +357,8 @@ public function store() {
         'status' => $status,
         'created_by' => (int)$userId,
         'repeat_type' => $repeatType,
-        'repeat_days' => is_array($repeatDays) ? implode(',', $repeatDays) : '',
-        'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? $repeatUntil : null,
+        'repeat_days' => (is_array($repeatDays) && !empty($repeatDays)) ? implode(',', $repeatDays) : null,
+        'repeat_until' => ($repeatType !== 'none' && !empty($repeatUntil)) ? date('Y-m-d', strtotime($repeatUntil)) : null,
         'is_external' => $isExternal,
         'external_email' => $externalEmail,
         'external_name' => $externalName
@@ -681,14 +681,7 @@ public function updateDate() {
     }
     
 
-public function delete() {
-    // DEBUG COMPLETO
-    error_log("=== INÍCIO DELETE ===");
-    error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
-    error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
-    error_log("POST data: " . print_r($_POST, true));
-    error_log("GET data: " . print_r($_GET, true));
-    
+public function delete() {   
     $this->checkAuth();
     
     // Verificar se é uma requisição POST
