@@ -51,20 +51,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       try {
         const startDate = new Date(startDatetimeInput.value);
-        let endDate = null;
 
-        if (endDatetimeInput.value) {
-          endDate = new Date(endDatetimeInput.value);
-        }
-
-        // Só atualizar o fim se estiver vazio ou for anterior ao início
-        if (!endDatetimeInput.value || !endDate || endDate <= startDate) {
+        // Apenas sincronizar data de término se estiver vazia
+        if (!endDatetimeInput.value) {
           const newEndDate = new Date(startDate);
           newEndDate.setHours(newEndDate.getHours() + 1);
           endDatetimeInput.value = formatDateTime(newEndDate);
         }
       } catch (e) {
-        // Ignorar erros de formatação de data
         console.log("Erro ao processar data:", e);
       }
     });

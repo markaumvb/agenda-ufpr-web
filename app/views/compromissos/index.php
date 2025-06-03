@@ -215,13 +215,6 @@
                     <?php if ($isOwner || (isset($agenda['can_edit']) && $agenda['can_edit'])): ?>
                         <div class="event-actions">
                             <?php if (!isset($compromisso['status']) || $compromisso['status'] !== 'realizado'): ?>
-                                <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">
-                                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?? 0 ?>">
-                                    <input type="hidden" name="status" value="realizado">
-                                    <button type="submit" class="btn btn-sm btn-success" title="Marcar como realizado">
-                                        <i class="icon-check"></i>
-                                    </button>
-                                </form>
                                                                             
                                 <?php if (isset($compromisso['status']) && $compromisso['status'] === 'pendente'): ?>
                                     <form action="<?= PUBLIC_URL ?>/compromissos/change-status" method="post" class="status-form">

@@ -51,7 +51,13 @@ class CompromissoController extends BaseController {
         require_once __DIR__ . '/../models/User.php';
         $userModel = new User();
         $agendaOwner = $userModel->getById($agenda['user_id']);
-        $agenda['user_name'] = $agendaOwner ? $agendaOwner['name'] : 'Usuário';
+        if ($agendaOwner) {
+            $agenda['user_name'] = $agendaOwner['name'];
+            $agenda['owner_name'] = $agendaOwner['name']; // Adicionar também owner_name
+        } else {
+            $agenda['user_name'] = 'Proprietário não encontrado';
+            $agenda['owner_name'] = 'Proprietário não encontrado';
+        }
         
         $canAccess = $agenda['is_public'] || $agenda['user_id'] == $_SESSION['user_id'];
         

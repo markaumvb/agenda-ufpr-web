@@ -132,7 +132,8 @@
                 </button>
                 
                 <!-- BOTÃO 2: CANCELAR -->
-                <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary" id="cancel-edit-btn">
+                <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary">
+
                     <i class="icon-cancel"></i>
                     <span>Cancelar</span>
                 </a>
@@ -207,5 +208,18 @@ function toggleRepeatOptions() {
 // Inicializar as opções de recorrência
 document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
+});
+</script>
+
+<script>
+// Prevenir conflitos no botão cancelar
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelLinks = document.querySelectorAll('a[href*="compromissos?agenda_id"]');
+    cancelLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            // Não mostrar confirmação para links de cancelar
+            return true;
+        });
+    });
 });
 </script>
