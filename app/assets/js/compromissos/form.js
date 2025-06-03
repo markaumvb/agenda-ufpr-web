@@ -1,9 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Verificar se estamos em um formulário de edição ou criação
   const isEditForm = window.location.href.includes("/edit");
-  const compromissoId = isEditForm
-    ? document.querySelector('input[name="id"]')?.value
-    : null;
 
   // Inicializar exibição das opções de repetição
   toggleRepeatOptions();
@@ -13,17 +10,11 @@ document.addEventListener("DOMContentLoaded", function () {
     input.addEventListener("change", toggleRepeatOptions);
   });
 
-  // REMOVER completamente os listeners para verificação de conflitos durante a edição
-  const startDatetime = document.getElementById("start_datetime");
-  const endDatetime = document.getElementById("end_datetime");
-
-  // Validação do formulário
-  const form = document.querySelector("form");
-  if (form) {
-    form.addEventListener("submit", function (event) {
-      // As validações de data já estão no arquivo validation.js
-
-      // Apenas validações específicas do formulário
+  // Validação do formulário APENAS para o formulário principal de update
+  const mainForm = document.querySelector("form[action*='update']");
+  if (mainForm) {
+    mainForm.addEventListener("submit", function (event) {
+      // Apenas validações específicas do formulário principal
       const title = document.getElementById("title").value;
       if (!title.trim()) {
         event.preventDefault();
@@ -63,35 +54,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (isEditForm) {
-    // Event listener específico para o botão cancelar (evitar interferência)
-    const cancelBtn = document.getElementById("cancel-edit-btn");
-    if (cancelBtn) {
-      cancelBtn.addEventListener("click", function (e) {
-        // Não interceptar o clique do cancelar - deixar seguir o href normalmente
-        return true;
-      });
-    }
-
-    // NÃO adicionar event listeners para formulários de delete pois eles já têm onsubmit inline
-    // Os formulários de delete já têm onsubmit="return confirm(...)" no HTML
-
-    // Event listener apenas para cancelar futuros (se não tiver onsubmit inline)
-    const cancelFutureForm = document.querySelector(
-      'form[action*="cancel-future"]'
-    );
-    if (cancelFutureForm && !cancelFutureForm.hasAttribute("onsubmit")) {
-      cancelFutureForm.addEventListener("submit", function (event) {
-        if (
-          !confirm(
-            "Tem certeza que deseja cancelar todos os compromissos futuros desta série?"
-          )
-        ) {
-          event.preventDefault();
-        }
-      });
-    }
-  }
+  // IMPORTANTE: NÃO adicionar NENHUM event listener para formulários de delete
+  // Eles devem funcionar apenas com onsubmit inline
 
   /**
    * Controla a exibição das opções de repetição baseado no tipo selecionado
