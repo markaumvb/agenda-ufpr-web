@@ -19,7 +19,7 @@ class TimelineController extends BaseController {
     }
     
     /**
-     * Exibe a timeline de eventos públicos com melhorias
+     * Exibe a timeline de eventos públicos
      */
     public function index() {
         // Obter data atual ou do parâmetro GET
@@ -87,8 +87,7 @@ class TimelineController extends BaseController {
             
             // Processar cada evento
             foreach ($events as $event) {
-                // Não incluir eventos cancelados na timeline pública por padrão
-                // Mas manter outros status para transparência
+
                 if ($event['status'] === 'cancelado') {
                     continue;
                 }

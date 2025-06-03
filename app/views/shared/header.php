@@ -1,7 +1,7 @@
 <?php
 // Determinar se estamos em uma página de autenticação
 $current_url = $_SERVER['REQUEST_URI'];
-$auth_pages = ['/login', '/register', '/login-process', '/register-process']; 
+$auth_pages = ['/login', '/register', '/login-process', '/register-process', '/timeline']; 
 $is_auth_page = false;
 
 if (isset($_SESSION['user_id']) && !isset($notificationModel)) {
