@@ -35,7 +35,9 @@ public function login() {
     // Validar campos
     $errors = [];
     if (empty($username)) {
-        $errors['username'] = 'O nome de usuário é obrigatório';
+        $errors['username'] = 'O e-mail é obrigatório';
+    } elseif (!filter_var($username, FILTER_VALIDATE_EMAIL)) {
+        $errors['username'] = 'Digite um e-mail válido (exemplo: usuario@ufpr.br)';
     }
     if (empty($password)) {
         $errors['password'] = 'A senha é obrigatória';
