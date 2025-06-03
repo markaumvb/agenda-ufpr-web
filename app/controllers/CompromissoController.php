@@ -451,6 +451,9 @@ public function edit() {
     // Verificar se é parte de um evento recorrente
     $isRecurring = !empty($compromisso['group_id']);
     
+    if (!isset($agenda)) {
+        $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+    }
     // Exibir a view
     require_once __DIR__ . '/../views/shared/header.php';
     require_once __DIR__ . '/../views/compromissos/edit.php';

@@ -1,4 +1,11 @@
-<div class="form-container">
+<?php
+// Buscar dados da agenda se não existir
+if (!isset($agenda)) {
+    $agenda = $this->agendaModel->getById($compromisso['agenda_id']);
+}
+?>
+
+<div class="form-container" data-min-time-before="<?= $agenda['min_time_before'] ?? 0 ?>">
     <div class="form-header">
         <h1>Editar Compromisso</h1>
         <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-link">Voltar</a>

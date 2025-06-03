@@ -1,4 +1,4 @@
-<div class="form-container">
+<div class="form-container" data-min-time-before="<?= $agenda['min_time_before'] ?? 0 ?>">
     <div class="form-header">
         <h1><i class="fas fa-calendar-plus"></i> Novo Compromisso</h1>
         <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $agendaId ?>" class="btn btn-link">

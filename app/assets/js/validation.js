@@ -18,12 +18,14 @@ document.addEventListener("DOMContentLoaded", function () {
   form.setAttribute("novalidate", "novalidate");
 
   // Obter tempo mínimo da agenda
-  const agendaContainer = document.querySelector("[data-min-time-before]");
-  const minTimeBefore = agendaContainer
-    ? parseInt(agendaContainer.dataset.minTimeBefore || 0)
+  const formContainer = document.querySelector(
+    ".form-container[data-min-time-before]"
+  );
+  const minTimeBefore = formContainer
+    ? parseInt(formContainer.dataset.minTimeBefore || 0)
     : 0;
 
-  // Calcular data mínima (agora + tempo mínimo)
+  // Calcular data mínima (agora + tempo mínimo da agenda)
   const now = new Date();
   const minDate = new Date(now.getTime() + minTimeBefore * 60 * 60 * 1000);
 
