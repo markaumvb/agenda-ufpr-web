@@ -15,7 +15,7 @@
     <form action="<?= BASE_URL ?>/login-process" method="post" class="login-form">
         <div class="form-group">
             <label for="username">Usuário UFPR:</label>
-            <input type="text" id="username" name="username" required 
+            <input type="email" id="username" name="username" required 
                    autocomplete="username" placeholder="email@ufpr.br"
                    class="form-control <?= isset($_SESSION['error_fields']['username']) ? 'is-invalid' : '' ?>">
             <?php if (isset($_SESSION['error_fields']['username'])): ?>

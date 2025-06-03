@@ -115,12 +115,12 @@ public function login() {
      */
     public function showRegisterForm() {
         // Verificar se há um nome de usuário na sessão
-        if (!isset($_SESSION['username'])) {
+        if (!isset($_SESSION['authenticated_username'])) {
             header('Location: ' . PUBLIC_URL . '/login');
             exit;
         }
         
-        $username = $_SESSION['username'];
+        $username = $_SESSION['authenticated_username'];
         
         require_once __DIR__ . '/../views/shared/header.php';
         require_once __DIR__ . '/../views/auth/register.php';
@@ -138,12 +138,12 @@ public function login() {
         }
         
         // Verificar se há um nome de usuário na sessão
-        if (!isset($_SESSION['username'])) {
+        if (!isset($_SESSION['authenticated_username'])) {
             header('Location: ' . PUBLIC_URL . '/login');
             exit;
         }
         
-        $username = $_SESSION['username'];
+        $username = $_SESSION['authenticated_username'];
         $name = trim($_POST['name']);
         
         // Validar campos
@@ -160,11 +160,8 @@ public function login() {
             exit;
         }
         
-        // Obter e-mail a partir do nome de usuário (padrão UFPR)
-        $email = $username;
-        if (strpos($email, '@') === false) {
-            $email .= '@ufpr.br';
-        }
+        // CORREÇÃO: Formatar e-mail corretamente
+        $email = $this->formatUserEmail($username);
         
         // Criar o usuário
         $userData = [
@@ -187,7 +184,7 @@ public function login() {
         $_SESSION['name'] = $name;
         
         // Limpar dados temporários da sessão
-        unset($_SESSION['username']);
+        unset($_SESSION['authenticated_username']);
         
         // Mensagem de sucesso
         $_SESSION['flash_message'] = 'Cadastro realizado com sucesso!';
@@ -196,6 +193,22 @@ public function login() {
         // Redirecionar para a página de agendas
         header('Location: ' . PUBLIC_URL . '/agendas');
         exit;
+    }
+    
+    /**
+     * Formata o e-mail do usuário corretamente
+     * 
+     * @param string $username Nome de usuário
+     * @return string E-mail formatado
+     */
+    private function formatUserEmail($username) {
+        // Se já contém @, usar como está
+        if (strpos($username, '@') !== false) {
+            return $username;
+        }
+        
+        // Se não contém @, adicionar @ufpr.br
+        return $username . '@ufpr.br';
     }
     
     /**
