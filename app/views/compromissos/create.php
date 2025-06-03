@@ -276,5 +276,4 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
 });
 </script>
-<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation-improved.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
