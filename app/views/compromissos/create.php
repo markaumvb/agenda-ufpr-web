@@ -82,7 +82,7 @@
                     <label for="end_datetime">
                         <i class="fas fa-stop"></i> Data e Hora de Término *
                     </label>
-                    <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control">
+                    <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" >
                     <small class="form-text text-muted">
                         <i class="fas fa-info-circle"></i>
                         Deve ser posterior ao horário de início
