@@ -73,43 +73,24 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // Event listeners apenas para formulários de delete, não para links
-    document.querySelectorAll("form.delete-form").forEach((form) => {
-      form.addEventListener("submit", function (event) {
-        const submitBtn = event.submitter;
+    // NÃO adicionar event listeners para formulários de delete pois eles já têm onsubmit inline
+    // Os formulários de delete já têm onsubmit="return confirm(...)" no HTML
+
+    // Event listener apenas para cancelar futuros (se não tiver onsubmit inline)
+    const cancelFutureForm = document.querySelector(
+      'form[action*="cancel-future"]'
+    );
+    if (cancelFutureForm && !cancelFutureForm.hasAttribute("onsubmit")) {
+      cancelFutureForm.addEventListener("submit", function (event) {
         if (
-          submitBtn &&
-          submitBtn.textContent.includes("Excluir Este e Futuros")
+          !confirm(
+            "Tem certeza que deseja cancelar todos os compromissos futuros desta série?"
+          )
         ) {
-          if (
-            !confirm(
-              "Tem certeza que deseja excluir este compromisso e todas as suas ocorrências futuras?"
-            )
-          ) {
-            event.preventDefault();
-          }
-        } else {
-          if (!confirm("Tem certeza que deseja excluir este compromisso?")) {
-            event.preventDefault();
-          }
+          event.preventDefault();
         }
       });
-    });
-
-    // Event listener para cancelar futuros
-    document
-      .querySelectorAll('form[action*="cancel-future"]')
-      .forEach((form) => {
-        form.addEventListener("submit", function (event) {
-          if (
-            !confirm(
-              "Tem certeza que deseja cancelar todos os compromissos futuros desta série?"
-            )
-          ) {
-            event.preventDefault();
-          }
-        });
-      });
+    }
   }
 
   /**

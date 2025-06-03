@@ -123,59 +123,88 @@
         <?php endif; ?>
         
         <div class="form-actions">
-    <div class="action-group primary-actions">
-        <button type="submit" class="btn btn-action btn-primary">
-            <i class="icon-save"></i>
-            <span>Salvar Alterações</span>
-        </button>
-        
-        <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary" id="cancel-edit-btn">
-            <i class="icon-cancel"></i>
-            <span>Cancelar</span>
-        </a>
-    </div>
-    
-    <div class="action-group secondary-actions">
-        <?php if ($compromisso['status'] === 'pendente'): ?>
-            <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
-                <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                <button type="submit" class="btn btn-action btn-danger">
-                    <i class="icon-trash"></i>
-                    <span>Excluir Compromisso</span>
+            <div class="action-group primary-actions">
+                <button type="submit" class="btn btn-action btn-primary">
+                    <i class="icon-save"></i>
+                    <span>Salvar Alterações</span>
                 </button>
-            </form>
+                
+                <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary" id="cancel-edit-btn">
+                    <i class="icon-cancel"></i>
+                    <span>Cancelar</span>
+                </a>
+            </div>
             
-            <?php if (!empty($compromisso['group_id'])): ?>
-                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
-                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                    <input type="hidden" name="delete_future" value="1">
-                    <button type="submit" class="btn btn-action btn-danger">
-                        <i class="icon-trash-all"></i>
-                        <span>Excluir Este e Futuros</span>
+            <div class="action-group secondary-actions">
+                <?php if ($compromisso['status'] === 'pendente'): ?>
+                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso?');">
+                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                        <button type="submit" class="btn btn-action btn-danger">
+                            <i class="icon-trash"></i>
+                            <span>Excluir Compromisso</span>
+                        </button>
+                    </form>
+                    
+                    <?php if (!empty($compromisso['group_id'])): ?>
+                        <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
+                            <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                            <input type="hidden" name="delete_future" value="1">
+                            <button type="submit" class="btn btn-action btn-danger">
+                                <i class="icon-trash-all"></i>
+                                <span>Excluir Este e Futuros</span>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <button type="button" class="btn btn-action btn-danger disabled" disabled>
+                        <i class="icon-trash"></i>
+                        <span>Excluir Compromisso (indisponível)</span>
                     </button>
-                </form>
-            <?php endif; ?>
-        <?php else: ?>
-            <button type="button" class="btn btn-action btn-danger disabled" disabled>
-                <i class="icon-trash"></i>
-                <span>Excluir Compromisso (indisponível)</span>
-            </button>
-            <p class="form-text text-danger">Apenas compromissos com status pendente podem ser excluídos</p>
-        <?php endif; ?>
-        
-        <?php if (!empty($compromisso['group_id'])): ?>
-            <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos futuros desta série?');">
-                <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                <button type="submit" class="btn btn-action btn-warning">
-                    <i class="icon-ban"></i>
-                    <span>Cancelar Futuros</span>
-                </button>
-            </form>
-        <?php endif; ?>
-    </div>
+                    <p class="form-text text-danger">Apenas compromissos com status pendente podem ser excluídos</p>
+                <?php endif; ?>
+                
+                <?php if (!empty($compromisso['group_id'])): ?>
+                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="delete-form" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos futuros desta série?');">
+                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                        <button type="submit" class="btn btn-action btn-warning">
+                            <i class="icon-ban"></i>
+                            <span>Cancelar Futuros</span>
+                        </button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </form>
 </div>
 
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation.js"></script>
 
- 
+<script>
+// Função que mostra/esconde as opções de recorrência
+function toggleRepeatOptions() {
+    const repeatType = document.querySelector('input[name="repeat_type"]:checked').value;
+    const repeatUntilContainer = document.getElementById('repeat_until_container');
+    const repeatDaysContainer = document.getElementById('repeat_days_container');
+    
+    // Mostrar/esconder container de "repetir até"
+    if (repeatType === 'none') {
+        repeatUntilContainer.style.display = 'none';
+        repeatDaysContainer.style.display = 'none';
+    } else {
+        repeatUntilContainer.style.display = 'block';
+        
+        // Mostrar/esconder container de dias específicos
+        if (repeatType === 'specific_days') {
+            repeatDaysContainer.style.display = 'block';
+        } else {
+            repeatDaysContainer.style.display = 'none';
+        }
+    }
+}
+
+// Inicializar as opções de recorrência
+document.addEventListener('DOMContentLoaded', function() {
+    toggleRepeatOptions();
+});
+</script>
