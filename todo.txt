@@ -1,7 +1,6 @@
 *https://200.238.174.7/agenda_ufpr/compromissos/edit?id=270 quando clico em cancelar, e depois na mensagem que aparece clico no botão cancelar, ele me retorna a mensagem se eu desejo excluir, sendo que quero apenas cancelar. Quando clico em cancelar na mensagem, ele me pergunta de novo a msm coisa...
 por favor veja meu código analise antes de tudo toda minha base de conhecimento, se estiver faltando arquivo me informe qual arquivo para enviar, e só prossiga se somente todos os arquivos necessários estiverem na base de conhecimento para essas mudanças seja mais detalhado em quais linhas devo fazer as modificações (número da linha) de qual até qual linha e veja também se for uma função me mostre a função completa Quando estou criando / editando o compromisso, ao digitar o número 1 na data e hora inicio: 
 
-* https://200.238.174.7/agenda_ufpr/shares/shared = campo de busca precisa de estilização
 
 * https://200.238.174.7/agenda_ufpr/agendas/all 
 ** precisa de campo para buscar as agendas (creio que o método ja exista)
