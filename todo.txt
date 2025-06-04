@@ -1,39 +1,3 @@
-
-em agendas compartilhadas, (apenas visualização) não se pode modificar nenhum compromisso da agenda...
-
-temos que criar uma tela que liste os compromissos em todas as agendas públicas, de forma linear (uma linha do tempo uma barra de linha do tempo de forma vertical... e essa barra deve ir atualizando com o decorrer do tempo (de meia em meia hora) a pessoa, ao abrir essa tela, pegará os eventos do dia!, mas logo acima podemos criar um filtro para: escolher a data, escolher a agenda (multiseleção) e pesquisar por descrição do evento. Além disso preciso de um script ou alguma forma de que obanco de dados atualize de forma automática, ou seja, eventos pendentes que sejam < que a data/hora atual devem ficar finalizados se forma automática sem intervenção humana... algum script ou processo que faça isso de forma agendada de meia em meia 
-
-- COMPROMISSOS SEM VERIFICAÇÕES DE DATA E HORA INICIAL E FINAL, DEVE-SE SEMPRE VERIFICAR ANTES DE CRIAR QUALQUER COMPROMISSO SE JÁ EXISTE COMPROMISSO NAQUELA DATA E HORA (OBEDECENDO O INTERVALO DE TEMPO)
-
-
- - quando criei um compromisso que se repete diariamente até um dia... o sistema crioui um monte de notificações de compromisso.... 
-
- - quando o compromisso for recorrente, apenas 1 notificação deverá ser gerada, tanto para informar do comrpomisso criado, tanto para quando o compromisso for aceito, quando aceito, todos os compromissos da recorrencia devems ser aceitos
-
- - devemos ter uma tela de criar compromisso (apenas para agendas publicas), para usuários que não estejam logados no sistema. dessa forma qualquer pessoa pode criar compromisso no sistema e ficar com status aguardando aprovação, msm não tendo feito login. na tela inicial logo ao lado do botão de visualizar compromissos deverá ter o botão para criar os compromissos. as regras para criar o compromisso serão as msm... não pode ser feito compromissos antes do dia atual e obedecer o prazo da agenda. deveremos gravar na tabela compromisso um campo is_external (booelan) e external_email e external_name para gravar o e-mail do usuário externo (devemos modificar isso, para usuarios logados is_external = false (por default no banco de dados)), o fluxo será
- 1 - usuário clicará em novo compromisso (deverá aparecer uma tela com um input simples para ele digitar o e-mail dele e o nome), e assim qaudno entrar na tela de fazer comrpomisso, deverá marcar is_external = true e o email delee o nome...
- 2 - o usuário dono da agenda terá a notificação desse compromisso, e receberá um e-mail informando desse novo compromisso o email poderá ter um link para a notificação criada. o usuário externo receberá um e-mail informando que o pedido está com status de aguardando a solicitação, e quando a solicitação for aceita ou negada, deverá receber outro e-mail com o status final e todas as informações da solicitação
-
-
-
-a estilização ficou legal, mas antes nas agendas, tinha uma fina borda na esquerda com a cor da agenda (essa cor é cadastrada na agenda) é possível fazer isso de novo??
-
-e os quadros de estatísticas, não caberam no card, podemos diminuir eles ou aumentar os cards...
-
-e agora em agendas compartilhadas, também ficou sem estilização, devemos usar a msm....
-
-https://200.238.174.7/agenda_ufpr/ << minha estilização sumiu, e tinhamos uma bem bonita feita.....  (veja todos meus CSS, que talvez em algum deles tenha o q era...)
-
-
-
-
-
-
-
-
-
-* Quando estou criando / editando o compromisso, ao digitar o número 1 na data e hora inicio: A data e hora de término deve ser posterior à data e hora de início. sendo que a data seria 17/06, ou seja, ainda não digitei a data final e ele já validou, essa validação só pode ser feita quando lcicar em salvar
-* https://200.238.174.7/agenda_ufpr/compromissos/edit?id=270 (botões precisam de estilização melhor: (me mostre no CSS, apenas o que deve ser alterado ou inserido, se for alterado o que alterar e se for inserir o que inserir) 
 *https://200.238.174.7/agenda_ufpr/compromissos/edit?id=270 quando clico em cancelar, e depois na mensagem que aparece clico no botão cancelar, ele me retorna a mensagem se eu desejo excluir, sendo que quero apenas cancelar. Quando clico em cancelar na mensagem, ele me pergunta de novo a msm coisa...
 por favor veja meu código analise antes de tudo toda minha base de conhecimento, se estiver faltando arquivo me informe qual arquivo para enviar, e só prossiga se somente todos os arquivos necessários estiverem na base de conhecimento para essas mudanças seja mais detalhado em quais linhas devo fazer as modificações (número da linha) de qual até qual linha e veja também se for uma função me mostre a função completa Quando estou criando / editando o compromisso, ao digitar o número 1 na data e hora inicio: 
 
@@ -42,3 +6,12 @@ por favor veja meu código analise antes de tudo toda minha base de conhecimento
 * https://200.238.174.7/agenda_ufpr/agendas/all 
 ** precisa de campo para buscar as agendas (creio que o método ja exista)
 ** precisa de paginação
+
+
+
+
+se estiver faltando algum arquivo me avise antes de prosseguir, e só prossiga se todos os arquivos estiverem presentes na base de conhecimento
+
+
+quando o compromisso tiver recorrência... a data e hora inicial e data e hora final devem ser no mesmo dia
+ex: criei um compromiso que começa nodia 20/06/2025 das 13:00 às 14:00 até o dia 30/06/2025 13:00 às 14:00, e coloquei recorrência diária até o dia 30/06... a ideia seria que ocorrese o compromisso do dia 20 até o dia 30 das 13:00 às 14:00 ou seja, se o usuário colocar o dia final em outro dia além do inicial, o sistema deve colocar a data incial e final no mesmo dia e fazer a recorrência da maneira correta...

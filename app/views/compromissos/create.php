@@ -68,7 +68,8 @@
                         <i class="fas fa-play"></i> Data e Hora de Início *
                     </label>
                     
-                    <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control">
+                    <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control" 
+                        value="<?= isset($formData['start_datetime']) ? htmlspecialchars($formData['start_datetime']) : $defaultStartDateTime ?>">
                     <small class="form-text text-muted">
                         <i class="fas fa-info-circle"></i>
                         A data deve ser futura 
@@ -82,7 +83,8 @@
                     <label for="end_datetime">
                         <i class="fas fa-stop"></i> Data e Hora de Término *
                     </label>
-                    <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" >
+                    <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" 
+                        value="<?= isset($formData['end_datetime']) ? htmlspecialchars($formData['end_datetime']) : $defaultEndDateTime ?>">
                     <small class="form-text text-muted">
                         <i class="fas fa-info-circle"></i>
                         Deve ser posterior ao horário de início
@@ -275,3 +277,63 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startInput = document.getElementById('start_datetime');
+    const endInput = document.getElementById('end_datetime');
+    
+    if (startInput && endInput) {
+        // Função para sincronizar data final quando data inicial muda
+        startInput.addEventListener('change', function() {
+            if (!startInput.value) return;
+            
+            try {
+                const startDate = new Date(startInput.value);
+                
+                // Se campo final estiver vazio OU for menor que início, sincronizar
+                if (!endInput.value || new Date(endInput.value) <= startDate) {
+                    const endDate = new Date(startDate);
+                    endDate.setHours(endDate.getHours() + 1); // +1 hora
+                    
+                    // Formatar para datetime-local
+                    const year = endDate.getFullYear();
+                    const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(endDate.getDate()).padStart(2, '0');
+                    const hours = String(endDate.getHours()).padStart(2, '0');
+                    const minutes = String(endDate.getMinutes()).padStart(2, '0');
+                    
+                    endInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                }
+                
+                // Atualizar mínimo do campo final
+                endInput.min = startInput.value;
+                
+            } catch (e) {
+                console.error('Erro ao sincronizar datas:', e);
+            }
+        });
+        
+        // Validação em tempo real
+        function validateDates() {
+            if (startInput.value && endInput.value) {
+                const start = new Date(startInput.value);
+                const end = new Date(endInput.value);
+                
+                if (end <= start) {
+                    endInput.setCustomValidity('A data de término deve ser posterior à data de início');
+                } else {
+                    endInput.setCustomValidity('');
+                }
+            }
+        }
+        
+        startInput.addEventListener('change', validateDates);
+        endInput.addEventListener('change', validateDates);
+        
+        // Disparar evento inicial para sincronizar se necessário
+        if (startInput.value) {
+            startInput.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>

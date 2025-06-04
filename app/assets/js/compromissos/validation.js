@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isNaN(startDate.getTime())) {
           errors.push("Data de início inválida");
         } else if (startDate <= now) {
-          errors.push("A data e hora de início deve ser no futuro");
+          errors.push("A data e hora de início devem ser posteriores");
         }
       }
 

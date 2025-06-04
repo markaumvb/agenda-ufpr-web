@@ -1201,7 +1201,7 @@ public function validateCompromissoDate($agendaId, $startDatetime, $isEditing = 
         
         // Verifica se a data inicial está no futuro
         if ($start <= $now) {
-            $errors[] = 'A data e hora de início deve ser no futuro';
+            $errors[] = 'A data e hora de início devem ser posteriores';
             return $errors;
         }
         
