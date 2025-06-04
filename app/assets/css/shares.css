@@ -385,6 +385,243 @@
   gap: var(--spacing-sm);
 }
 
+/* Container do campo de busca */
+.search-box {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 74, 143, 0.1);
+  transition: all 0.3s ease;
+}
+
+.search-box:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 6px 20px rgba(0, 74, 143, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Formulário de busca */
+.search-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Campo de entrada de busca */
+.search-form input[type="text"] {
+  flex: 1;
+  min-width: 300px;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #2d3748;
+  background-color: #ffffff;
+  background-clip: padding-box;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-form input[type="text"]:focus {
+  border-color: #004a8f;
+  box-shadow: 0 0 0 3px rgba(0, 74, 143, 0.1), 0 4px 12px rgba(0, 74, 143, 0.15);
+  outline: none;
+  background-color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.search-form input[type="text"]::placeholder {
+  color: #a0aec0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Botões do formulário de busca */
+.search-form .btn {
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-form .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+/* Botão primário (Buscar) */
+.search-form .btn-primary {
+  background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
+  color: #ffffff;
+  min-width: 120px;
+}
+
+.search-form .btn-primary:hover {
+  background: linear-gradient(135deg, #003a70 0%, #004a8f 100%);
+  color: #ffffff;
+}
+
+/* Botão secundário (Limpar) */
+.search-form .btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: #ffffff;
+  min-width: 100px;
+}
+
+.search-form .btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  color: #ffffff;
+}
+
+/* Ícones nos botões */
+.search-form .btn i {
+  font-size: 0.9rem;
+  margin-right: 0.25rem;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 768px) {
+  .search-box {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-form input[type="text"] {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .search-form .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem 1.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .search-box {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .search-form input[type="text"] {
+    font-size: 0.9rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .search-form .btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* ===== ESTADO DE BUSCA ATIVA ===== */
+
+/* Estilo quando há uma busca ativa */
+.search-box.has-search {
+  background: linear-gradient(135deg, #e6f3ff 0%, #f0f7ff 100%);
+  border-color: #004a8f;
+}
+
+.search-box.has-search input[type="text"] {
+  border-color: #004a8f;
+  background-color: #ffffff;
+  font-weight: 500;
+}
+
+/* ===== ANIMAÇÕES SUAVES ===== */
+
+.search-form {
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading state para o botão de busca */
+.search-form .btn.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.search-form .btn.loading::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  margin-left: 0.5rem;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== INTEGRAÇÃO COM O TEMA EXISTENTE ===== */
+
+/* Garantir que os estilos sejam consistentes com o resto da aplicação */
+.search-form input[type="text"]:invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.search-form input[type="text"]:valid {
+  border-color: #28a745;
+}
+
+/* Melhorar a acessibilidade */
+.search-form input[type="text"]:focus-visible {
+  outline: 2px solid #004a8f;
+  outline-offset: 2px;
+}
+
+.search-form .btn:focus-visible {
+  outline: 2px solid #004a8f;
+  outline-offset: 2px;
+}
+
 /* Responsividade */
 @media (max-width: var(--breakpoint-sm)) {
   .form-row {

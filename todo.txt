@@ -13,8 +13,3 @@ por favor veja meu código analise antes de tudo toda minha base de conhecimento
 se estiver faltando algum arquivo me avise antes de prosseguir, e só prossiga se todos os arquivos estiverem presentes na base de conhecimento
 
 
-Quando o compromisso, tiver recorrência, a data/hora inicial e data/hora final não podem ter mais de 12h de diferença!!! ou seja, o usuário deverá ser notificado que o tempo máximo do compromisso deve ser 12h para recorrências. Essa situação só deverá ser feita para compromissos com recorrência, seja ela qual for. Caso o usuário ultrapasse esse tempo, deverá ser notificado ao salvar e pedindo para ele fazer essa correção.
-também podemos colocar na tela de create/edit logo ao lado da data/hora final o tempo do compromisso (quando ele mudar a data final calcular esse tempo ao sair do campo),e também estilizar esse campo.
-outro detalhe no edit.php que é praticamente o mesmo de create, a estilização está diferente, faça a estilização igual ao do create.
-e também podemos diminuir um pouco do espaço entre os elementos para que a altura fique menor...
-se estiver faltando algum arquivo me avise antes de prosseguir, e só prossiga se todos os arquivos estiverem presentes na base de conhecimento!!!
