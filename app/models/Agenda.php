@@ -39,7 +39,7 @@ class Agenda {
         }
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+            $sql .= " AND (a.title LIKE :search1 OR a.description LIKE :search2)";
         }
         
         $sql .= " ORDER BY a.is_active DESC, a.title ASC";
@@ -53,7 +53,8 @@ class Agenda {
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
@@ -67,7 +68,7 @@ class Agenda {
     }
 }
 
-    public function countByUser($userId, $search = null, $includeInactive = false) {
+public function countByUser($userId, $search = null, $includeInactive = false) {
     try {
         $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
         
@@ -76,7 +77,7 @@ class Agenda {
         }
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (title LIKE :search OR description LIKE :search)";
+            $sql .= " AND (title LIKE :search1 OR description LIKE :search2)";
         }
         
         $stmt = $this->db->prepare($sql);
@@ -84,7 +85,8 @@ class Agenda {
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();

@@ -102,7 +102,7 @@ class AgendaShare {
         }
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search2)";
+            $sql .= " AND (a.title LIKE :search1 OR a.description LIKE :search2 OR u.name LIKE :search3)";
         }
         
         $sql .= " ORDER BY a.title LIMIT :limit OFFSET :offset";
@@ -112,8 +112,9 @@ class AgendaShare {
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
             $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
@@ -152,7 +153,7 @@ public function countSharedWithUser($userId, $activeOnly = true, $search = null)
         }
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search2)";
+            $sql .= " AND (a.title LIKE :search1 OR a.description LIKE :search2 OR u.name LIKE :search3)";
         }
         
         $stmt = $this->db->prepare($sql);
@@ -160,8 +161,9 @@ public function countSharedWithUser($userId, $activeOnly = true, $search = null)
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
             $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();
@@ -186,7 +188,7 @@ public function getAgendasSharedByUser($userId, $search = null) {
                 )";
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+            $sql .= " AND (a.title LIKE :search1 OR a.description LIKE :search2)";
         }
         
         $sql .= " ORDER BY a.title";
@@ -196,14 +198,14 @@ public function getAgendasSharedByUser($userId, $search = null) {
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();
         
         $agendas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // Adicionar dados dos usuários com quem esta agenda foi compartilhada
             $sharesSql = "SELECT u.name 
                           FROM agenda_shares s
                           JOIN users u ON s.user_id = u.id
