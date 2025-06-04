@@ -376,71 +376,82 @@ class AgendaController extends BaseController {
     }
 
     /**
- * Exibe todas as agendas organizadas por tipo
- */
-
-public function allAgendas() {
-    // Verificar se o usuário está logado
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: " . PUBLIC_URL . "/login");
-        exit;
-    }
-    
-    $userId = $_SESSION['user_id'];
-    
-    // Processar parâmetro de busca
-    $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
-    
-    // Inicializar modelos localmente
-    require_once __DIR__ . '/../models/Agenda.php';
-    $agendaModel = new Agenda();
-    
-    require_once __DIR__ . '/../models/AgendaShare.php';
-    $shareModel = new AgendaShare();
-    
-    // Parâmetros de paginação
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $perPage = 12; // 12 agendas por página
-    
-    // Buscar agendas do usuário (dono)
-    $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
-    
-    // ADICIONAR ESTA PARTE: Remover duplicatas usando IDs
-    $uniqueAgendas = [];
-    $uniqueIds = [];
-    foreach ($myAgendas as $agenda) {
-        if (!in_array($agenda['id'], $uniqueIds)) {
-            $uniqueIds[] = $agenda['id'];
-            $uniqueAgendas[] = $agenda;
+     * Exibe todas as agendas organizadas por tipo - CORRIGIDO COM BUSCA
+     */
+    public function allAgendas() {
+        // Verificar se o usuário está logado
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: " . PUBLIC_URL . "/login");
+            exit;
         }
+        
+        $userId = $_SESSION['user_id'];
+        
+        // ADICIONADO: Processar parâmetro de busca
+        $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+        
+        // Inicializar modelos localmente
+        require_once __DIR__ . '/../models/Agenda.php';
+        $agendaModel = new Agenda();
+        
+        require_once __DIR__ . '/../models/AgendaShare.php';
+        $shareModel = new AgendaShare();
+        
+        // Parâmetros de paginação
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $perPage = 12; // 12 agendas por página
+        
+        // CORRIGIDO: Buscar agendas do usuário (dono) COM BUSCA
+        $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
+        
+        // ADICIONAR ESTA PARTE: Remover duplicatas usando IDs
+        $uniqueAgendas = [];
+        $uniqueIds = [];
+        foreach ($myAgendas as $agenda) {
+            if (!in_array($agenda['id'], $uniqueIds)) {
+                $uniqueIds[] = $agenda['id'];
+                $uniqueAgendas[] = $agenda;
+            }
+        }
+        $myAgendas = $uniqueAgendas;
+        
+        $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
+        
+        // Adicionar contagem de compromissos para cada agenda
+        foreach ($myAgendas as &$agenda) {
+            $stats = $agendaModel->countCompromissosByStatus($agenda['id']);
+            $agenda['compromissos'] = $stats ?: [
+                'pendentes' => 0,
+                'realizados' => 0,
+                'cancelados' => 0,
+                'aguardando_aprovacao' => 0,
+                'total' => 0
+            ];
+        }
+        
+        // CORRIGIDO: Buscar agendas compartilhadas com o usuário COM BUSCA
+        $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
+        $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true, $search);
+        
+        // CORRIGIDO: Buscar agendas públicas COM BUSCA (excluindo as que o usuário já tem acesso)
+        if ($search) {
+            // Se há busca, usar método de busca específico
+            $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage);
+            $totalPublicAgendas = $agendaModel->countPublicAgendasWithSearch($search);
+        } else {
+            // Se não há busca, usar método normal
+            $publicAgendas = $agendaModel->getPublicAgendas($userId, true, $page, $perPage);
+            $totalPublicAgendas = $agendaModel->countPublicAgendas($userId, true);
+        }
+        
+        // Calcular total de páginas para cada seção
+        $totalPagesMyAgendas = ceil($totalMyAgendas / $perPage);
+        $totalPagesSharedAgendas = ceil($totalSharedAgendas / $perPage);
+        $totalPagesPublicAgendas = ceil($totalPublicAgendas / $perPage);
+        
+        // Carregar view
+        require_once __DIR__ . '/../views/shared/header.php';
+        require_once __DIR__ . '/../views/agendas/all.php';
+        require_once __DIR__ . '/../views/shared/footer.php';
     }
-    $myAgendas = $uniqueAgendas;
-    
-    $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
-    
-    // Adicionar contagem de compromissos para cada agenda
-    foreach ($myAgendas as &$agenda) {
-        $stats = $agendaModel->countCompromissosByStatus($agenda['id']);
-        $agenda['compromissos'] = $stats ?: [
-            'pendentes' => 0,
-            'realizados' => 0,
-            'cancelados' => 0,
-            'aguardando_aprovacao' => 0,
-            'total' => 0
-        ];
-    }
-    
-    // Buscar agendas compartilhadas com o usuário
-    $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage);
-    $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true);
-    
-    // Buscar agendas públicas (excluindo as que o usuário já tem acesso)
-    $publicAgendas = $agendaModel->getPublicAgendas($userId, true, $page, $perPage);
-    $totalPublicAgendas = $agendaModel->countPublicAgendas($userId, true);
-    
-    // Carregar view
-    require_once __DIR__ . '/../views/shared/header.php';
-    require_once __DIR__ . '/../views/agendas/all.php';
-    require_once __DIR__ . '/../views/shared/footer.php';
-}
 }

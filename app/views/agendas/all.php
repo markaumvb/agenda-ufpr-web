@@ -29,6 +29,30 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
             </a>
         </div>
     </div>
+    
+    <!-- ADICIONADO: Campo de busca igual ao de agendas/index.php -->
+    <div class="search-box">
+        <form action="<?= PUBLIC_URL ?>/agendas/all" method="get" class="search-form">
+            <input type="text" name="search" placeholder="Pesquisar em todas as agendas..." 
+                   value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+            <?php if (isset($_GET['search']) && !empty($_GET['search'])): ?>
+                <a href="<?= PUBLIC_URL ?>/agendas/all" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Limpar
+                </a>
+            <?php endif; ?>
+        </form>
+    </div>
+    
+    <!-- ADICIONADO: Informação sobre resultados da busca -->
+    <?php if (!empty($_GET['search'])): ?>
+        <div class="search-info">
+            <i class="fas fa-search"></i> 
+            Resultados para "<strong><?= htmlspecialchars($_GET['search']) ?></strong>"
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- SEÇÃO 1: MINHAS AGENDAS -->
@@ -36,16 +60,27 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
     <h2 class="section-title">
         <i class="fas fa-calendar"></i>
         Minhas Agendas
+        <?php if (!empty($_GET['search'])): ?>
+            <span class="results-count">(<?= count($myAgendas) ?> encontrada(s))</span>
+        <?php endif; ?>
     </h2>
     
     <?php if (empty($myAgendas)): ?>
         <div class="empty-state">
             <i class="fas fa-calendar-plus"></i>
-            <h3>Nenhuma agenda encontrada</h3>
-            <p>Você ainda não criou nenhuma agenda.</p>
-            <a href="<?= PUBLIC_URL ?>/agendas/new" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Criar Agenda
-            </a>
+            <?php if (!empty($_GET['search'])): ?>
+                <h3>Nenhuma agenda encontrada</h3>
+                <p>Não foi possível encontrar suas agendas com o termo "<strong><?= htmlspecialchars($_GET['search']) ?></strong>".</p>
+                <a href="<?= PUBLIC_URL ?>/agendas/all" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Ver Todas as Agendas
+                </a>
+            <?php else: ?>
+                <h3>Nenhuma agenda encontrada</h3>
+                <p>Você ainda não criou nenhuma agenda.</p>
+                <a href="<?= PUBLIC_URL ?>/agendas/new" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Criar Agenda
+                </a>
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <div class="agenda-grid">
@@ -104,20 +139,48 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
             <?php endforeach; ?>
         </div>
         
-        <?php if (isset($totalMyAgendas) && $totalMyAgendas > $perPage): ?>
+        <!-- CORRIGIDO: Paginação padronizada -->
+        <?php if (isset($totalPagesMyAgendas) && $totalPagesMyAgendas > 1): ?>
             <div class="pagination-container">
-                <?php
-                // Criar objeto de paginação
-                require_once __DIR__ . '/../../app/helpers/Pagination.php';
-                $pagination = new Pagination(
-                    $totalMyAgendas,
-                    $perPage,
-                    $page,
-                    PUBLIC_URL . '/agendas/all',
-                    ['section' => 'my']
-                );
-                echo $pagination->createLinks();
-                ?>
+                <div class="pagination-info">
+                    Mostrando <?= count($myAgendas) ?> de <?= $totalMyAgendas ?> agendas
+                </div>
+                <div class="pagination">
+                    <?php
+                    $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
+                    ?>
+                    
+                    <?php if ($page > 1): ?>
+                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=1<?= $searchParam ?>" class="pagination-link first">
+                            &laquo; Primeira
+                        </a>
+                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $page - 1 ?><?= $searchParam ?>" class="pagination-link prev">
+                            &lsaquo; Anterior
+                        </a>
+                    <?php else: ?>
+                        <span class="pagination-link disabled">&laquo; Primeira</span>
+                        <span class="pagination-link disabled">&lsaquo; Anterior</span>
+                    <?php endif; ?>
+                    
+                    <?php for ($i = max(1, $page - 2); $i <= min($totalPagesMyAgendas, $page + 2); $i++): ?>
+                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $i ?><?= $searchParam ?>" 
+                           class="pagination-link <?= $i == $page ? 'current' : '' ?>">
+                            <?= $i ?>
+                        </a>
+                    <?php endfor; ?>
+                    
+                    <?php if ($page < $totalPagesMyAgendas): ?>
+                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $page + 1 ?><?= $searchParam ?>" class="pagination-link next">
+                            Próxima &rsaquo;
+                        </a>
+                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $totalPagesMyAgendas ?><?= $searchParam ?>" class="pagination-link last">
+                            Última &raquo;
+                        </a>
+                    <?php else: ?>
+                        <span class="pagination-link disabled">Próxima &rsaquo;</span>
+                        <span class="pagination-link disabled">Última &raquo;</span>
+                    <?php endif; ?>
+                </div>
             </div>
         <?php endif; ?>
     <?php endif; ?>
@@ -128,13 +191,21 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
     <h2 class="section-title">
         <i class="fas fa-share-alt"></i>
         Agendas Compartilhadas Comigo
+        <?php if (!empty($_GET['search'])): ?>
+            <span class="results-count">(<?= count($sharedAgendas) ?> encontrada(s))</span>
+        <?php endif; ?>
     </h2>
     
     <?php if (empty($sharedAgendas)): ?>
         <div class="empty-state">
             <i class="fas fa-share-alt"></i>
-            <h3>Nenhuma agenda compartilhada</h3>
-            <p>Nenhuma agenda foi compartilhada com você.</p>
+            <?php if (!empty($_GET['search'])): ?>
+                <h3>Nenhuma agenda compartilhada encontrada</h3>
+                <p>Não foram encontradas agendas compartilhadas com o termo "<strong><?= htmlspecialchars($_GET['search']) ?></strong>".</p>
+            <?php else: ?>
+                <h3>Nenhuma agenda compartilhada</h3>
+                <p>Nenhuma agenda foi compartilhada com você.</p>
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <div class="agenda-grid">
@@ -197,23 +268,6 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                 </div>
             <?php endforeach; ?>
         </div>
-        
-        <?php if (isset($totalSharedAgendas) && $totalSharedAgendas > $perPage): ?>
-            <div class="pagination-container">
-                <?php
-                // Criar objeto de paginação
-                require_once __DIR__ . '/../../app/helpers/Pagination.php';
-                $pagination = new Pagination(
-                    $totalSharedAgendas,
-                    $perPage,
-                    $page,
-                    PUBLIC_URL . '/agendas/all',
-                    ['section' => 'shared']
-                );
-                echo $pagination->createLinks();
-                ?>
-            </div>
-        <?php endif; ?>
     <?php endif; ?>
 </section>
 
@@ -222,13 +276,21 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
     <h2 class="section-title">
         <i class="fas fa-globe"></i>
         Agendas Públicas
+        <?php if (!empty($_GET['search'])): ?>
+            <span class="results-count">(<?= count($publicAgendas) ?> encontrada(s))</span>
+        <?php endif; ?>
     </h2>
     
     <?php if (empty($publicAgendas)): ?>
         <div class="empty-state">
             <i class="fas fa-globe"></i>
-            <h3>Nenhuma agenda pública</h3>
-            <p>Nenhuma agenda pública está disponível no momento.</p>
+            <?php if (!empty($_GET['search'])): ?>
+                <h3>Nenhuma agenda pública encontrada</h3>
+                <p>Não foram encontradas agendas públicas com o termo "<strong><?= htmlspecialchars($_GET['search']) ?></strong>".</p>
+            <?php else: ?>
+                <h3>Nenhuma agenda pública</h3>
+                <p>Nenhuma agenda pública está disponível no momento.</p>
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <div class="agenda-grid">
@@ -288,22 +350,9 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                 </div>
             <?php endforeach; ?>
         </div>
-        
-        <?php if (isset($totalPublicAgendas) && $totalPublicAgendas > $perPage): ?>
-            <div class="pagination-container">
-                <?php
-                // Criar objeto de paginação
-                require_once __DIR__ . '/../../app/helpers/Pagination.php';
-                $pagination = new Pagination(
-                    $totalPublicAgendas,
-                    $perPage,
-                    $page,
-                    PUBLIC_URL . '/agendas/all',
-                    ['section' => 'public']
-                );
-                echo $pagination->createLinks();
-                ?>
-            </div>
-        <?php endif; ?>
     <?php endif; ?>
 </section>
+
+<!-- ADICIONADO: JavaScript para funcionalidade de busca -->
+<script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/index.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/common.js"></script>

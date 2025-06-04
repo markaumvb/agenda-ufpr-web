@@ -133,6 +133,29 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
+    <?php 
+    // ADICIONADO: JavaScript comum para busca em páginas que precisam
+    $searchPages = ['/agendas', '/shares/shared'];
+    $needsSearchJS = false;
+    
+    foreach ($searchPages as $searchPage) {
+        if (strpos($currentUri, $searchPage) !== false) {
+            $needsSearchJS = true;
+            break;
+        }
+    }
+    
+    // Também incluir na home se houver busca
+    if ($currentUri == '/' || $currentUri == '/agenda_ufpr/' || $currentUri == '/agenda_ufpr/index.php' || 
+        strpos($currentUri, '/?') !== false || strpos($currentUri, '/agenda_ufpr/?') !== false) {
+        $needsSearchJS = true;
+    }
+    
+    if ($needsSearchJS) {
+        echo '<script src="' . PUBLIC_URL . '/app/assets/js/search-common.js"></script>';
+    }
+    ?>
+
 </head>
 <body class="<?php echo $body_class; ?>">
     <?php if (!$is_auth_page): ?>

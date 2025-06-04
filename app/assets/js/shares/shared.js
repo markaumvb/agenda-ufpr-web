@@ -1,42 +1,63 @@
-/**
- * JavaScript para página de agendas compartilhadas
- * Arquivo: app/assets/js/shares/shared.js
- */
 document.addEventListener("DOMContentLoaded", function () {
-  // Elementos originais
+  // ==========================================
+  // ELEMENTOS DO DOM
+  // ==========================================
+
   const searchForm = document.querySelector(".search-form");
-  const searchInput = document.getElementById("search");
+  const searchInput = document.querySelector(
+    ".search-form input[name='search']"
+  );
+  const searchButton = document.querySelector(".search-form .btn-primary");
   const clearSearchBtn = document.querySelector(".search-form .btn-secondary");
+  const searchBox = document.querySelector(".search-box");
   const paginationLinks = document.querySelectorAll(
     ".pagination-link:not(.disabled)"
   );
 
-  // Novos elementos para melhorias visuais
-  const searchBox = document.querySelector(".search-box");
-  const searchButton = document.querySelector(".search-form .btn-primary");
-
   // ==========================================
-  // FUNCIONALIDADE ORIGINAL MANTIDA
+  // VERIFICAÇÃO INICIAL
   // ==========================================
 
-  // Event listeners originais
-  if (searchForm) {
-    searchForm.addEventListener("submit", function (e) {
-      // Evitar submissão se campo de busca estiver vazio
-      if (!searchInput || !searchInput.value.trim()) {
-        e.preventDefault();
-        window.location.href = searchForm.getAttribute("action");
-        return;
-      }
-
-      // Adicionar estado de loading no botão
-      if (searchButton) {
-        searchButton.classList.add("loading");
-        searchButton.disabled = true;
-      }
-    });
+  if (!searchForm || !searchInput || !searchBox) {
+    console.log("Elementos de busca não encontrados, funcionalidade limitada");
+    return;
   }
 
+  // ==========================================
+  // FUNCIONALIDADE PRINCIPAL
+  // ==========================================
+
+  // Event listener para submissão do formulário
+  searchForm.addEventListener("submit", function (e) {
+    const query = searchInput.value.trim();
+
+    // Se campo vazio, redirecionar para página sem busca
+    if (!query) {
+      e.preventDefault();
+      window.location.href = searchForm.getAttribute("action");
+      return;
+    }
+
+    // Adicionar estado de loading no botão
+    if (searchButton) {
+      searchButton.classList.add("loading");
+      searchButton.disabled = true;
+
+      // Adicionar texto de loading
+      const originalText = searchButton.innerHTML;
+      searchButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+
+      // Fallback para remover loading após 10 segundos
+      setTimeout(function () {
+        searchButton.classList.remove("loading");
+        searchButton.disabled = false;
+        searchButton.innerHTML = originalText;
+      }, 10000);
+    }
+  });
+
+  // Event listener para botão limpar
   if (clearSearchBtn) {
     clearSearchBtn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -44,24 +65,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Highlight para a página atual (mantido original)
-  const currentPage =
-    parseInt(new URLSearchParams(window.location.search).get("page")) || 1;
-  paginationLinks.forEach((link) => {
-    const linkPage = new URLSearchParams(new URL(link.href).search).get("page");
-    if (parseInt(linkPage) === currentPage) {
-      link.classList.add("current");
-    }
-  });
-
   // ==========================================
-  // NOVAS FUNCIONALIDADES ADICIONADAS
+  // MELHORIAS DE UX
   // ==========================================
-
-  // Verificar se há elementos necessários para as melhorias
-  if (!searchForm || !searchInput || !searchBox) {
-    return; // Sair se elementos essenciais não existem
-  }
 
   // Verificar se há uma busca ativa na URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -69,17 +75,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (currentSearch && currentSearch.trim() !== "") {
     searchBox.classList.add("has-search");
+
+    // Destacar termos de busca nos resultados
+    highlightSearchTerms(currentSearch);
   }
 
   // Melhorar UX do campo de busca
-  let searchTimeout;
-
   searchInput.addEventListener("input", function () {
-    clearTimeout(searchTimeout);
-
     const query = this.value.trim();
 
-    // Adicionar ou remover classe baseado no conteúdo
     if (query.length > 0) {
       searchBox.classList.add("has-search");
     } else {
@@ -106,20 +110,18 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Auto-focus no campo de busca se não houver resultado
-  const noResults = document.querySelector(".empty-state");
-  if (noResults && currentSearch) {
+  const emptyStates = document.querySelectorAll(".empty-state");
+  if (emptyStates.length > 0 && currentSearch) {
     searchInput.focus();
     searchInput.select();
   }
 
-  // Destacar termos de busca nos resultados
-  if (currentSearch && currentSearch.length > 0) {
-    highlightSearchTerms(currentSearch);
-  }
+  // ==========================================
+  // PLACEHOLDER DINÂMICO
+  // ==========================================
 
-  // Adicionar suporte para placeholder dinâmico
   const placeholders = [
-    "Pesquisar agendas...",
+    "Pesquisar agendas compartilhadas...",
     "Digite o nome da agenda...",
     "Buscar por responsável...",
     "Procurar agenda compartilhada...",
@@ -128,7 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let placeholderIndex = 0;
 
   // Mudar placeholder a cada 4 segundos se o campo estiver vazio
-  setInterval(function () {
+  const placeholderInterval = setInterval(function () {
     if (
       searchInput.value.trim() === "" &&
       document.activeElement !== searchInput
@@ -138,30 +140,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }, 4000);
 
-  // Adicionar feedback visual quando não há resultados
-  const agendaGrid = document.querySelector(".agenda-grid");
-  if (agendaGrid && currentSearch) {
-    const agendaCards = agendaGrid.querySelectorAll(".agenda-card");
+  // ==========================================
+  // PAGINAÇÃO
+  // ==========================================
 
-    if (agendaCards.length === 0) {
-      // Adicionar sugestões de busca alternativa
-      const emptyState = document.querySelector(".empty-state");
-      if (emptyState && !emptyState.querySelector(".search-suggestions")) {
-        const suggestions = document.createElement("div");
-        suggestions.className = "search-suggestions";
-        suggestions.innerHTML = `
-                    <h4>💡 Dicas de busca:</h4>
-                    <ul>
-                        <li>Verifique a ortografia das palavras</li>
-                        <li>Tente termos mais gerais</li>
-                        <li>Use apenas palavras-chave importantes</li>
-                        <li>Experimente buscar pelo nome do responsável</li>
-                    </ul>
-                `;
-        emptyState.appendChild(suggestions);
-      }
+  // Highlight para a página atual
+  const currentPage = parseInt(urlParams.get("page")) || 1;
+  paginationLinks.forEach((link) => {
+    const linkUrl = new URL(link.href);
+    const linkPage =
+      parseInt(new URLSearchParams(linkUrl.search).get("page")) || 1;
+
+    if (linkPage === currentPage) {
+      link.classList.add("current");
     }
-  }
+  });
 
   // ==========================================
   // FUNÇÕES AUXILIARES
@@ -180,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
         highlightElement(title, searchRegex);
       }
 
-      if (description) {
+      if (description && !description.classList.contains("text-muted")) {
         highlightElement(description, searchRegex);
       }
 
@@ -203,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function showSearchMessage(message, type = "info") {
+  function showMessage(message, type = "info") {
     // Remover mensagem anterior se existir
     const existingMessage = document.querySelector(".search-message");
     if (existingMessage) {
@@ -214,20 +207,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const messageDiv = document.createElement("div");
     messageDiv.className = `search-message alert alert-${type}`;
     messageDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            max-width: 300px;
-            animation: slideInRight 0.3s ease-out;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        `;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      max-width: 300px;
+      animation: slideInRight 0.3s ease-out;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    `;
+
     messageDiv.innerHTML = `
-            <i class="fas fa-info-circle"></i>
-            ${message}
-        `;
+      <i class="fas fa-info-circle"></i>
+      ${message}
+    `;
 
     document.body.appendChild(messageDiv);
 
@@ -245,105 +239,82 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ==========================================
-  // ESTILOS DINÂMICOS
+  // ESTILOS DINÂMICOS (se não existirem)
   // ==========================================
 
-  // Adicionar estilos para as animações das mensagens (se não existirem)
-  if (!document.querySelector("#search-message-styles")) {
+  if (!document.querySelector("#search-styles")) {
     const styles = document.createElement("style");
-    styles.id = "search-message-styles";
+    styles.id = "search-styles";
     styles.textContent = `
-            @keyframes slideInRight {
-                from {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-            
-            @keyframes slideOutRight {
-                from {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-                to {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-            }
-            
-            .search-message {
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                border-radius: 8px;
-                padding: 1rem;
-                font-size: 0.9rem;
-            }
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      
+      @keyframes slideOutRight {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+      }
+      
+      .search-message {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 0.9rem;
+      }
 
-            mark {
-                background-color: #fff3cd;
-                color: #856404;
-                padding: 0.1em 0.2em;
-                border-radius: 3px;
-                font-weight: 600;
-            }
-            
-            .search-suggestions {
-                margin-top: 1.5rem;
-                padding: 1rem;
-                background: #f8f9fa;
-                border-radius: 8px;
-                border-left: 4px solid #004a8f;
-            }
-            
-            .search-suggestions h4 {
-                margin-bottom: 0.75rem;
-                color: #004a8f;
-                font-size: 1rem;
-            }
-            
-            .search-suggestions ul {
-                margin: 0;
-                padding-left: 1.5rem;
-            }
-            
-            .search-suggestions li {
-                margin-bottom: 0.5rem;
-                color: #6c757d;
-                font-size: 0.9rem;
-            }
-
-            .search-form .btn.loading {
-                opacity: 0.7;
-                cursor: not-allowed;
-                pointer-events: none;
-            }
-
-            .search-form .btn.loading::after {
-                content: "";
-                width: 16px;
-                height: 16px;
-                margin-left: 0.5rem;
-                border: 2px solid transparent;
-                border-top-color: currentColor;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            }
-
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        `;
+      mark {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 0.1em 0.2em;
+        border-radius: 3px;
+        font-weight: 600;
+      }
+      
+      .search-suggestions {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #004a8f;
+      }
+      
+      .search-suggestions h4 {
+        margin-bottom: 0.75rem;
+        color: #004a8f;
+        font-size: 1rem;
+      }
+      
+      .search-suggestions ul {
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+      
+      .search-suggestions li {
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+      }
+    `;
     document.head.appendChild(styles);
   }
 
-  // ==========================================
-  // EXPOSIÇÃO DE FUNÇÕES GLOBAIS (MANTIDO)
-  // ==========================================
+  // Limpar interval ao sair da página
+  window.addEventListener("beforeunload", function () {
+    clearInterval(placeholderInterval);
+  });
 
-  // Expor funções úteis para uso global se necessário
-  window.showSearchMessage = showSearchMessage;
+  window.showSearchMessage = showMessage;
 });

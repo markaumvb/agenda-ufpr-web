@@ -64,15 +64,18 @@ class ShareController extends BaseController {
     /**
      * Exibe a lista de agendas compartilhadas
      */
+/**
+     * Exibe a lista de agendas compartilhadas - MÉTODO CORRIGIDO
+     */
     public function shared() {
         $userId = $_SESSION['user_id'];
         
-        // Processar parâmetro de busca
+        // CORRIGIDO: Processar parâmetro de busca corretamente
         $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
         
         // Parâmetros de paginação
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-        $perPage = 10; // Número de itens por página
+        $perPage = 12; // AUMENTADO: 12 agendas por página para consistência
         
         // Verificar se o usuário está logado
         $this->checkAuth();
@@ -86,6 +89,17 @@ class ShareController extends BaseController {
         
         // Calcular número total de páginas para paginação
         $totalPages = ceil($totalSharedWithMe / $perPage);
+        
+        // ADICIONADO: Informações de paginação para a view
+        $paginationData = [
+            'current_page' => $page,
+            'total_pages' => $totalPages,
+            'total_items' => $totalSharedWithMe,
+            'per_page' => $perPage,
+            'start_item' => ($page - 1) * $perPage + 1,
+            'end_item' => min($page * $perPage, $totalSharedWithMe),
+            'search' => $search
+        ];
         
         // Carregar view
         require_once __DIR__ . '/../views/shared/header.php';
