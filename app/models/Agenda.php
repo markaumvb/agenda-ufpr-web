@@ -39,7 +39,9 @@ class Agenda {
             }
             
             $params = [':user_id' => $userId];
-            if ($search !== null && $search !== '') {
+            
+            // CORRIGIDO: Aplicar busca apenas se não for null E não for string vazia
+            if ($search !== null && trim($search) !== '') {
                 $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
                 $params[':search'] = "%{$search}%";
             }
@@ -75,7 +77,9 @@ class Agenda {
             }
             
             $params = [':user_id' => $userId];
-            if ($search !== null && $search !== '') {
+            
+            // CORRIGIDO: Aplicar busca apenas se não for null E não for string vazia
+            if ($search !== null && trim($search) !== '') {
                 $sql .= " AND (title LIKE :search OR description LIKE :search)";
                 $params[':search'] = "%{$search}%";
             }
@@ -426,28 +430,29 @@ class Agenda {
         }
     }
 
-    // CORREÇÃO CRÍTICA: Método de busca com uma única query concatenada
+    // CORRIGIDO: Método de busca com busca mais robusta
     public function searchPublicAgendas($search, $page = 1, $perPage = 10) {
         try {
             $offset = ($page - 1) * $perPage;
             $searchParam = "%{$search}%";
             
-            // CORREÇÃO: Usar CONCAT para evitar múltiplos parâmetros
             $sql = "SELECT a.*, u.name as owner_name
                     FROM agendas a
                     INNER JOIN users u ON a.user_id = u.id
                     WHERE a.is_public = 1 
                       AND a.is_active = 1
-                      AND CONCAT(
-                          COALESCE(a.title, ''), ' ',
-                          COALESCE(a.description, ''), ' ',
-                          COALESCE(u.name, '')
-                      ) LIKE :search
+                      AND (
+                          a.title LIKE :search1 OR 
+                          a.description LIKE :search2 OR 
+                          u.name LIKE :search3
+                      )
                     ORDER BY a.title
                     LIMIT :limit OFFSET :offset";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
             $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
@@ -459,25 +464,26 @@ class Agenda {
         }
     }
 
-    // CORREÇÃO CRÍTICA: Método de contagem com uma única query concatenada
+    // CORRIGIDO: Método de contagem com busca mais robusta
     public function countPublicAgendasWithSearch($search) {
         try {
             $searchParam = "%{$search}%";
             
-            // CORREÇÃO: Usar CONCAT para evitar múltiplos parâmetros
             $sql = "SELECT COUNT(*) as total 
                     FROM agendas a
                     INNER JOIN users u ON a.user_id = u.id
                     WHERE a.is_public = 1 
                       AND a.is_active = 1
-                      AND CONCAT(
-                          COALESCE(a.title, ''), ' ',
-                          COALESCE(a.description, ''), ' ',
-                          COALESCE(u.name, '')
-                      ) LIKE :search";
+                      AND (
+                          a.title LIKE :search1 OR 
+                          a.description LIKE :search2 OR 
+                          u.name LIKE :search3
+                      )";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             

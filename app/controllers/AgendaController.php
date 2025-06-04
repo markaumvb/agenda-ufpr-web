@@ -18,17 +18,24 @@ class AgendaController extends BaseController {
     public function index() {
     $userId = $_SESSION['user_id'];
     
-    // Correção: Processar parâmetro de busca corretamente
-    $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+    // CORRIGIDO: Processar parâmetro de busca igual à home page
+    $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
     $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1;
     
     // Página atual para paginação
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $perPage = 12; // 12 agendas por página
     
-    // Buscar apenas as agendas do usuário (não as compartilhadas ou públicas)
-    $agendas = $this->agendaModel->getAllByUser($userId, $search, $includeInactive, $page, $perPage);
-    $totalAgendas = $this->agendaModel->countByUser($userId, $search, $includeInactive);
+    // CORRIGIDO: Buscar agendas com lógica consistente
+    if (!empty($search)) {
+        // Se há busca, usar busca específica
+        $agendas = $this->agendaModel->getAllByUser($userId, $search, $includeInactive, $page, $perPage);
+        $totalAgendas = $this->agendaModel->countByUser($userId, $search, $includeInactive);
+    } else {
+        // Se não há busca, buscar todas
+        $agendas = $this->agendaModel->getAllByUser($userId, null, $includeInactive, $page, $perPage);
+        $totalAgendas = $this->agendaModel->countByUser($userId, null, $includeInactive);
+    }
     
     // Calcular total de páginas
     $totalPages = ceil($totalAgendas / $perPage);
@@ -47,6 +54,17 @@ class AgendaController extends BaseController {
         // Verificar se a agenda pode ser excluída (apenas para agendas próprias)
         $agenda['can_be_deleted'] = $this->agendaModel->canBeDeleted($agenda['id']);
     }
+    
+    // ADICIONADO: Dados de paginação para a view
+    $paginationData = [
+        'current_page' => $page,
+        'total_pages' => $totalPages,
+        'total_items' => $totalAgendas,
+        'per_page' => $perPage,
+        'start_item' => ($page - 1) * $perPage + 1,
+        'end_item' => min($page * $perPage, $totalAgendas),
+        'search' => $search
+    ];
     
     // Exibir a view
     require_once __DIR__ . '/../views/shared/header.php';
@@ -387,8 +405,8 @@ class AgendaController extends BaseController {
         
         $userId = $_SESSION['user_id'];
         
-        // ADICIONADO: Processar parâmetro de busca
-        $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+        // CORRIGIDO: Processar parâmetro de busca igual à home page
+        $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
         
         // Inicializar modelos localmente
         require_once __DIR__ . '/../models/Agenda.php';
@@ -401,10 +419,16 @@ class AgendaController extends BaseController {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $perPage = 12; // 12 agendas por página
         
-        // CORRIGIDO: Buscar agendas do usuário (dono) COM BUSCA
-        $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
+        // CORRIGIDO: Buscar agendas do usuário (dono) COM BUSCA CONSISTENTE
+        if (!empty($search)) {
+            $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
+            $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
+        } else {
+            $myAgendas = $agendaModel->getAllByUser($userId, null, true, $page, $perPage);
+            $totalMyAgendas = $agendaModel->countByUser($userId, null, true);
+        }
         
-        // ADICIONAR ESTA PARTE: Remover duplicatas usando IDs
+        // Remover duplicatas usando IDs
         $uniqueAgendas = [];
         $uniqueIds = [];
         foreach ($myAgendas as $agenda) {
@@ -414,8 +438,6 @@ class AgendaController extends BaseController {
             }
         }
         $myAgendas = $uniqueAgendas;
-        
-        $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
         
         // Adicionar contagem de compromissos para cada agenda
         foreach ($myAgendas as &$agenda) {
@@ -429,12 +451,17 @@ class AgendaController extends BaseController {
             ];
         }
         
-        // CORRIGIDO: Buscar agendas compartilhadas com o usuário COM BUSCA
-        $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
-        $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true, $search);
+        // CORRIGIDO: Buscar agendas compartilhadas COM BUSCA CONSISTENTE
+        if (!empty($search)) {
+            $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
+            $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true, $search);
+        } else {
+            $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage, null);
+            $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true, null);
+        }
         
-        // CORRIGIDO: Buscar agendas públicas COM BUSCA (excluindo as que o usuário já tem acesso)
-        if ($search) {
+        // CORRIGIDO: Buscar agendas públicas COM BUSCA CONSISTENTE
+        if (!empty($search)) {
             // Se há busca, usar método de busca específico
             $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage);
             $totalPublicAgendas = $agendaModel->countPublicAgendasWithSearch($search);
@@ -448,6 +475,15 @@ class AgendaController extends BaseController {
         $totalPagesMyAgendas = ceil($totalMyAgendas / $perPage);
         $totalPagesSharedAgendas = ceil($totalSharedAgendas / $perPage);
         $totalPagesPublicAgendas = ceil($totalPublicAgendas / $perPage);
+        
+        // ADICIONADO: Dados de paginação para a view
+        $paginationData = [
+            'current_page' => $page,
+            'total_pages' => max($totalPagesMyAgendas, $totalPagesSharedAgendas, $totalPagesPublicAgendas),
+            'total_items' => $totalMyAgendas + $totalSharedAgendas + $totalPublicAgendas,
+            'per_page' => $perPage,
+            'search' => $search
+        ];
         
         // Carregar view
         require_once __DIR__ . '/../views/shared/header.php';

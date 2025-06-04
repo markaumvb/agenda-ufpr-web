@@ -3,7 +3,6 @@
         <h1>Agendas Compartilhadas</h1>
     </div>
     
-    <!-- CORRIGIDO: Campo de busca padronizado -->
     <div class="search-box">
         <form action="<?= BASE_URL ?>/shares/shared" method="get" class="search-form">
             <input type="text" name="search" placeholder="Pesquisar agendas compartilhadas..." 
@@ -19,7 +18,7 @@
         </form>
     </div>
     
-    <!-- ADICIONADO: Informação sobre resultados da busca -->
+    <!-- Informação sobre resultados da busca -->
     <?php if (!empty($_GET['search'])): ?>
         <div class="search-info">
             <i class="fas fa-search"></i> 
@@ -197,74 +196,88 @@
                 <?php endforeach; ?>
             </div>
             
-            <!-- CORRIGIDO: Paginação padronizada -->
-            <?php if (isset($totalPages) && $totalPages > 1): ?>
+            <!-- CORRIGIDO: Paginação padronizada igual à home page -->
+            <?php if (isset($paginationData) && $paginationData['total_pages'] > 1): ?>
                 <div class="pagination-container">
                     <div class="pagination-info">
-                        Mostrando página <?= $page ?> de <?= $totalPages ?>
+                        <i class="fas fa-chart-bar"></i>
+                        Exibindo <strong><?= $paginationData['start_item'] ?></strong> a 
+                        <strong><?= $paginationData['end_item'] ?></strong> de 
+                        <strong><?= $paginationData['total_items'] ?></strong> agendas compartilhadas
+                        <?php if (!empty($paginationData['search'])): ?>
+                            encontradas para "<strong><?= htmlspecialchars($paginationData['search']) ?></strong>"
+                        <?php endif; ?>
                     </div>
-                    <div class="pagination">
+                    
+                    <nav class="pagination">
                         <?php
-                        $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
-                        ?>
+                        $baseUrl = BASE_URL . '/shares/shared';
+                        $searchParam = !empty($paginationData['search']) ? '&search=' . urlencode($paginationData['search']) : '';
                         
-                        <?php if ($page > 1): ?>
-                            <a href="<?= BASE_URL ?>/shares/shared?page=1<?= $searchParam ?>" class="pagination-link first">
-                                &laquo; Primeira
-                            </a>
-                            <a href="<?= BASE_URL ?>/shares/shared?page=<?= $page - 1 ?><?= $searchParam ?>" class="pagination-link prev">
-                                &lsaquo; Anterior
+                        // Botão "Anterior"
+                        if ($paginationData['current_page'] > 1):
+                            $prevPage = $paginationData['current_page'] - 1;
+                            $prevUrl = $baseUrl . '?page=' . $prevPage . $searchParam;
+                        ?>
+                            <a href="<?= $prevUrl ?>" class="pagination-link prev">
+                                <i class="fas fa-chevron-left"></i> Anterior
                             </a>
                         <?php else: ?>
-                            <span class="pagination-link disabled">&laquo; Primeira</span>
-                            <span class="pagination-link disabled">&lsaquo; Anterior</span>
+                            <span class="pagination-link prev disabled">
+                                <i class="fas fa-chevron-left"></i> Anterior
+                            </span>
                         <?php endif; ?>
                         
                         <?php
-                        // Determinar quais páginas mostrar
-                        $startPage = max(1, $page - 2);
-                        $endPage = min($totalPages, $page + 2);
+                        // Páginas numeradas
+                        $start = max(1, $paginationData['current_page'] - 2);
+                        $end = min($paginationData['total_pages'], $paginationData['current_page'] + 2);
                         
-                        // Se estamos mostrando menos de 5 páginas, ajustar para mostrar mais
-                        if ($endPage - $startPage < 4) {
-                            if ($startPage == 1) {
-                                $endPage = min($totalPages, $startPage + 4);
-                            } elseif ($endPage == $totalPages) {
-                                $startPage = max(1, $endPage - 4);
-                            }
-                        }
+                        // Primeira página
+                        if ($start > 1): ?>
+                            <a href="<?= $baseUrl ?>?page=1<?= $searchParam ?>" class="pagination-link">1</a>
+                            <?php if ($start > 2): ?>
+                                <span class="pagination-ellipsis">...</span>
+                            <?php endif; ?>
+                        <?php endif; ?>
                         
-                        // Mostrar primeira página e elipse se necessário
-                        if ($startPage > 1) {
-                            echo '<a href="' . BASE_URL . '/shares/shared?page=1' . $searchParam . '" class="pagination-link">1</a>';
-                            if ($startPage > 2) {
-                                echo '<span class="pagination-ellipsis">&hellip;</span>';
-                            }
-                        }
-                        
-                        // Mostrar páginas centrais
-                        for ($i = $startPage; $i <= $endPage; $i++) {
-                            $activeClass = ($i == $page) ? ' current' : '';
-                            echo '<a href="' . BASE_URL . '/shares/shared?page=' . $i . $searchParam . '" class="pagination-link' . $activeClass . '">' . $i . '</a>';
-                        }
-                        
-                        // Mostrar última página e elipse se necessário
-                        if ($endPage < $totalPages) {
-                            if ($endPage < $totalPages - 1) {
-                                echo '<span class="pagination-ellipsis">&hellip;</span>';
-                            }
-                            echo '<a href="' . BASE_URL . '/shares/shared?page=' . $totalPages . $searchParam . '" class="pagination-link">' . $totalPages . '</a>';
-                        }
+                        <?php
+                        // Páginas do range atual
+                        for ($i = $start; $i <= $end; $i++):
+                            if ($i == $paginationData['current_page']):
+                        ?>
+                                <span class="pagination-link current"><?= $i ?></span>
+                        <?php else: ?>
+                                <a href="<?= $baseUrl ?>?page=<?= $i ?><?= $searchParam ?>" class="pagination-link"><?= $i ?></a>
+                        <?php 
+                            endif;
+                        endfor; 
                         ?>
                         
-                        <?php if ($page < $totalPages): ?>
-                            <a href="<?= BASE_URL ?>/shares/shared?page=<?= $page + 1 ?><?= $searchParam ?>" class="pagination-link next">Próxima &rsaquo;</a>
-                            <a href="<?= BASE_URL ?>/shares/shared?page=<?= $totalPages ?><?= $searchParam ?>" class="pagination-link last">Última &raquo;</a>
-                        <?php else: ?>
-                            <span class="pagination-link disabled">Próxima &rsaquo;</span>
-                            <span class="pagination-link disabled">Última &raquo;</span>
+                        <?php
+                        // Última página
+                        if ($end < $paginationData['total_pages']): ?>
+                            <?php if ($end < $paginationData['total_pages'] - 1): ?>
+                                <span class="pagination-ellipsis">...</span>
+                            <?php endif; ?>
+                            <a href="<?= $baseUrl ?>?page=<?= $paginationData['total_pages'] ?><?= $searchParam ?>" class="pagination-link"><?= $paginationData['total_pages'] ?></a>
                         <?php endif; ?>
-                    </div>
+                        
+                        <?php
+                        // Botão "Próximo"
+                        if ($paginationData['current_page'] < $paginationData['total_pages']):
+                            $nextPage = $paginationData['current_page'] + 1;
+                            $nextUrl = $baseUrl . '?page=' . $nextPage . $searchParam;
+                        ?>
+                            <a href="<?= $nextUrl ?>" class="pagination-link next">
+                                Próximo <i class="fas fa-chevron-right"></i>
+                            </a>
+                        <?php else: ?>
+                            <span class="pagination-link next disabled">
+                                Próximo <i class="fas fa-chevron-right"></i>
+                            </span>
+                        <?php endif; ?>
+                    </nav>
                 </div>
             <?php endif; ?>
         <?php endif; ?>

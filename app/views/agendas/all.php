@@ -30,7 +30,6 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
         </div>
     </div>
     
-    <!-- ADICIONADO: Campo de busca igual ao de agendas/index.php -->
     <div class="search-box">
         <form action="<?= PUBLIC_URL ?>/agendas/all" method="get" class="search-form">
             <input type="text" name="search" placeholder="Pesquisar em todas as agendas..." 
@@ -46,7 +45,7 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
         </form>
     </div>
     
-    <!-- ADICIONADO: Informação sobre resultados da busca -->
+    <!-- Informação sobre resultados da busca -->
     <?php if (!empty($_GET['search'])): ?>
         <div class="search-info">
             <i class="fas fa-search"></i> 
@@ -138,51 +137,6 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
                 </div>
             <?php endforeach; ?>
         </div>
-        
-        <!-- CORRIGIDO: Paginação padronizada -->
-        <?php if (isset($totalPagesMyAgendas) && $totalPagesMyAgendas > 1): ?>
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    Mostrando <?= count($myAgendas) ?> de <?= $totalMyAgendas ?> agendas
-                </div>
-                <div class="pagination">
-                    <?php
-                    $searchParam = isset($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
-                    ?>
-                    
-                    <?php if ($page > 1): ?>
-                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=1<?= $searchParam ?>" class="pagination-link first">
-                            &laquo; Primeira
-                        </a>
-                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $page - 1 ?><?= $searchParam ?>" class="pagination-link prev">
-                            &lsaquo; Anterior
-                        </a>
-                    <?php else: ?>
-                        <span class="pagination-link disabled">&laquo; Primeira</span>
-                        <span class="pagination-link disabled">&lsaquo; Anterior</span>
-                    <?php endif; ?>
-                    
-                    <?php for ($i = max(1, $page - 2); $i <= min($totalPagesMyAgendas, $page + 2); $i++): ?>
-                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $i ?><?= $searchParam ?>" 
-                           class="pagination-link <?= $i == $page ? 'current' : '' ?>">
-                            <?= $i ?>
-                        </a>
-                    <?php endfor; ?>
-                    
-                    <?php if ($page < $totalPagesMyAgendas): ?>
-                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $page + 1 ?><?= $searchParam ?>" class="pagination-link next">
-                            Próxima &rsaquo;
-                        </a>
-                        <a href="<?= PUBLIC_URL ?>/agendas/all?page=<?= $totalPagesMyAgendas ?><?= $searchParam ?>" class="pagination-link last">
-                            Última &raquo;
-                        </a>
-                    <?php else: ?>
-                        <span class="pagination-link disabled">Próxima &rsaquo;</span>
-                        <span class="pagination-link disabled">Última &raquo;</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-        <?php endif; ?>
     <?php endif; ?>
 </section>
 
@@ -353,6 +307,89 @@ $publicAgendas = isset($publicAgendas) ? filterDuplicateAgendas($publicAgendas) 
     <?php endif; ?>
 </section>
 
-<!-- ADICIONADO: JavaScript para funcionalidade de busca -->
+<!-- ADICIONADO: Paginação geral padronizada -->
+<?php if (isset($paginationData) && $paginationData['total_pages'] > 1): ?>
+    <div class="pagination-container">
+        <div class="pagination-info">
+            <i class="fas fa-chart-bar"></i>
+            Página <strong><?= $paginationData['current_page'] ?></strong> de 
+            <strong><?= $paginationData['total_pages'] ?></strong>
+            <?php if (!empty($paginationData['search'])): ?>
+                - Resultados para "<strong><?= htmlspecialchars($paginationData['search']) ?></strong>"
+            <?php endif; ?>
+        </div>
+        
+        <nav class="pagination">
+            <?php
+            $baseUrl = PUBLIC_URL . '/agendas/all';
+            $searchParam = !empty($paginationData['search']) ? '&search=' . urlencode($paginationData['search']) : '';
+            
+            // Botão "Anterior"
+            if ($paginationData['current_page'] > 1):
+                $prevPage = $paginationData['current_page'] - 1;
+                $prevUrl = $baseUrl . '?page=' . $prevPage . $searchParam;
+            ?>
+                <a href="<?= $prevUrl ?>" class="pagination-link prev">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            <?php else: ?>
+                <span class="pagination-link prev disabled">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </span>
+            <?php endif; ?>
+            
+            <?php
+            // Páginas numeradas
+            $start = max(1, $paginationData['current_page'] - 2);
+            $end = min($paginationData['total_pages'], $paginationData['current_page'] + 2);
+            
+            // Primeira página
+            if ($start > 1): ?>
+                <a href="<?= $baseUrl ?>?page=1<?= $searchParam ?>" class="pagination-link">1</a>
+                <?php if ($start > 2): ?>
+                    <span class="pagination-ellipsis">...</span>
+                <?php endif; ?>
+            <?php endif; ?>
+            
+            <?php
+            // Páginas do range atual
+            for ($i = $start; $i <= $end; $i++):
+                if ($i == $paginationData['current_page']):
+            ?>
+                    <span class="pagination-link current"><?= $i ?></span>
+            <?php else: ?>
+                    <a href="<?= $baseUrl ?>?page=<?= $i ?><?= $searchParam ?>" class="pagination-link"><?= $i ?></a>
+            <?php 
+                endif;
+            endfor; 
+            ?>
+            
+            <?php
+            // Última página
+            if ($end < $paginationData['total_pages']): ?>
+                <?php if ($end < $paginationData['total_pages'] - 1): ?>
+                    <span class="pagination-ellipsis">...</span>
+                <?php endif; ?>
+                <a href="<?= $baseUrl ?>?page=<?= $paginationData['total_pages'] ?><?= $searchParam ?>" class="pagination-link"><?= $paginationData['total_pages'] ?></a>
+            <?php endif; ?>
+            
+            <?php
+            // Botão "Próximo"
+            if ($paginationData['current_page'] < $paginationData['total_pages']):
+                $nextPage = $paginationData['current_page'] + 1;
+                $nextUrl = $baseUrl . '?page=' . $nextPage . $searchParam;
+            ?>
+                <a href="<?= $nextUrl ?>" class="pagination-link next">
+                    Próximo <i class="fas fa-chevron-right"></i>
+                </a>
+            <?php else: ?>
+                <span class="pagination-link next disabled">
+                    Próximo <i class="fas fa-chevron-right"></i>
+                </span>
+            <?php endif; ?>
+        </nav>
+    </div>
+<?php endif; ?>
+
 <script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/index.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/common.js"></script>

@@ -1,7 +1,3 @@
-/**
- * Usado em todas as páginas que têm busca: agendas, agendas/all, shares/shared
- */
-
 // Namespace para evitar conflitos
 window.AgendaSearch = window.AgendaSearch || {};
 
@@ -30,7 +26,7 @@ window.AgendaSearch = window.AgendaSearch || {};
     );
     const searchBox = document.querySelector(".search-box");
 
-    if (!searchForm || !searchInput || !searchBox) {
+    if (!searchForm || !searchInput) {
       return; // Não há elementos de busca na página
     }
 
@@ -38,8 +34,6 @@ window.AgendaSearch = window.AgendaSearch || {};
     setupSearchEnhancements(searchInput, searchBox);
     highlightCurrentSearch();
     setupPagination();
-
-    console.log("✅ AgendaSearch inicializado");
   }
 
   function setupSearchForm(form, input, box) {
@@ -65,7 +59,7 @@ window.AgendaSearch = window.AgendaSearch || {};
         searchButton.innerHTML =
           '<i class="fas fa-spinner fa-spin"></i> Buscando...';
 
-        // Fallback
+        // Fallback para remover loading após 10 segundos
         setTimeout(function () {
           searchButton.classList.remove("loading");
           searchButton.disabled = false;
@@ -78,6 +72,7 @@ window.AgendaSearch = window.AgendaSearch || {};
     if (clearButton) {
       clearButton.addEventListener("click", function (e) {
         e.preventDefault();
+        console.log("🗑️ Limpando busca");
         window.location.href = form.getAttribute("action");
       });
     }
@@ -93,7 +88,7 @@ window.AgendaSearch = window.AgendaSearch || {};
     input.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && this.value.trim() !== "") {
         this.value = "";
-        box.classList.remove("has-search");
+        if (box) box.classList.remove("has-search");
         this.focus();
       }
     });
@@ -105,7 +100,7 @@ window.AgendaSearch = window.AgendaSearch || {};
     const currentSearch = urlParams.get("search");
 
     if (currentSearch && currentSearch.trim() !== "") {
-      box.classList.add("has-search");
+      if (box) box.classList.add("has-search");
     }
 
     // Feedback visual durante digitação
@@ -113,9 +108,9 @@ window.AgendaSearch = window.AgendaSearch || {};
       const query = this.value.trim();
 
       if (query.length > 0) {
-        box.classList.add("has-search");
+        if (box) box.classList.add("has-search");
       } else {
-        box.classList.remove("has-search");
+        if (box) box.classList.remove("has-search");
       }
     });
 
@@ -125,13 +120,16 @@ window.AgendaSearch = window.AgendaSearch || {};
     // Auto-focus se não há resultados
     const emptyStates = document.querySelectorAll(".empty-state");
     if (emptyStates.length > 0 && currentSearch) {
-      input.focus();
-      input.select();
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 100);
     }
   }
 
   function setupDynamicPlaceholder(input) {
     let placeholderIndex = 0;
+    const originalPlaceholder = input.placeholder;
 
     const interval = setInterval(function () {
       if (input.value.trim() === "" && document.activeElement !== input) {
@@ -139,6 +137,11 @@ window.AgendaSearch = window.AgendaSearch || {};
         input.placeholder = config.placeholders[placeholderIndex];
       }
     }, config.placeholderInterval);
+
+    // Restaurar placeholder original ao focar
+    input.addEventListener("focus", function () {
+      input.placeholder = originalPlaceholder;
+    });
 
     // Limpar interval ao sair da página
     window.addEventListener("beforeunload", function () {
@@ -151,58 +154,71 @@ window.AgendaSearch = window.AgendaSearch || {};
     const searchTerm = urlParams.get("search");
 
     if (searchTerm && searchTerm.trim() !== "") {
+      console.log("🎯 Destacando termos de busca:", searchTerm);
       highlightSearchTerms(searchTerm.trim());
     }
   }
 
   function highlightSearchTerms(searchTerm) {
-    const cards = document.querySelectorAll(".agenda-card");
+    // Elementos que podem conter os termos de busca
+    const selectors = [
+      ".agenda-card .agenda-title",
+      ".agenda-card .agenda-description",
+      ".agenda-card .agenda-owner",
+      ".public-agendas-table td",
+    ];
+
     const searchRegex = new RegExp(`(${escapeRegex(searchTerm)})`, "gi");
+    let highlightCount = 0;
 
-    cards.forEach((card) => {
-      const title = card.querySelector(".agenda-title");
-      const description = card.querySelector(".agenda-description");
-      const owner = card.querySelector(".agenda-owner");
+    selectors.forEach((selector) => {
+      const elements = document.querySelectorAll(selector);
 
-      if (title) {
-        highlightElement(title, searchRegex);
-      }
+      elements.forEach((element) => {
+        // Pular elementos que já foram processados ou que são apenas texto mudo
+        if (
+          element.classList.contains("text-muted") ||
+          element.hasAttribute("data-highlighted")
+        ) {
+          return;
+        }
 
-      if (description && !description.classList.contains("text-muted")) {
-        highlightElement(description, searchRegex);
-      }
+        const walker = document.createTreeWalker(
+          element,
+          NodeFilter.SHOW_TEXT,
+          null,
+          false
+        );
 
-      if (owner) {
-        highlightElement(owner, searchRegex);
-      }
+        const textNodes = [];
+        let node;
+
+        while ((node = walker.nextNode())) {
+          textNodes.push(node);
+        }
+
+        textNodes.forEach((textNode) => {
+          const originalText = textNode.textContent;
+          const highlightedText = originalText.replace(
+            searchRegex,
+            "<mark>$1</mark>"
+          );
+
+          if (highlightedText !== originalText) {
+            const span = document.createElement("span");
+            span.innerHTML = highlightedText;
+            textNode.parentNode.replaceChild(span, textNode);
+            highlightCount++;
+          }
+        });
+
+        element.setAttribute("data-highlighted", "true");
+      });
     });
-  }
 
-  function highlightElement(element, regex) {
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_TEXT,
-      null,
-      false
-    );
-
-    const textNodes = [];
-    let node;
-
-    while ((node = walker.nextNode())) {
-      textNodes.push(node);
+    if (highlightCount > 0) {
+      console.log(`✨ ${highlightCount} ocorrências destacadas`);
     }
-
-    textNodes.forEach((textNode) => {
-      const originalText = textNode.textContent;
-      const highlightedText = originalText.replace(regex, "<mark>$1</mark>");
-
-      if (highlightedText !== originalText) {
-        const span = document.createElement("span");
-        span.innerHTML = highlightedText;
-        textNode.parentNode.replaceChild(span, textNode);
-      }
-    });
   }
 
   function setupPagination() {
@@ -213,14 +229,24 @@ window.AgendaSearch = window.AgendaSearch || {};
     );
 
     paginationLinks.forEach((link) => {
-      const linkUrl = new URL(link.href);
-      const linkPage =
-        parseInt(new URLSearchParams(linkUrl.search).get("page")) || 1;
+      try {
+        const linkUrl = new URL(link.href);
+        const linkPage =
+          parseInt(new URLSearchParams(linkUrl.search).get("page")) || 1;
 
-      if (linkPage === currentPage) {
-        link.classList.add("current");
+        if (linkPage === currentPage) {
+          link.classList.add("current");
+        }
+      } catch (error) {
+        console.warn("⚠️ Erro ao processar link de paginação:", error);
       }
     });
+
+    if (paginationLinks.length > 0) {
+      console.log(
+        `📄 Configurada paginação para ${paginationLinks.length} links`
+      );
+    }
   }
 
   function escapeRegex(string) {
@@ -247,10 +273,19 @@ window.AgendaSearch = window.AgendaSearch || {};
       padding: 1rem;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      background: white;
+      border: 1px solid #dee2e6;
     `;
 
+    const iconMap = {
+      info: "fas fa-info-circle",
+      success: "fas fa-check-circle",
+      warning: "fas fa-exclamation-triangle",
+      danger: "fas fa-times-circle",
+    };
+
     messageDiv.innerHTML = `
-      <i class="fas fa-info-circle"></i>
+      <i class="${iconMap[type] || iconMap.info}"></i>
       ${message}
     `;
 
@@ -267,6 +302,8 @@ window.AgendaSearch = window.AgendaSearch || {};
         }, 300);
       }
     }, config.messageTimeout);
+
+    console.log(`💬 Mensagem exibida: ${message}`);
   }
 
   function injectStyles() {
@@ -288,12 +325,16 @@ window.AgendaSearch = window.AgendaSearch || {};
       }
       
       .search-message {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border-radius: 8px;
-        padding: 1rem;
         font-size: 0.9rem;
-        background: white;
-        border: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .search-message i {
+        color: #004a8f;
+        font-size: 1.1rem;
+        flex-shrink: 0;
       }
 
       mark {
@@ -302,21 +343,90 @@ window.AgendaSearch = window.AgendaSearch || {};
         padding: 0.1em 0.2em !important;
         border-radius: 3px !important;
         font-weight: 600 !important;
+        animation: highlight 0.5s ease-out;
+      }
+
+      @keyframes highlight {
+        0% { background-color: #ffeb3b; }
+        100% { background-color: #fff3cd; }
       }
       
       .search-form .btn.loading {
-        opacity: 0.7;
-        cursor: not-allowed;
-        pointer-events: none;
+        opacity: 0.7 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+      }
+
+      .search-box.has-search {
+        background: linear-gradient(135deg, #e6f3ff 0%, #f0f7ff 100%) !important;
+        border-color: #004a8f !important;
+        box-shadow: 0 4px 12px rgba(0, 74, 143, 0.15) !important;
+      }
+
+      .search-box.has-search input[type="text"] {
+        border-color: #004a8f !important;
+        background-color: #ffffff !important;
+        font-weight: 500 !important;
+      }
+
+      .results-count {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #718096;
+        background: rgba(113, 128, 150, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        border: 1px solid rgba(113, 128, 150, 0.2);
+      }
+
+      .search-info {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #f6ad55;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #856404;
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .search-info i {
+        color: #d69e2e;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+
+      .search-info strong {
+        color: #744210;
+        font-weight: 600;
+      }
+
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
     `;
 
     document.head.appendChild(styles);
+    console.log("💄 Estilos de busca injetados");
   }
+
+  // ==========================================
+  // FUNÇÕES PÚBLICAS
+  // ==========================================
 
   AgendaSearch.init = init;
   AgendaSearch.showMessage = showMessage;
   AgendaSearch.highlightSearchTerms = highlightSearchTerms;
+
+  // ==========================================
+  // AUTO-INICIALIZAÇÃO
+  // ==========================================
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
@@ -330,4 +440,8 @@ window.AgendaSearch = window.AgendaSearch || {};
 })();
 
 // Exposição global para compatibilidade
-window.showSearchMessage = window.AgendaSearch.showMessage;
+window.showSearchMessage = function (message, type) {
+  if (window.AgendaSearch && window.AgendaSearch.showMessage) {
+    window.AgendaSearch.showMessage(message, type);
+  }
+};

@@ -62,41 +62,42 @@ class ShareController extends BaseController {
     }
     
     /**
-     * Exibe a lista de agendas compartilhadas
-     */
-/**
-     * Exibe a lista de agendas compartilhadas - MÉTODO CORRIGIDO
+     * Exibe a lista de agendas compartilhadas - CORRIGIDO
      */
     public function shared() {
         $userId = $_SESSION['user_id'];
         
-        // CORRIGIDO: Processar parâmetro de busca corretamente
-        $search = isset($_GET['search']) ? htmlspecialchars(filter_input(INPUT_GET, 'search', FILTER_UNSAFE_RAW) ?? '') : null;
+        // CORRIGIDO: Processar parâmetro de busca igual à home page  
+        $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
         
         // Parâmetros de paginação
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-        $perPage = 12; // AUMENTADO: 12 agendas por página para consistência
+        $perPage = 12; // 12 agendas por página para consistência
         
         // Verificar se o usuário está logado
         $this->checkAuth();
         
-        // Buscar agendas compartilhadas com o usuário (com paginação e busca)
-        $sharedWithMe = $this->shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
-        $totalSharedWithMe = $this->shareModel->countSharedWithUser($userId, true, $search);
-        
-        // Buscar agendas que o usuário compartilhou (com busca)
-        $mySharedAgendas = $this->shareModel->getAgendasSharedByUser($userId, $search);
+        // CORRIGIDO: Buscar agendas compartilhadas com lógica consistente
+        if (!empty($search)) {
+            $sharedWithMe = $this->shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
+            $totalSharedWithMe = $this->shareModel->countSharedWithUser($userId, true, $search);
+            $mySharedAgendas = $this->shareModel->getAgendasSharedByUser($userId, $search);
+        } else {
+            $sharedWithMe = $this->shareModel->getSharedWithUser($userId, true, $page, $perPage, null);
+            $totalSharedWithMe = $this->shareModel->countSharedWithUser($userId, true, null);
+            $mySharedAgendas = $this->shareModel->getAgendasSharedByUser($userId, null);
+        }
         
         // Calcular número total de páginas para paginação
         $totalPages = ceil($totalSharedWithMe / $perPage);
         
-        // ADICIONADO: Informações de paginação para a view
+        // CORRIGIDO: Informações de paginação padronizadas para a view
         $paginationData = [
             'current_page' => $page,
             'total_pages' => $totalPages,
             'total_items' => $totalSharedWithMe,
             'per_page' => $perPage,
-            'start_item' => ($page - 1) * $perPage + 1,
+            'start_item' => $totalSharedWithMe > 0 ? (($page - 1) * $perPage + 1) : 0,
             'end_item' => min($page * $perPage, $totalSharedWithMe),
             'search' => $search
         ];
