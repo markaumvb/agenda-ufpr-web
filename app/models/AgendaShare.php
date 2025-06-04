@@ -176,73 +176,64 @@ class AgendaShare {
     }
 }
     
-    public function getAgendasSharedByUser($userId, $search = null) {
-        try {
-            // Consulta para encontrar agendas do usuário que têm compartilhamentos
-            $sql = "SELECT DISTINCT a.id, a.title, a.description, a.color, a.is_public, a.is_active,
-                           (SELECT name FROM users WHERE id = a.user_id) as owner_name
-                    FROM agendas a
-                    WHERE a.user_id = :userId 
-                    AND EXISTS (
-                        SELECT 1 FROM agenda_shares 
-                        WHERE agenda_id = a.id
-                    )";
-            
-            if ($search) {
-                $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
-            }
-            
-            $sql .= " ORDER BY a.title";
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
-            
-            if ($search) {
-                $searchParam = "%{$search}%";
-                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-            }
-            
-            $stmt->execute();
-            
-            $agendas = [];
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                // Adicionar dados dos usuários com quem esta agenda foi compartilhada
-                $sharesSql = "SELECT u.name 
-                              FROM agenda_shares s
-                              JOIN users u ON s.user_id = u.id
-                              WHERE s.agenda_id = ?";
-                
-                $sharesStmt = $this->db->prepare($sharesSql);
-                $sharesStmt->execute([$row['id']]);
-                $shares = $sharesStmt->fetchAll(PDO::FETCH_COLUMN);
-                
-                $row['is_owner'] = true; // É o dono
-                $row['can_edit'] = true; // Dono sempre pode editar
-                $row['compromissos'] = [
-                    'pendentes' => $this->countCompromissosByStatus($row['id'], 'pendente'),
-                    'realizados' => $this->countCompromissosByStatus($row['id'], 'realizado'),
-                    'cancelados' => $this->countCompromissosByStatus($row['id'], 'cancelado'),
-                    'aguardando_aprovacao' => $this->countCompromissosByStatus($row['id'], 'aguardando_aprovacao')
-                ];
-                $row['shared_with'] = $shares;
-                
-                $agendas[] = $row;
-            }
-            
-            return $agendas;
-        } catch (PDOException $e) {
-            error_log('Erro ao buscar agendas compartilhadas pelo usuário: ' . $e->getMessage());
-            return [];
+public function getAgendasSharedByUser($userId, $search = null) {
+    try {
+        $sql = "SELECT DISTINCT a.id, a.title, a.description, a.color, a.is_public, a.is_active,
+                       (SELECT name FROM users WHERE id = a.user_id) as owner_name
+                FROM agendas a
+                WHERE a.user_id = :user_id 
+                AND EXISTS (
+                    SELECT 1 FROM agenda_shares 
+                    WHERE agenda_id = a.id
+                )";
+        
+        if ($search !== null && trim($search) !== '') {
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
         }
+        
+        $sql .= " ORDER BY a.title";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        
+        if ($search !== null && trim($search) !== '') {
+            $stmt->bindValue(':search', "%{$search}%", PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        
+        $agendas = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Adicionar dados dos usuários com quem esta agenda foi compartilhada
+            $sharesSql = "SELECT u.name 
+                          FROM agenda_shares s
+                          JOIN users u ON s.user_id = u.id
+                          WHERE s.agenda_id = ?";
+            
+            $sharesStmt = $this->db->prepare($sharesSql);
+            $sharesStmt->execute([$row['id']]);
+            $shares = $sharesStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            $row['is_owner'] = true;
+            $row['can_edit'] = true;
+            $row['compromissos'] = [
+                'pendentes' => $this->countCompromissosByStatus($row['id'], 'pendente'),
+                'realizados' => $this->countCompromissosByStatus($row['id'], 'realizado'),
+                'cancelados' => $this->countCompromissosByStatus($row['id'], 'cancelado'),
+                'aguardando_aprovacao' => $this->countCompromissosByStatus($row['id'], 'aguardando_aprovacao')
+            ];
+            $row['shared_with'] = $shares;
+            
+            $agendas[] = $row;
+        }
+        
+        return $agendas;
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar agendas compartilhadas pelo usuário: ' . $e->getMessage());
+        return [];
     }
+}
     
-    /**
-     * Verifica se um usuário tem acesso a uma agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @param int $userId ID do usuário
-     * @return bool|array False se não tiver acesso, ou array com detalhes do compartilhamento
-     */
     public function checkAccess($agendaId, $userId) {
         try {
             $query = "SELECT * FROM agenda_shares WHERE agenda_id = :agenda_id AND user_id = :user_id LIMIT 1";
@@ -260,13 +251,7 @@ class AgendaShare {
         }
     }
     
-    /**
-     * Verifica se um usuário pode editar uma agenda compartilhada
-     * 
-     * @param int $agendaId ID da agenda
-     * @param int $userId ID do usuário
-     * @return bool Se o usuário pode editar
-     */
+
     public function canEdit($agendaId, $userId) {
         $access = $this->checkAccess($agendaId, $userId);
         
@@ -276,26 +261,14 @@ class AgendaShare {
         
         return (bool)$access['can_edit'];
     }
-    
-    /**
-     * Remove todos os compartilhamentos de uma agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @return bool Resultado da operação
-     */
+
     public function deleteAllFromAgenda($agendaId) {
         $sql = "DELETE FROM agenda_shares WHERE agenda_id = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$agendaId]);
     }
     
-    /**
-     * Conta o número de compromissos por status em uma agenda
-     * 
-     * @param int $agendaId ID da agenda
-     * @param string $status Status dos compromissos
-     * @return int Número de compromissos
-     */
+
     public function countCompromissosByStatus($agendaId, $status) {
         try {
             $sql = "SELECT COUNT(*) FROM compromissos WHERE agenda_id = ? AND status = ?";

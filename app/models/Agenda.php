@@ -38,9 +38,6 @@ class Agenda {
             $sql .= " AND a.is_active = 1";
         }
         
-        $params = [':user_id' => $userId];
-        
-        // CORRIGIDO: Binding direto sem array genérico
         if ($search !== null && trim($search) !== '') {
             $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
         }
@@ -52,7 +49,6 @@ class Agenda {
         
         $stmt = $this->db->prepare($sql);
         
-        // CORRIGIDO: Binding individual
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
         
         if ($search !== null && trim($search) !== '') {
@@ -429,69 +425,94 @@ class Agenda {
         }
     }
 
-    // CORRIGIDO: Método de busca com busca mais robusta
-    public function searchPublicAgendas($search, $page = 1, $perPage = 10) {
-        try {
-            $offset = ($page - 1) * $perPage;
-            $searchParam = "%{$search}%";
-            
-            $sql = "SELECT a.*, u.name as owner_name
-                    FROM agendas a
-                    INNER JOIN users u ON a.user_id = u.id
-                    WHERE a.is_public = 1 
-                      AND a.is_active = 1
-                      AND (
-                          a.title LIKE :search1 OR 
-                          a.description LIKE :search2 OR 
-                          u.name LIKE :search3
-                      )
-                    ORDER BY a.title
-                    LIMIT :limit OFFSET :offset";
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('Erro ao buscar agendas públicas: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    // CORRIGIDO: Método de contagem com busca mais robusta
-    public function countPublicAgendasWithSearch($search) {
-        try {
-            $searchParam = "%{$search}%";
-            
-            $sql = "SELECT COUNT(*) as total 
-                    FROM agendas a
-                    INNER JOIN users u ON a.user_id = u.id
-                    WHERE a.is_public = 1 
-                      AND a.is_active = 1
-                      AND (
-                          a.title LIKE :search1 OR 
-                          a.description LIKE :search2 OR 
-                          u.name LIKE :search3
+public function searchPublicAgendas($search, $page = 1, $perPage = 10, $userId = null) {
+    try {
+        $offset = ($page - 1) * $perPage;
+        $searchParam = "%{$search}%";
+        
+        $sql = "SELECT a.*, u.name as owner_name
+                FROM agendas a
+                INNER JOIN users u ON a.user_id = u.id
+                WHERE a.is_public = 1 
+                  AND a.is_active = 1
+                  AND (
+                      a.title LIKE :search1 OR 
+                      a.description LIKE :search2 OR 
+                      u.name LIKE :search3
+                  )";
+        
+        if ($userId) {
+            $sql .= " AND a.user_id != :user_id
+                      AND a.id NOT IN (
+                          SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
                       )";
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return intval($row['total']);
-        } catch (PDOException $e) {
-            error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
-            return 0;
         }
+        
+        $sql .= " ORDER BY a.title
+                  LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+        $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+        $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
+        
+        if ($userId) {
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+        }
+        
+        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar agendas públicas: ' . $e->getMessage());
+        return [];
     }
+}
+
+public function countPublicAgendasWithSearch($search, $userId = null) {
+    try {
+        $searchParam = "%{$search}%";
+        
+        $sql = "SELECT COUNT(*) as total 
+                FROM agendas a
+                INNER JOIN users u ON a.user_id = u.id
+                WHERE a.is_public = 1 
+                  AND a.is_active = 1
+                  AND (
+                      a.title LIKE :search1 OR 
+                      a.description LIKE :search2 OR 
+                      u.name LIKE :search3
+                  )";
+
+        if ($userId) {
+            $sql .= " AND a.user_id != :user_id
+                      AND a.id NOT IN (
+                          SELECT agenda_id FROM agenda_shares WHERE user_id = :user_id2
+                      )";
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
+        $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+        $stmt->bindParam(':search3', $searchParam, PDO::PARAM_STR);
+        
+        if ($userId) {
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':user_id2', $userId, PDO::PARAM_INT);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return intval($row['total']);
+    } catch (PDOException $e) {
+        error_log('Erro ao contar agendas públicas: ' . $e->getMessage());
+        return 0;
+    }
+}
 
     public function getAllPublicActivePaginated($page = 1, $perPage = 10) {
         try {
