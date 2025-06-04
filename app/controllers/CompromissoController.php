@@ -973,11 +973,7 @@ public function delete() {
         exit;
     }
 
-
-
-    private function validateCompromissoData($data, $compromissoId = null) {
-
-    
+   private function validateCompromissoData($data, $compromissoId = null) {
     $errors = [];
     
     // Validar campos obrigatórios
@@ -1015,6 +1011,16 @@ public function delete() {
         if ($end <= $start) {
             $errors[] = 'A data e hora de término deve ser posterior à data e hora de início';
         }
+        
+        // NOVA VALIDAÇÃO: Verificar duração máxima para eventos recorrentes
+        if (isset($data['repeat_type']) && $data['repeat_type'] !== 'none') {
+            $duration = $start->diff($end);
+            $totalHours = ($duration->days * 24) + $duration->h + ($duration->i / 60);
+            
+            if ($totalHours > 12) {
+                $errors[] = 'Compromissos com recorrência não podem ter duração superior a 12 horas';
+            }
+        }
     }
     
     // Verificar recorrência
@@ -1030,6 +1036,7 @@ public function delete() {
     
     return $errors;
 }
+
 
     public function newPublic() {
     $this->checkAuth();

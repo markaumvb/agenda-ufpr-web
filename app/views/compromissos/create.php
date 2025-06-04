@@ -44,7 +44,7 @@
                 <label for="description">
                     <i class="fas fa-align-left"></i> Descrição
                 </label>
-                <textarea id="description" name="description" rows="4" class="form-control" 
+                <textarea id="description" name="description" rows="3" class="form-control" 
                           placeholder="Descreva os detalhes do compromisso (opcional)"></textarea>
             </div>
             
@@ -85,6 +85,12 @@
                     </label>
                     <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" 
                         value="<?= isset($formData['end_datetime']) ? htmlspecialchars($formData['end_datetime']) : $defaultEndDateTime ?>">
+                    <div class="duration-display-container">
+                        <div id="duration-display" class="duration-display">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span id="duration-text">Duração: 1h 00min</span>
+                        </div>
+                    </div>
                     <small class="form-text text-muted">
                         <i class="fas fa-info-circle"></i>
                         Deve ser posterior ao horário de início
@@ -110,7 +116,6 @@
                         <span>Aguardando Aprovação</span>
                         <small>Seu compromisso será analisado pelo responsável da agenda</small>
                     </div>
-                    <!-- Não definimos o status aqui para permitir que a lógica do controller o faça -->
                 <?php else: ?>
                     <div class="status-display status-pending">
                         <i class="fas fa-hourglass-start"></i>
@@ -149,7 +154,7 @@
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Repetir diariamente</strong>
-                            <small>Todos os dias úteis</small>
+                            <small>Todos os dias úteis (máx. 12h duração)</small>
                         </div>
                     </label>
                     
@@ -158,7 +163,7 @@
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Repetir semanalmente</strong>
-                            <small>Mesmo dia da semana</small>
+                            <small>Mesmo dia da semana (máx. 12h duração)</small>
                         </div>
                     </label>
                     
@@ -167,9 +172,14 @@
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Repetir em dias específicos</strong>
-                            <small>Escolha os dias da semana</small>
+                            <small>Escolha os dias da semana (máx. 12h duração)</small>
                         </div>
                     </label>
+                </div>
+                
+                <div id="recurrence-warning" class="alert alert-warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atenção:</strong> Compromissos com recorrência não podem ter duração superior a 12 horas.
                 </div>
                 
                 <div id="repeat_until_container" class="form-group repeat-option" style="display: none;">
@@ -254,13 +264,16 @@ function toggleRepeatOptions() {
     const repeatType = document.querySelector('input[name="repeat_type"]:checked').value;
     const repeatUntilContainer = document.getElementById('repeat_until_container');
     const repeatDaysContainer = document.getElementById('repeat_days_container');
+    const recurrenceWarning = document.getElementById('recurrence-warning');
     
     // Mostrar/esconder container de "repetir até"
     if (repeatType === 'none') {
         repeatUntilContainer.style.display = 'none';
         repeatDaysContainer.style.display = 'none';
+        recurrenceWarning.style.display = 'none';
     } else {
         repeatUntilContainer.style.display = 'block';
+        recurrenceWarning.style.display = 'block';
         
         // Mostrar/esconder container de dias específicos
         if (repeatType === 'specific_days') {
@@ -269,11 +282,69 @@ function toggleRepeatOptions() {
             repeatDaysContainer.style.display = 'none';
         }
     }
+    
+    // Verificar duração ao mudar tipo de recorrência
+    checkDurationForRecurrence();
+}
+
+// Função para calcular e exibir duração
+function calculateDuration() {
+    const startInput = document.getElementById('start_datetime');
+    const endInput = document.getElementById('end_datetime');
+    const durationText = document.getElementById('duration-text');
+    const durationDisplay = document.getElementById('duration-display');
+    
+    if (!startInput.value || !endInput.value) {
+        durationDisplay.style.display = 'none';
+        return;
+    }
+    
+    const start = new Date(startInput.value);
+    const end = new Date(endInput.value);
+    
+    if (end <= start) {
+        durationDisplay.style.display = 'none';
+        return;
+    }
+    
+    const diffMs = end - start;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    durationText.textContent = `Duração: ${diffHours}h ${diffMinutes.toString().padStart(2, '0')}min`;
+    durationDisplay.style.display = 'flex';
+    
+    // Verificar se excede 12h para recorrência
+    checkDurationForRecurrence();
+}
+
+// Função para verificar duração em eventos recorrentes
+function checkDurationForRecurrence() {
+    const repeatType = document.querySelector('input[name="repeat_type"]:checked').value;
+    const startInput = document.getElementById('start_datetime');
+    const endInput = document.getElementById('end_datetime');
+    const durationDisplay = document.getElementById('duration-display');
+    
+    if (repeatType !== 'none' && startInput.value && endInput.value) {
+        const start = new Date(startInput.value);
+        const end = new Date(endInput.value);
+        const diffMs = end - start;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        
+        if (diffHours > 12) {
+            durationDisplay.classList.add('duration-error');
+        } else {
+            durationDisplay.classList.remove('duration-error');
+        }
+    } else {
+        durationDisplay.classList.remove('duration-error');
+    }
 }
 
 // Inicializar as opções de recorrência
 document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
+    calculateDuration();
 });
 </script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
@@ -308,9 +379,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Atualizar mínimo do campo final
                 endInput.min = startInput.value;
                 
+                // Calcular duração
+                calculateDuration();
+                
             } catch (e) {
                 console.error('Erro ao sincronizar datas:', e);
             }
+        });
+        
+        // Calcular duração quando campo final muda
+        endInput.addEventListener('change', function() {
+            calculateDuration();
         });
         
         // Validação em tempo real
@@ -335,5 +414,10 @@ document.addEventListener('DOMContentLoaded', function() {
             startInput.dispatchEvent(new Event('change'));
         }
     }
+    
+    // Event listeners para recorrência
+    document.querySelectorAll('input[name="repeat_type"]').forEach(input => {
+        input.addEventListener('change', checkDurationForRecurrence);
+    });
 });
 </script>

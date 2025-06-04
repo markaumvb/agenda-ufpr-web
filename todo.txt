@@ -13,5 +13,8 @@ por favor veja meu código analise antes de tudo toda minha base de conhecimento
 se estiver faltando algum arquivo me avise antes de prosseguir, e só prossiga se todos os arquivos estiverem presentes na base de conhecimento
 
 
-quando o compromisso tiver recorrência... a data e hora inicial e data e hora final devem ser no mesmo dia
-ex: criei um compromiso que começa nodia 20/06/2025 das 13:00 às 14:00 até o dia 30/06/2025 13:00 às 14:00, e coloquei recorrência diária até o dia 30/06... a ideia seria que ocorrese o compromisso do dia 20 até o dia 30 das 13:00 às 14:00 ou seja, se o usuário colocar o dia final em outro dia além do inicial, o sistema deve colocar a data incial e final no mesmo dia e fazer a recorrência da maneira correta...
+Quando o compromisso, tiver recorrência, a data/hora inicial e data/hora final não podem ter mais de 12h de diferença!!! ou seja, o usuário deverá ser notificado que o tempo máximo do compromisso deve ser 12h para recorrências. Essa situação só deverá ser feita para compromissos com recorrência, seja ela qual for. Caso o usuário ultrapasse esse tempo, deverá ser notificado ao salvar e pedindo para ele fazer essa correção.
+também podemos colocar na tela de create/edit logo ao lado da data/hora final o tempo do compromisso (quando ele mudar a data final calcular esse tempo ao sair do campo),e também estilizar esse campo.
+outro detalhe no edit.php que é praticamente o mesmo de create, a estilização está diferente, faça a estilização igual ao do create.
+e também podemos diminuir um pouco do espaço entre os elementos para que a altura fique menor...
+se estiver faltando algum arquivo me avise antes de prosseguir, e só prossiga se todos os arquivos estiverem presentes na base de conhecimento!!!
