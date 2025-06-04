@@ -170,6 +170,13 @@ public function create() {
     $formData = [];
     if (isset($_SESSION['form_data'])) {
         $formData = $_SESSION['form_data'];
+        
+        // Converter repeat_days de POST array para formato esperado
+        if (isset($formData['repeat_days']) && is_array($formData['repeat_days'])) {
+            // Manter como array para fácil verificação
+            $formData['repeat_days'] = $formData['repeat_days'];
+        }
+        
         unset($_SESSION['form_data']);
     }
     
@@ -199,9 +206,18 @@ public function create() {
     $endDate = clone $currentDate;
     $endDate->add(new DateInterval('PT1H')); // Adiciona 1 hora
     
-    // Formatar datas para o formato HTML datetime-local
-    $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
-    $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
+    // Formatar datas para o formato HTML datetime-local apenas se não houver dados da sessão
+    if (!isset($formData['start_datetime'])) {
+        $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
+    } else {
+        $defaultStartDateTime = $formData['start_datetime'];
+    }
+    
+    if (!isset($formData['end_datetime'])) {
+        $defaultEndDateTime = $endDate->format('Y-m-d\TH:i');
+    } else {
+        $defaultEndDateTime = $formData['end_datetime'];
+    }
     
     // Exibir a view
     require_once __DIR__ . '/../views/shared/header.php';
@@ -1195,10 +1211,6 @@ public function delete() {
         exit;
     }
     
-    /**
-     * Armazenar compromisso de usuário externo
-     */
-
     /**
      * Formulário de criação de compromisso para usuários externos
      */

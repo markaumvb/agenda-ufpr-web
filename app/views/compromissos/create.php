@@ -37,7 +37,8 @@
                     <i class="fas fa-heading"></i> Título *
                 </label>
                 <input type="text" id="title" name="title" required class="form-control" 
-                       placeholder="Digite o título do compromisso">
+                       placeholder="Digite o título do compromisso"
+                       value="<?= isset($formData['title']) ? htmlspecialchars($formData['title']) : '' ?>">
             </div>
             
             <div class="form-group">
@@ -45,7 +46,7 @@
                     <i class="fas fa-align-left"></i> Descrição
                 </label>
                 <textarea id="description" name="description" rows="3" class="form-control" 
-                          placeholder="Descreva os detalhes do compromisso (opcional)"></textarea>
+                          placeholder="Descreva os detalhes do compromisso (opcional)"><?= isset($formData['description']) ? htmlspecialchars($formData['description']) : '' ?></textarea>
             </div>
             
             <div class="form-group">
@@ -53,7 +54,8 @@
                     <i class="fas fa-map-marker-alt"></i> Local
                 </label>
                 <input type="text" id="location" name="location" class="form-control" 
-                       placeholder="Onde será realizado o compromisso (opcional)">
+                       placeholder="Onde será realizado o compromisso (opcional)"
+                       value="<?= isset($formData['location']) ? htmlspecialchars($formData['location']) : '' ?>">
             </div>
         </div>
 
@@ -62,8 +64,8 @@
                 <i class="fas fa-clock"></i> Data e Horário
             </h3>
             
-            <div class="form-row">
-                <div class="form-group form-group-half">
+            <div class="form-row-datetime">
+                <div class="form-group form-group-datetime">
                     <label for="start_datetime">
                         <i class="fas fa-play"></i> Data e Hora de Início *
                     </label>
@@ -79,22 +81,26 @@
                     </small>
                 </div>
                 
-                <div class="form-group form-group-half">
+                <div class="form-group form-group-datetime">
                     <label for="end_datetime">
                         <i class="fas fa-stop"></i> Data e Hora de Término *
                     </label>
                     <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" 
                         value="<?= isset($formData['end_datetime']) ? htmlspecialchars($formData['end_datetime']) : $defaultEndDateTime ?>">
-                    <div class="duration-display-container">
-                        <div id="duration-display" class="duration-display">
-                            <i class="fas fa-hourglass-half"></i>
-                            <span id="duration-text">Duração: 1h 00min</span>
-                        </div>
-                    </div>
                     <small class="form-text text-muted">
                         <i class="fas fa-info-circle"></i>
                         Deve ser posterior ao horário de início
                     </small>
+                </div>
+                
+                <div class="form-group form-group-duration">
+                    <div id="duration-card" class="duration-card">
+                        <div class="duration-header">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Duração</span>
+                        </div>
+                        <div id="duration-value" class="duration-value">1h 00min</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,9 +145,13 @@
             <div class="form-group">
                 <label>Tipo de Recorrência</label>
                 
+                <?php 
+                $selectedRepeatType = isset($formData['repeat_type']) ? $formData['repeat_type'] : 'none';
+                ?>
+                
                 <div class="radio-group">
                     <label class="radio-container">
-                        <input type="radio" name="repeat_type" value="none" checked onchange="toggleRepeatOptions()">
+                        <input type="radio" name="repeat_type" value="none" <?= $selectedRepeatType === 'none' ? 'checked' : '' ?> onchange="toggleRepeatOptions()">
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Não repetir</strong>
@@ -150,7 +160,7 @@
                     </label>
                     
                     <label class="radio-container">
-                        <input type="radio" name="repeat_type" value="daily" onchange="toggleRepeatOptions()">
+                        <input type="radio" name="repeat_type" value="daily" <?= $selectedRepeatType === 'daily' ? 'checked' : '' ?> onchange="toggleRepeatOptions()">
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Repetir diariamente</strong>
@@ -159,7 +169,7 @@
                     </label>
                     
                     <label class="radio-container">
-                        <input type="radio" name="repeat_type" value="weekly" onchange="toggleRepeatOptions()">
+                        <input type="radio" name="repeat_type" value="weekly" <?= $selectedRepeatType === 'weekly' ? 'checked' : '' ?> onchange="toggleRepeatOptions()">
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Repetir semanalmente</strong>
@@ -168,7 +178,7 @@
                     </label>
                     
                     <label class="radio-container">
-                        <input type="radio" name="repeat_type" value="specific_days" onchange="toggleRepeatOptions()">
+                        <input type="radio" name="repeat_type" value="specific_days" <?= $selectedRepeatType === 'specific_days' ? 'checked' : '' ?> onchange="toggleRepeatOptions()">
                         <span class="radiomark"></span>
                         <div class="radio-content">
                             <strong>Repetir em dias específicos</strong>
@@ -186,7 +196,8 @@
                     <label for="repeat_until">
                         <i class="fas fa-calendar-times"></i> Repetir até
                     </label>
-                    <input type="date" id="repeat_until" name="repeat_until" class="form-control">
+                    <input type="date" id="repeat_until" name="repeat_until" class="form-control"
+                           value="<?= isset($formData['repeat_until']) ? htmlspecialchars($formData['repeat_until']) : '' ?>">
                     <small class="form-text text-muted">Data final da recorrência</small>
                 </div>
                 
@@ -195,47 +206,18 @@
                         <i class="fas fa-calendar-week"></i> Dias da semana
                     </label>
                     <div class="checkbox-group days-grid">
-                        <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="0">
-                            <span class="checkmark"></span>
-                            <span class="day-label">Dom</span>
-                        </label>
+                        <?php 
+                        $selectedDays = isset($formData['repeat_days']) && is_array($formData['repeat_days']) ? $formData['repeat_days'] : [];
+                        $daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
                         
+                        for ($i = 0; $i < 7; $i++): 
+                        ?>
                         <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="1">
+                            <input type="checkbox" name="repeat_days[]" value="<?= $i ?>" <?= in_array((string)$i, $selectedDays) ? 'checked' : '' ?>>
                             <span class="checkmark"></span>
-                            <span class="day-label">Seg</span>
+                            <span class="day-label"><?= $daysOfWeek[$i] ?></span>
                         </label>
-                        
-                        <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="2">
-                            <span class="checkmark"></span>
-                            <span class="day-label">Ter</span>
-                        </label>
-                        
-                        <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="3">
-                            <span class="checkmark"></span>
-                            <span class="day-label">Qua</span>
-                        </label>
-                        
-                        <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="4">
-                            <span class="checkmark"></span>
-                            <span class="day-label">Qui</span>
-                        </label>
-                        
-                        <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="5">
-                            <span class="checkmark"></span>
-                            <span class="day-label">Sex</span>
-                        </label>
-                        
-                        <label class="checkbox-container">
-                            <input type="checkbox" name="repeat_days[]" value="6">
-                            <span class="checkmark"></span>
-                            <span class="day-label">Sáb</span>
-                        </label>
+                        <?php endfor; ?>
                     </div>
                 </div>
             </div>
@@ -291,11 +273,11 @@ function toggleRepeatOptions() {
 function calculateDuration() {
     const startInput = document.getElementById('start_datetime');
     const endInput = document.getElementById('end_datetime');
-    const durationText = document.getElementById('duration-text');
-    const durationDisplay = document.getElementById('duration-display');
+    const durationValue = document.getElementById('duration-value');
+    const durationCard = document.getElementById('duration-card');
     
     if (!startInput.value || !endInput.value) {
-        durationDisplay.style.display = 'none';
+        durationCard.classList.remove('show');
         return;
     }
     
@@ -303,7 +285,7 @@ function calculateDuration() {
     const end = new Date(endInput.value);
     
     if (end <= start) {
-        durationDisplay.style.display = 'none';
+        durationCard.classList.remove('show');
         return;
     }
     
@@ -311,8 +293,8 @@ function calculateDuration() {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     
-    durationText.textContent = `Duração: ${diffHours}h ${diffMinutes.toString().padStart(2, '0')}min`;
-    durationDisplay.style.display = 'flex';
+    durationValue.textContent = `${diffHours}h ${diffMinutes.toString().padStart(2, '0')}min`;
+    durationCard.classList.add('show');
     
     // Verificar se excede 12h para recorrência
     checkDurationForRecurrence();
@@ -323,7 +305,7 @@ function checkDurationForRecurrence() {
     const repeatType = document.querySelector('input[name="repeat_type"]:checked').value;
     const startInput = document.getElementById('start_datetime');
     const endInput = document.getElementById('end_datetime');
-    const durationDisplay = document.getElementById('duration-display');
+    const durationCard = document.getElementById('duration-card');
     
     if (repeatType !== 'none' && startInput.value && endInput.value) {
         const start = new Date(startInput.value);
@@ -332,12 +314,12 @@ function checkDurationForRecurrence() {
         const diffHours = diffMs / (1000 * 60 * 60);
         
         if (diffHours > 12) {
-            durationDisplay.classList.add('duration-error');
+            durationCard.classList.add('duration-error');
         } else {
-            durationDisplay.classList.remove('duration-error');
+            durationCard.classList.remove('duration-error');
         }
     } else {
-        durationDisplay.classList.remove('duration-error');
+        durationCard.classList.remove('duration-error');
     }
 }
 
