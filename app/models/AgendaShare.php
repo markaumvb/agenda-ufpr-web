@@ -86,102 +86,96 @@ class AgendaShare {
     
 
     public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10, $search = null) {
-        try {
-            $offset = ($page - 1) * $perPage;
-            
-            $sql = "SELECT a.*, 
-                   s.can_edit,
-                   u.name as owner_name,
-                   u.id as owner_id
+    try {
+        $offset = ($page - 1) * $perPage;
+        
+        $sql = "SELECT a.*, 
+               s.can_edit,
+               u.name as owner_name,
+               u.id as owner_id
+            FROM agenda_shares s
+            INNER JOIN agendas a ON s.agenda_id = a.id
+            INNER JOIN users u ON a.user_id = u.id
+            WHERE s.user_id = :user_id";
+        
+        if ($activeOnly) {
+            $sql .= " AND a.is_active = 1";
+        }
+        
+        if ($search !== null && trim($search) !== '') {
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search2)";
+        }
+        
+        $sql .= " ORDER BY a.title LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        
+        if ($search !== null && trim($search) !== '') {
+            $searchParam = "%{$search}%";
+            $stmt->bindValue(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindValue(':search2', $searchParam, PDO::PARAM_STR);
+        }
+        
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $agendas = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['is_owner'] = false;
+            $row['compromissos'] = [
+                'pendentes' => $this->countCompromissosByStatus($row['id'], 'pendente'),
+                'realizados' => $this->countCompromissosByStatus($row['id'], 'realizado'),
+                'cancelados' => $this->countCompromissosByStatus($row['id'], 'cancelado'),
+                'aguardando_aprovacao' => $this->countCompromissosByStatus($row['id'], 'aguardando_aprovacao')
+            ];
+            $agendas[] = $row;
+        }
+        
+        return $agendas;
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar agendas compartilhadas: ' . $e->getMessage());
+        return [];
+    }
+}
+    
+
+    public function countSharedWithUser($userId, $activeOnly = true, $search = null) {
+    try {
+        $sql = "SELECT COUNT(*) as total 
                 FROM agenda_shares s
                 INNER JOIN agendas a ON s.agenda_id = a.id
                 INNER JOIN users u ON a.user_id = u.id
                 WHERE s.user_id = :user_id";
-            
-            if ($activeOnly) {
-                $sql .= " AND a.is_active = 1";
-            }
-            
-            if ($search) {
-                $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
-            }
-            
-            $sql .= " ORDER BY a.title
-                      LIMIT :limit OFFSET :offset";
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            
-            if ($search) {
-                $searchParam = "%{$search}%";
-                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-            }
-            
-            $stmt->bindValue(':limit', (int)$perPage, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $agendas = [];
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $row['is_owner'] = false;
-                $row['compromissos'] = [
-                    'pendentes' => $this->countCompromissosByStatus($row['id'], 'pendente'),
-                    'realizados' => $this->countCompromissosByStatus($row['id'], 'realizado'),
-                    'cancelados' => $this->countCompromissosByStatus($row['id'], 'cancelado'),
-                    'aguardando_aprovacao' => $this->countCompromissosByStatus($row['id'], 'aguardando_aprovacao')
-                ];
-                $agendas[] = $row;
-            }
-            
-            return $agendas;
-        } catch (PDOException $e) {
-            error_log('Erro ao buscar agendas compartilhadas com o usuário: ' . $e->getMessage());
-            return [];
+        
+        if ($activeOnly) {
+            $sql .= " AND a.is_active = 1";
         }
-    }
-    
-
-    public function countSharedWithUser($userId, $activeOnly = true, $search = null) {
-        try {
-            $sql = "SELECT COUNT(*) as total 
-                    FROM agenda_shares s
-                    INNER JOIN agendas a ON s.agenda_id = a.id
-                    INNER JOIN users u ON a.user_id = u.id
-                    WHERE s.user_id = :user_id";
-            
-            if ($activeOnly) {
-                $sql .= " AND a.is_active = 1";
-            }
-            
-            if ($search) {
-                $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search)";
-            }
-            
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            
-            if ($search) {
-                $searchParam = "%{$search}%";
-                $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
-            }
-            
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return intval($row['total']);
-        } catch (PDOException $e) {
-            error_log('Erro ao contar agendas compartilhadas com o usuário: ' . $e->getMessage());
-            return 0;
+        
+        if ($search !== null && trim($search) !== '') {
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search OR u.name LIKE :search2)";
         }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        
+        if ($search !== null && trim($search) !== '') {
+            $searchParam = "%{$search}%";
+            $stmt->bindValue(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindValue(':search2', $searchParam, PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return intval($row['total']);
+    } catch (PDOException $e) {
+        error_log('Erro ao contar agendas compartilhadas: ' . $e->getMessage());
+        return 0;
     }
+}
     
-    /**
-     * Método para obter agendas que o usuário compartilhou
-     * 
-     * @param int $userId ID do usuário
-     * @param string|null $search Termo de busca
-     * @return array Lista de agendas compartilhadas
-     */
     public function getAgendasSharedByUser($userId, $search = null) {
         try {
             // Consulta para encontrar agendas do usuário que têm compartilhamentos

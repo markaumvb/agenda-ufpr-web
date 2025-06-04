@@ -31,72 +31,71 @@ class Agenda {
     }
 
     public function getAllByUser($userId, $search = null, $includeInactive = false, $page = 1, $perPage = 12) {
-        try {
-            $sql = "SELECT DISTINCT a.* FROM agendas a WHERE a.user_id = :user_id";
-            
-            if (!$includeInactive) {
-                $sql .= " AND a.is_active = 1";
-            }
-            
-            $params = [':user_id' => $userId];
-            
-            // CORRIGIDO: Aplicar busca apenas se não for null E não for string vazia
-            if ($search !== null && trim($search) !== '') {
-                $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
-                $params[':search'] = "%{$search}%";
-            }
-            
-            $sql .= " ORDER BY a.is_active DESC, a.title ASC";
-            
-            $offset = ($page - 1) * $perPage;
-            $sql .= " LIMIT :limit OFFSET :offset";
-            
-            $stmt = $this->db->prepare($sql);
-            
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            
-            $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-            
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('Erro ao buscar agendas do usuário: ' . $e->getMessage());
-            return [];
+    try {
+        $sql = "SELECT DISTINCT a.* FROM agendas a WHERE a.user_id = :user_id";
+        
+        if (!$includeInactive) {
+            $sql .= " AND a.is_active = 1";
         }
+        
+        $params = [':user_id' => $userId];
+        
+        // CORRIGIDO: Binding direto sem array genérico
+        if ($search !== null && trim($search) !== '') {
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
+        }
+        
+        $sql .= " ORDER BY a.is_active DESC, a.title ASC";
+        
+        $offset = ($page - 1) * $perPage;
+        $sql .= " LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        // CORRIGIDO: Binding individual
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        
+        if ($search !== null && trim($search) !== '') {
+            $stmt->bindValue(':search', "%{$search}%", PDO::PARAM_STR);
+        }
+        
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Erro ao buscar agendas do usuário: ' . $e->getMessage());
+        return [];
     }
+}
 
     public function countByUser($userId, $search = null, $includeInactive = false) {
-        try {
-            $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
-            
-            if (!$includeInactive) {
-                $sql .= " AND is_active = 1";
-            }
-            
-            $params = [':user_id' => $userId];
-            
-            // CORRIGIDO: Aplicar busca apenas se não for null E não for string vazia
-            if ($search !== null && trim($search) !== '') {
-                $sql .= " AND (title LIKE :search OR description LIKE :search)";
-                $params[':search'] = "%{$search}%";
-            }
-            
-            $stmt = $this->db->prepare($sql);
-            
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            
-            $stmt->execute();
-            return $stmt->fetchColumn();
-        } catch (PDOException $e) {
-            error_log('Erro ao contar agendas do usuário: ' . $e->getMessage());
-            return 0;
+    try {
+        $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
+        
+        if (!$includeInactive) {
+            $sql .= " AND is_active = 1";
         }
+        
+        if ($search !== null && trim($search) !== '') {
+            $sql .= " AND (title LIKE :search OR description LIKE :search)";
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        
+        if ($search !== null && trim($search) !== '') {
+            $stmt->bindValue(':search', "%{$search}%", PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log('Erro ao contar agendas do usuário: ' . $e->getMessage());
+        return 0;
     }
+}
 
     public function getById($id) {
         try {
