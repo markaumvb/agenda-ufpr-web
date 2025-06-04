@@ -83,7 +83,6 @@ class AgendaShare {
             return [];
         }
     }
-    
 
     public function getSharedWithUser($userId, $activeOnly = true, $page = 1, $perPage = 10, $search = null) {
     try {
@@ -109,16 +108,16 @@ class AgendaShare {
         $sql .= " ORDER BY a.title LIMIT :limit OFFSET :offset";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindValue(':search', $searchParam, PDO::PARAM_STR);
-            $stmt->bindValue(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
         }
         
-        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         
         $agendas = [];
@@ -139,9 +138,8 @@ class AgendaShare {
         return [];
     }
 }
-    
 
-    public function countSharedWithUser($userId, $activeOnly = true, $search = null) {
+public function countSharedWithUser($userId, $activeOnly = true, $search = null) {
     try {
         $sql = "SELECT COUNT(*) as total 
                 FROM agenda_shares s
@@ -158,12 +156,12 @@ class AgendaShare {
         }
         
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindValue(':search', $searchParam, PDO::PARAM_STR);
-            $stmt->bindValue(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();
@@ -175,7 +173,7 @@ class AgendaShare {
         return 0;
     }
 }
-    
+
 public function getAgendasSharedByUser($userId, $search = null) {
     try {
         $sql = "SELECT DISTINCT a.id, a.title, a.description, a.color, a.is_public, a.is_active,
@@ -194,10 +192,11 @@ public function getAgendasSharedByUser($userId, $search = null) {
         $sql .= " ORDER BY a.title";
         
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         
         if ($search !== null && trim($search) !== '') {
-            $stmt->bindValue(':search', "%{$search}%", PDO::PARAM_STR);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();

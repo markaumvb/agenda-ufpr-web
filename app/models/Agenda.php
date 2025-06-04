@@ -49,14 +49,15 @@ class Agenda {
         
         $stmt = $this->db->prepare($sql);
         
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         
         if ($search !== null && trim($search) !== '') {
-            $stmt->bindValue(':search', "%{$search}%", PDO::PARAM_STR);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
         }
         
-        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -79,10 +80,11 @@ class Agenda {
         }
         
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         
         if ($search !== null && trim($search) !== '') {
-            $stmt->bindValue(':search', "%{$search}%", PDO::PARAM_STR);
+            $searchParam = "%{$search}%";
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();
