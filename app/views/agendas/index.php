@@ -12,14 +12,14 @@
                    value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
             <label class="checkbox-container" style="margin-left: 10px;">
                 <input type="checkbox" name="include_inactive" value="1" 
-                    <?= isset($_GET['include_inactive']) && $_GET['include_inactive'] == '1' ? 'checked' : '' ?>>
+                    <?= !isset($_GET['include_inactive']) || $_GET['include_inactive'] == '1' ? 'checked' : '' ?>>
                 <span class="checkmark"></span>
                 Incluir agendas desativadas
             </label>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-search"></i> Buscar
             </button>
-            <?php if ((isset($_GET['search']) && !empty($_GET['search'])) || (isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1)): ?>
+            <?php if ((isset($_GET['search']) && !empty($_GET['search'])) || (!empty($_GET['include_inactive']) && $_GET['include_inactive'] == '1')): ?>
                 <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Limpar
                 </a>
@@ -174,7 +174,7 @@
                 <?php
                 $baseUrl = PUBLIC_URL . '/agendas';
                 $searchParam = !empty($paginationData['search']) ? '&search=' . urlencode($paginationData['search']) : '';
-                $inactiveParam = isset($_GET['include_inactive']) && $_GET['include_inactive'] == '1' ? '&include_inactive=1' : '';
+                $inactiveParam = isset($_GET['include_inactive']) && $_GET['include_inactive'] == '0' ? '&include_inactive=0' : '&include_inactive=1';
                 $queryParams = $searchParam . $inactiveParam;
                 
                 // Botão "Anterior"
@@ -247,3 +247,31 @@
 
 <script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/index.js"></script>
 <script src="<?= PUBLIC_URL ?>/app/assets/js/agenda/common.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const includeInactiveCheckbox = document.querySelector('input[name="include_inactive"]');
+    const searchForm = document.querySelector('.search-form');
+    
+    if (includeInactiveCheckbox && searchForm) {
+        includeInactiveCheckbox.addEventListener('change', function() {
+            console.log('Checkbox alterado para:', this.checked);
+            
+            // Adicionar campo hidden para indicar o valor correto
+            let hiddenField = searchForm.querySelector('input[name="include_inactive"][type="hidden"]');
+            if (hiddenField) {
+                hiddenField.remove();
+            }
+            
+            // Criar novo campo hidden com o valor correto
+            hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = 'include_inactive';
+            hiddenField.value = this.checked ? '1' : '0';
+            searchForm.appendChild(hiddenField);
+            
+            searchForm.submit();
+        });
+    }
+});
+</script>

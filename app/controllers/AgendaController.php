@@ -19,7 +19,7 @@ class AgendaController extends BaseController {
     $userId = $_SESSION['user_id'];
     
     $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
-    $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == '1';
+    $includeInactive = !isset($_GET['include_inactive']) || $_GET['include_inactive'] == '1';
     
     // Página atual para paginação
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;

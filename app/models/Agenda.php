@@ -68,6 +68,8 @@ class Agenda {
         
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
     } catch (PDOException $e) {
         error_log('Erro ao buscar agendas do usuário: ' . $e->getMessage());
         return [];
