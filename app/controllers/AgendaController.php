@@ -18,7 +18,6 @@ class AgendaController extends BaseController {
     public function index() {
     $userId = $_SESSION['user_id'];
     
-    // CORRIGIDO: Processar parâmetro de busca igual à home page
     $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
     $includeInactive = isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1;
     
@@ -26,7 +25,6 @@ class AgendaController extends BaseController {
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $perPage = 12; // 12 agendas por página
     
-    // CORRIGIDO: Buscar agendas com lógica consistente
     if (!empty($search)) {
         // Se há busca, usar busca específica
         $agendas = $this->agendaModel->getAllByUser($userId, $search, $includeInactive, $page, $perPage);
@@ -55,7 +53,6 @@ class AgendaController extends BaseController {
         $agenda['can_be_deleted'] = $this->agendaModel->canBeDeleted($agenda['id']);
     }
     
-    // ADICIONADO: Dados de paginação para a view
     $paginationData = [
         'current_page' => $page,
         'total_pages' => $totalPages,
