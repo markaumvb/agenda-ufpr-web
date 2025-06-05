@@ -916,7 +916,7 @@ public function delete() {
             exit;
         }
         
-        // Atualizar o status
+        // CORREÇÃO: Atualizar apenas o compromisso individual, não o grupo todo
         $data = [
             'title' => $compromisso['title'],
             'description' => $compromisso['description'],
@@ -929,12 +929,8 @@ public function delete() {
             'status' => $status
         ];
         
-        // Para compromissos recorrentes, atualizar todos os eventos do grupo se necessário
-        if (!empty($compromisso['group_id'])) {
-            $result = $this->compromissoModel->updateGroupStatus($compromisso['group_id'], $status);
-        } else {
-            $result = $this->compromissoModel->update($id, $data);
-        }
+        // SEMPRE atualizar apenas o compromisso individual, não o grupo
+        $result = $this->compromissoModel->update($id, $data, false);
         
         if ($result) {
             $_SESSION['flash_message'] = 'Status do compromisso atualizado com sucesso';

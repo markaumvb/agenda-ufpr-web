@@ -5,17 +5,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }, 200);
 
   function initializeForm() {
-    // Encontrar o formulário
+    // Encontrar APENAS o formulário principal de edição/criação
     let form = document.getElementById("compromisso-form");
     if (!form) {
       form = document.querySelector(".compromisso-form");
     }
 
-    if (!form) {
+    // IMPORTANTE: Não interferir com formulários de exclusão
+    if (
+      !form ||
+      form.classList.contains("delete-form-individual") ||
+      form.classList.contains("delete-form-future") ||
+      form.classList.contains("cancel-form-all")
+    ) {
+      console.log("❌ Formulário de exclusão detectado - validação ignorada");
       return;
     }
 
-    console.log("✅ Formulário encontrado:", form);
+    console.log("✅ Formulário principal encontrado:", form);
 
     // DESABILITAR VALIDAÇÃO NATIVA DE FORMA BRUTAL
     form.setAttribute("novalidate", "novalidate");
@@ -113,10 +120,22 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // INTERCEPTAR SUBMIT PARA FAZER VALIDAÇÃO CUSTOMIZADA
+    // INTERCEPTAR SUBMIT APENAS PARA O FORMULÁRIO PRINCIPAL
     form.addEventListener(
       "submit",
       function (e) {
+        // IMPORTANTE: Não interceptar formulários de exclusão
+        if (
+          e.target.classList.contains("delete-form-individual") ||
+          e.target.classList.contains("delete-form-future") ||
+          e.target.classList.contains("cancel-form-all") ||
+          e.target.action.includes("/delete") ||
+          e.target.action.includes("/cancel-future")
+        ) {
+          console.log("🗑️ Formulário de exclusão - não interceptar");
+          return true; // Deixar enviar normalmente
+        }
+
         e.preventDefault();
         e.stopPropagation();
 

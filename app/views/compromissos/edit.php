@@ -234,13 +234,12 @@ if (!isset($agenda)) {
                 </a>
             </div>
             
-
             <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
             <div class="action-group secondary-actions">
                 <!-- BOTÃO 3: EXCLUIR COMPROMISSO -->
-                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="console.log('Formulário de delete sendo submetido', this); return confirm('Tem certeza que deseja excluir este compromisso?');">
+                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-individual">
                     <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                    <button type="submit" class="btn btn-action btn-danger">
+                    <button type="submit" class="btn btn-action btn-danger" onclick="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
                         <i class="fas fa-trash"></i>
                         <span>Excluir Compromisso</span>
                     </button>
@@ -249,19 +248,19 @@ if (!isset($agenda)) {
                 <!-- BOTÕES PARA EVENTOS RECORRENTES -->
                 <?php if (!empty($compromisso['group_id'])): ?>
                     <!-- BOTÃO 4: EXCLUIR ESTE E FUTUROS -->
-                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
+                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-future">
                         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                         <input type="hidden" name="delete_future" value="1">
-                        <button type="submit" class="btn btn-action btn-danger">
+                        <button type="submit" class="btn btn-action btn-danger" onclick="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
                             <i class="fas fa-trash-alt"></i>
                             <span>Excluir Este e Futuros</span>
                         </button>
                     </form>
                     
                     <!-- BOTÃO 5: CANCELAR TODOS OS COMPROMISSOS -->
-                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
+                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="cancel-form-all">
                         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                        <button type="submit" class="btn btn-action btn-warning">
+                        <button type="submit" class="btn btn-action btn-warning" onclick="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
                             <i class="fas fa-ban"></i>
                             <span>Cancelar Todos os Compromissos</span>
                         </button>
@@ -364,27 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
     calculateDuration();
     
-    // Prevenir conflitos apenas em formulários de delete
-/*     const deleteForms = document.querySelectorAll('form[action*="/delete"]');
-    deleteForms.forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('Tem certeza que deseja excluir?')) {
-                e.preventDefault();
-            }
-        });
-    }); */
-    
-    // Links de cancelar NÃO devem ter confirmação
-    const cancelLinks = document.querySelectorAll('a.btn-secondary[href*="compromissos?agenda_id"]');
-    cancelLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            // Não fazer nada - deixar navegação normal
-        });
-    });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
     const startInput = document.getElementById('start_datetime');
     const endInput = document.getElementById('end_datetime');
     
@@ -454,5 +432,31 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[name="repeat_type"]').forEach(input => {
         input.addEventListener('change', checkDurationForRecurrence);
     });
+    
+    // Formulários de exclusão
+    const deleteFormIndividual = document.querySelector('.delete-form-individual');
+    const deleteFormFuture = document.querySelector('.delete-form-future');
+    const cancelFormAll = document.querySelector('.cancel-form-all');
+    
+    if (deleteFormIndividual) {
+        deleteFormIndividual.addEventListener('submit', function(e) {
+
+            // Não prevenir - deixar o onclick do botão fazer a confirmação
+        });
+    }
+    
+    if (deleteFormFuture) {
+        deleteFormFuture.addEventListener('submit', function(e) {
+
+            // Não prevenir - deixar o onclick do botão fazer a confirmação
+        });
+    }
+    
+    if (cancelFormAll) {
+        cancelFormAll.addEventListener('submit', function(e) {
+
+            // Não prevenir - deixar o onclick do botão fazer a confirmação
+        });
+    }
 });
 </script>
