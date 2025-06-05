@@ -1,133 +1,65 @@
 document.addEventListener("DOMContentLoaded", function () {
-  protectDeleteForms();
-
+  // Aguardar um pouco para garantir que a página carregou
   setTimeout(function () {
-    initializeForm();
-  }, 300);
+    initializeMainFormValidation();
+  }, 100);
 
-  // FUNÇÃO PARA PROTEGER FORMULÁRIOS DE EXCLUSÃO
-  function protectDeleteForms() {
-    const deleteFormSelectors = [
-      ".delete-form-individual",
-      ".delete-form-future",
-      ".cancel-form-all",
-      'form[action*="/delete"]',
-      'form[action*="/cancel-future"]',
-    ];
+  function initializeMainFormValidation() {
+    // Encontrar APENAS o formulário principal (update/create)
+    const mainForm = document.querySelector(
+      "form[action*='update'], form[action*='save']"
+    );
 
-    deleteFormSelectors.forEach((selector) => {
-      const forms = document.querySelectorAll(selector);
-      forms.forEach((form) => {
-        // Marcar formulário como protegido
-        form.setAttribute("data-protected", "true");
-        form.setAttribute(
-          "data-original-onsubmit",
-          form.getAttribute("onsubmit") || ""
-        );
-
-        console.log("🛡️ Formulário de exclusão protegido:", form.className);
-      });
-    });
-  }
-
-  function initializeForm() {
-    // Encontrar APENAS o formulário principal de edição/criação
-    let form = document.getElementById("compromisso-form");
-    if (!form) {
-      form = document.querySelector(".compromisso-form");
+    if (!mainForm) {
+      return; // Não há formulário principal para validar
     }
 
-    // IMPORTANTE: Não interferir com formulários de exclusão
-    if (!form) {
-      console.log("❌ Formulário principal não encontrado");
-      return;
-    }
-
-    // VERIFICAÇÃO: Se é um formulário protegido, não aplicar validação
-    if (form.hasAttribute("data-protected")) {
-      console.log("❌ Formulário protegido detectado - validação ignorada");
-      return;
-    }
-
-    // VERIFICAÇÃO EXTRA: Se tem action de delete, não aplicar validação
-    if (
-      form.action &&
-      (form.action.includes("/delete") || form.action.includes("/cancel"))
-    ) {
-      console.log("❌ Formulário com action de exclusão - validação ignorada");
-      return;
-    }
-
-    console.log("✅ Formulário principal encontrado:", form);
-
-    // DESABILITAR VALIDAÇÃO NATIVA
-    form.setAttribute("novalidate", "novalidate");
-    form.noValidate = true;
-
-    // Elementos de erro
+    // Elementos de validação
     const errorContainer = document.getElementById("error-container");
     const errorList = document.getElementById("error-list");
-
-    // CONFIGURAR SINCRONIZAÇÃO DE DATAS SEM VALIDAÇÃO
     const startInput = document.getElementById("start_datetime");
     const endInput = document.getElementById("end_datetime");
 
+    // Desabilitar validação HTML5 nativa apenas no formulário principal
+    mainForm.setAttribute("novalidate", "novalidate");
+    mainForm.noValidate = true;
+
+    // Sincronização de datas
     if (startInput && endInput) {
       startInput.addEventListener("change", function () {
         if (!startInput.value) return;
 
         try {
           const startDate = new Date(startInput.value);
-
-          // Sincronizar apenas se o campo final estiver vazio
           if (!endInput.value && !isNaN(startDate.getTime())) {
             const endDate = new Date(startDate);
             endDate.setHours(endDate.getHours() + 1);
             endInput.value = formatDateTime(endDate);
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignorar erros silenciosamente
+        }
       });
     }
 
-    // INTERCEPTAR SUBMIT APENAS PARA O FORMULÁRIO PRINCIPAL
-    form.addEventListener("submit", function (e) {
-      // VERIFICAÇÃO TRIPLA: Garantir que é o formulário correto
-      if (e.target !== form) {
-        return; // Não interceptar
-      }
-
-      if (e.target.hasAttribute("data-protected")) {
-        return; // Não interceptar formulários protegidos
-      }
-
-      if (
-        e.target.action &&
-        (e.target.action.includes("/delete") ||
-          e.target.action.includes("/cancel"))
-      ) {
-        return; // Não interceptar ações de exclusão
-      }
-
-      console.log(
-        "✅ Interceptando submit do formulário principal para validação"
-      );
-
+    // Interceptar submit APENAS do formulário principal
+    mainForm.addEventListener("submit", function (e) {
       e.preventDefault();
       e.stopPropagation();
 
-      // Executar validação customizada
-      const errors = validateFormData();
+      const errors = validateMainForm();
 
       if (errors.length > 0) {
         showErrors(errors);
       } else {
-        // Enviar formulário sem validação
-        submitFormSafely();
+        hideErrors();
+        // Submeter o formulário de forma segura
+        submitMainForm();
       }
     });
 
-    // FUNÇÃO DE VALIDAÇÃO (executada apenas no submit)
-    function validateFormData() {
+    // Função de validação
+    function validateMainForm() {
       const errors = [];
 
       // Validar título
@@ -195,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return errors;
     }
 
-    // FUNÇÃO PARA EXIBIR ERROS
+    // Função para exibir erros
     function showErrors(errors) {
       if (!errorContainer || !errorList) {
         alert("Erros encontrados:\n" + errors.join("\n"));
@@ -213,29 +145,41 @@ document.addEventListener("DOMContentLoaded", function () {
       errorContainer.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
-    // FUNÇÃO PARA ENVIAR FORMULÁRIO COM SEGURANÇA
-    function submitFormSafely() {
-      // Criar um formulário temporário limpo
-      const tempForm = document.createElement("form");
-      tempForm.action = form.action;
-      tempForm.method = form.method;
-      tempForm.style.display = "none";
+    // Função para esconder erros
+    function hideErrors() {
+      if (errorContainer) {
+        errorContainer.style.display = "none";
+      }
+    }
 
-      // Copiar todos os dados para o formulário temporário
-      const formData = new FormData(form);
+    // Função para submeter o formulário principal
+    function submitMainForm() {
+      // Remover o event listener temporariamente para evitar loop
+      const tempForm = mainForm.cloneNode(true);
+
+      // Copiar todos os dados do formulário original
+      const formData = new FormData(mainForm);
+
+      // Criar formulário temporário para submissão
+      const submitForm = document.createElement("form");
+      submitForm.action = mainForm.action;
+      submitForm.method = mainForm.method;
+      submitForm.style.display = "none";
+
+      // Adicionar todos os dados como campos hidden
       for (let [key, value] of formData.entries()) {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = key;
         input.value = value;
-        tempForm.appendChild(input);
+        submitForm.appendChild(input);
       }
 
-      document.body.appendChild(tempForm);
-      tempForm.submit();
+      document.body.appendChild(submitForm);
+      submitForm.submit();
     }
 
-    // FUNÇÃO AUXILIAR PARA FORMATAR DATA
+    // Função auxiliar para formatar data
     function formatDateTime(date) {
       return (
         date.getFullYear() +
@@ -250,23 +194,4 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   }
-
-  // DELEGAÇÃO DE EVENTOS PARA FORMULÁRIOS DE EXCLUSÃO - GARANTIR QUE FUNCIONEM
-  document.addEventListener("DOMContentLoaded", function () {
-    // Aguardar que todos os scripts carreguem
-    setTimeout(function () {
-      // Garantir que os formulários de exclusão funcionem
-      const deleteforms = document.querySelectorAll(
-        ".delete-form-individual, .delete-form-future, .cancel-form-all"
-      );
-
-      deleteforms.forEach(function (deleteForm) {
-        // Remover qualquer event listener que possa ter sido adicionado
-        const newForm = deleteForm.cloneNode(true);
-        deleteForm.parentNode.replaceChild(newForm, deleteForm);
-
-        console.log("✅ Formulário de exclusão limpo:", newForm.className);
-      });
-    }, 500);
-  });
 });
