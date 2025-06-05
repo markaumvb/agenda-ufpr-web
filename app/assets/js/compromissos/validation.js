@@ -1,8 +1,34 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Aguardar um pouco para garantir que a página carregou completamente
+  protectDeleteForms();
+
   setTimeout(function () {
     initializeForm();
-  }, 200);
+  }, 300);
+
+  // FUNÇÃO PARA PROTEGER FORMULÁRIOS DE EXCLUSÃO
+  function protectDeleteForms() {
+    const deleteFormSelectors = [
+      ".delete-form-individual",
+      ".delete-form-future",
+      ".cancel-form-all",
+      'form[action*="/delete"]',
+      'form[action*="/cancel-future"]',
+    ];
+
+    deleteFormSelectors.forEach((selector) => {
+      const forms = document.querySelectorAll(selector);
+      forms.forEach((form) => {
+        // Marcar formulário como protegido
+        form.setAttribute("data-protected", "true");
+        form.setAttribute(
+          "data-original-onsubmit",
+          form.getAttribute("onsubmit") || ""
+        );
+
+        console.log("🛡️ Formulário de exclusão protegido:", form.className);
+      });
+    });
+  }
 
   function initializeForm() {
     // Encontrar APENAS o formulário principal de edição/criação
@@ -17,94 +43,30 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // NOVA VERIFICAÇÃO: Garantir que não é um formulário de exclusão
+    // VERIFICAÇÃO: Se é um formulário protegido, não aplicar validação
+    if (form.hasAttribute("data-protected")) {
+      console.log("❌ Formulário protegido detectado - validação ignorada");
+      return;
+    }
+
+    // VERIFICAÇÃO EXTRA: Se tem action de delete, não aplicar validação
     if (
-      form.classList.contains("delete-form-individual") ||
-      form.classList.contains("delete-form-future") ||
-      form.classList.contains("cancel-form-all") ||
-      form.action.includes("/delete") ||
-      form.action.includes("/cancel-future")
+      form.action &&
+      (form.action.includes("/delete") || form.action.includes("/cancel"))
     ) {
-      console.log("❌ Formulário de exclusão detectado - validação ignorada");
+      console.log("❌ Formulário com action de exclusão - validação ignorada");
       return;
     }
 
     console.log("✅ Formulário principal encontrado:", form);
 
-    // DESABILITAR VALIDAÇÃO NATIVA DE FORMA BRUTAL
+    // DESABILITAR VALIDAÇÃO NATIVA
     form.setAttribute("novalidate", "novalidate");
     form.noValidate = true;
 
     // Elementos de erro
     const errorContainer = document.getElementById("error-container");
     const errorList = document.getElementById("error-list");
-
-    // INTERCEPTAR E CANCELAR QUALQUER EVENTO DE VALIDAÇÃO
-    const eventsToBlock = ["invalid", "oninvalid"];
-
-    eventsToBlock.forEach((eventType) => {
-      form.addEventListener(
-        eventType,
-        function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          return false;
-        },
-        true
-      );
-    });
-
-    // REMOVER VALIDAÇÃO DE TODOS OS INPUTS DE FORMA AGRESSIVA
-    const allInputs = form.querySelectorAll("input, textarea, select");
-    allInputs.forEach((input) => {
-      // Remover todos os atributos de validação
-      const validationAttrs = [
-        "required",
-        "pattern",
-        "min",
-        "max",
-        "step",
-        "minlength",
-        "maxlength",
-      ];
-      validationAttrs.forEach((attr) => input.removeAttribute(attr));
-
-      // Desabilitar validação customizada
-      input.setCustomValidity("");
-
-      // BLOQUEAR EVENTOS DE VALIDAÇÃO EM CADA INPUT
-      eventsToBlock.forEach((eventType) => {
-        input.addEventListener(
-          eventType,
-          function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-          },
-          true
-        );
-      });
-
-      // Para inputs datetime-local, interceptar mudanças de valor
-      if (input.type === "datetime-local") {
-        // Interceptar TODOS os eventos que podem disparar validação
-        ["input", "change", "blur", "keyup", "keydown", "focus"].forEach(
-          (eventType) => {
-            input.addEventListener(eventType, function (e) {
-              // NÃO fazer validação, apenas limpar erros se existirem
-              if (errorContainer && errorContainer.style.display === "block") {
-                errorContainer.style.display = "none";
-              }
-
-              // Forçar setCustomValidity vazio para evitar validação nativa
-              input.setCustomValidity("");
-            });
-          }
-        );
-      }
-    });
 
     // CONFIGURAR SINCRONIZAÇÃO DE DATAS SEM VALIDAÇÃO
     const startInput = document.getElementById("start_datetime");
@@ -128,96 +90,41 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // INTERCEPTAR SUBMIT APENAS PARA O FORMULÁRIO PRINCIPAL
-    form.addEventListener(
-      "submit",
-      function (e) {
-        // CORREÇÃO: Verificação mais robusta para formulários de exclusão
+    form.addEventListener("submit", function (e) {
+      // VERIFICAÇÃO TRIPLA: Garantir que é o formulário correto
+      if (e.target !== form) {
+        return; // Não interceptar
+      }
 
-        // Verificar se é um formulário de exclusão por classe CSS
-        if (
-          e.target.classList.contains("delete-form-individual") ||
-          e.target.classList.contains("delete-form-future") ||
-          e.target.classList.contains("cancel-form-all")
-        ) {
-          console.log(
-            "🗑️ Formulário de exclusão (por classe) - não interceptar"
-          );
-          return true; // Deixar enviar normalmente
-        }
+      if (e.target.hasAttribute("data-protected")) {
+        return; // Não interceptar formulários protegidos
+      }
 
-        // Verificar se é um formulário de exclusão por ação (URL)
-        if (
-          e.target.action &&
-          (e.target.action.includes("/delete") ||
-            e.target.action.includes("/cancel-future"))
-        ) {
-          console.log("🗑️ Formulário de exclusão (por URL) - não interceptar");
-          return true; // Deixar enviar normalmente
-        }
+      if (
+        e.target.action &&
+        (e.target.action.includes("/delete") ||
+          e.target.action.includes("/cancel"))
+      ) {
+        return; // Não interceptar ações de exclusão
+      }
 
-        // Verificar se é o formulário principal (tem ID específico)
-        if (
-          e.target.id !== "compromisso-form" &&
-          !e.target.classList.contains("compromisso-form")
-        ) {
-          console.log("🔄 Não é o formulário principal - não interceptar");
-          return true; // Deixar enviar normalmente
-        }
+      console.log(
+        "✅ Interceptando submit do formulário principal para validação"
+      );
 
-        // Verificar se contém campos de exclusão (input hidden para ID)
-        const hasDeleteId =
-          e.target.querySelector('input[name="id"][type="hidden"]') &&
-          (e.target.action.includes("/delete") ||
-            e.target.action.includes("/cancel"));
+      e.preventDefault();
+      e.stopPropagation();
 
-        if (hasDeleteId) {
-          console.log("🗑️ Formulário com ID de exclusão - não interceptar");
-          return true; // Deixar enviar normalmente
-        }
+      // Executar validação customizada
+      const errors = validateFormData();
 
-        console.log(
-          "✅ Interceptando submit do formulário principal para validação"
-        );
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Executar validação customizada
-        const errors = validateFormData();
-
-        if (errors.length > 0) {
-          showErrors(errors);
-        } else {
-          // Enviar formulário sem validação
-          submitFormSafely();
-        }
-      },
-      true
-    );
-
-    // CONFIGURAR DELEGAÇÃO DE EVENTOS PARA FORMULÁRIOS DE EXCLUSÃO
-    // Isso garante que formulários adicionados dinamicamente também funcionem
-    document.addEventListener(
-      "submit",
-      function (e) {
-        // Verificar se é um formulário de exclusão
-        if (
-          e.target.classList.contains("delete-form-individual") ||
-          e.target.classList.contains("delete-form-future") ||
-          e.target.classList.contains("cancel-form-all") ||
-          (e.target.action &&
-            (e.target.action.includes("/delete") ||
-              e.target.action.includes("/cancel-future")))
-        ) {
-          console.log(
-            "🗑️ Formulário de exclusão detectado via delegação - permitindo"
-          );
-          // NÃO interceptar - deixar funcionar normalmente
-          return true;
-        }
-      },
-      false
-    ); // Usar fase de bubbling para não interferir
+      if (errors.length > 0) {
+        showErrors(errors);
+      } else {
+        // Enviar formulário sem validação
+        submitFormSafely();
+      }
+    });
 
     // FUNÇÃO DE VALIDAÇÃO (executada apenas no submit)
     function validateFormData() {
@@ -343,4 +250,23 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   }
+
+  // DELEGAÇÃO DE EVENTOS PARA FORMULÁRIOS DE EXCLUSÃO - GARANTIR QUE FUNCIONEM
+  document.addEventListener("DOMContentLoaded", function () {
+    // Aguardar que todos os scripts carreguem
+    setTimeout(function () {
+      // Garantir que os formulários de exclusão funcionem
+      const deleteforms = document.querySelectorAll(
+        ".delete-form-individual, .delete-form-future, .cancel-form-all"
+      );
+
+      deleteforms.forEach(function (deleteForm) {
+        // Remover qualquer event listener que possa ter sido adicionado
+        const newForm = deleteForm.cloneNode(true);
+        deleteForm.parentNode.replaceChild(newForm, deleteForm);
+
+        console.log("✅ Formulário de exclusão limpo:", newForm.className);
+      });
+    }, 500);
+  });
 });
