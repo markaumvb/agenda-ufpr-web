@@ -12,11 +12,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // IMPORTANTE: Não interferir com formulários de exclusão
+    if (!form) {
+      console.log("❌ Formulário principal não encontrado");
+      return;
+    }
+
+    // NOVA VERIFICAÇÃO: Garantir que não é um formulário de exclusão
     if (
-      !form ||
       form.classList.contains("delete-form-individual") ||
       form.classList.contains("delete-form-future") ||
-      form.classList.contains("cancel-form-all")
+      form.classList.contains("cancel-form-all") ||
+      form.action.includes("/delete") ||
+      form.action.includes("/cancel-future")
     ) {
       console.log("❌ Formulário de exclusão detectado - validação ignorada");
       return;
@@ -124,17 +131,53 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener(
       "submit",
       function (e) {
-        // IMPORTANTE: Não interceptar formulários de exclusão
+        // CORREÇÃO: Verificação mais robusta para formulários de exclusão
+
+        // Verificar se é um formulário de exclusão por classe CSS
         if (
           e.target.classList.contains("delete-form-individual") ||
           e.target.classList.contains("delete-form-future") ||
-          e.target.classList.contains("cancel-form-all") ||
-          e.target.action.includes("/delete") ||
-          e.target.action.includes("/cancel-future")
+          e.target.classList.contains("cancel-form-all")
         ) {
-          console.log("🗑️ Formulário de exclusão - não interceptar");
+          console.log(
+            "🗑️ Formulário de exclusão (por classe) - não interceptar"
+          );
           return true; // Deixar enviar normalmente
         }
+
+        // Verificar se é um formulário de exclusão por ação (URL)
+        if (
+          e.target.action &&
+          (e.target.action.includes("/delete") ||
+            e.target.action.includes("/cancel-future"))
+        ) {
+          console.log("🗑️ Formulário de exclusão (por URL) - não interceptar");
+          return true; // Deixar enviar normalmente
+        }
+
+        // Verificar se é o formulário principal (tem ID específico)
+        if (
+          e.target.id !== "compromisso-form" &&
+          !e.target.classList.contains("compromisso-form")
+        ) {
+          console.log("🔄 Não é o formulário principal - não interceptar");
+          return true; // Deixar enviar normalmente
+        }
+
+        // Verificar se contém campos de exclusão (input hidden para ID)
+        const hasDeleteId =
+          e.target.querySelector('input[name="id"][type="hidden"]') &&
+          (e.target.action.includes("/delete") ||
+            e.target.action.includes("/cancel"));
+
+        if (hasDeleteId) {
+          console.log("🗑️ Formulário com ID de exclusão - não interceptar");
+          return true; // Deixar enviar normalmente
+        }
+
+        console.log(
+          "✅ Interceptando submit do formulário principal para validação"
+        );
 
         e.preventDefault();
         e.stopPropagation();
@@ -151,6 +194,30 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       true
     );
+
+    // CONFIGURAR DELEGAÇÃO DE EVENTOS PARA FORMULÁRIOS DE EXCLUSÃO
+    // Isso garante que formulários adicionados dinamicamente também funcionem
+    document.addEventListener(
+      "submit",
+      function (e) {
+        // Verificar se é um formulário de exclusão
+        if (
+          e.target.classList.contains("delete-form-individual") ||
+          e.target.classList.contains("delete-form-future") ||
+          e.target.classList.contains("cancel-form-all") ||
+          (e.target.action &&
+            (e.target.action.includes("/delete") ||
+              e.target.action.includes("/cancel-future")))
+        ) {
+          console.log(
+            "🗑️ Formulário de exclusão detectado via delegação - permitindo"
+          );
+          // NÃO interceptar - deixar funcionar normalmente
+          return true;
+        }
+      },
+      false
+    ); // Usar fase de bubbling para não interferir
 
     // FUNÇÃO DE VALIDAÇÃO (executada apenas no submit)
     function validateFormData() {
