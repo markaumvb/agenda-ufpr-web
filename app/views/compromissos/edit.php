@@ -236,7 +236,6 @@ if (!isset($agenda)) {
             
             <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
             <div class="action-group secondary-actions">
-                <!-- BOTÃO 3: EXCLUIR COMPROMISSO - CORREÇÃO: ADICIONADA CLASSE delete-form-individual -->
                 <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-individual" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
                     <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
                     <button type="submit" class="btn btn-action btn-danger">
