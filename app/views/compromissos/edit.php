@@ -20,6 +20,7 @@ if (!isset($agenda)) {
         </div>
     <?php endif; ?>
     
+    <!-- FORMULÁRIO PRINCIPAL DE EDIÇÃO -->
     <form action="<?= PUBLIC_URL ?>/compromissos/update" method="post" id="compromisso-form" class="compromisso-form" novalidate>
         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
         <input type="hidden" name="agenda_id" value="<?= $compromisso['agenda_id'] ?>">
@@ -218,62 +219,67 @@ if (!isset($agenda)) {
         </div>
         <?php endif; ?>
         
+        <!-- BOTÕES PRINCIPAIS (DENTRO DO FORMULÁRIO) -->
         <div class="form-actions">
-            <!-- BOTÕES PRINCIPAIS -->
             <div class="action-group primary-actions">
-                <!-- BOTÃO 1: SALVAR ALTERAÇÕES -->
                 <button type="submit" class="btn btn-action btn-primary">
                     <i class="fas fa-save"></i>
                     <span>Salvar Alterações</span>
                 </button>
                 
-                <!-- BOTÃO 2: CANCELAR -->
                 <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary">
                     <i class="fas fa-times"></i>
                     <span>Cancelar</span>
                 </a>
             </div>
-            
-            <!-- SEÇÃO DE FORMULÁRIOS DE EXCLUSÃO - CORRIGIDA -->
-            <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
-            <div class="action-group secondary-actions">
-                <!-- FORMULÁRIO 1: EXCLUIR COMPROMISSO INDIVIDUAL -->
-                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-individual" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
-                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                    <button type="submit" class="btn btn-action btn-danger">
-                        <i class="fas fa-trash"></i>
-                        <span>Excluir Compromisso</span>
-                    </button>
-                </form>
-                            
-                <!-- FORMULÁRIOS PARA EVENTOS RECORRENTES -->
-                <?php if (!empty($compromisso['group_id'])): ?>
-                    <!-- FORMULÁRIO 2: EXCLUIR ESTE E FUTUROS -->
-                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-future" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
-                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                        <input type="hidden" name="delete_future" value="1">
-                        <button type="submit" class="btn btn-action btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                            <span>Excluir Este e Futuros</span>
-                        </button>
-                    </form>
-                    
-                    <!-- FORMULÁRIO 3: CANCELAR TODOS OS COMPROMISSOS -->
-                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="cancel-form-all" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
-                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                        <button type="submit" class="btn btn-action btn-warning">
-                            <i class="fas fa-ban"></i>
-                            <span>Cancelar Todos os Compromissos</span>
-                        </button>
-                    </form>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
         </div>
     </form>
+    
+    <!-- ===== FORMULÁRIOS DE EXCLUSÃO (FORA DO FORMULÁRIO PRINCIPAL) ===== -->
+    <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
+    <div class="delete-actions-section">
+        <h3 class="section-title">
+            <i class="fas fa-exclamation-triangle text-danger"></i> Ações de Exclusão
+        </h3>
+        
+        <div class="action-group secondary-actions">
+            <!-- FORMULÁRIO 1: EXCLUIR COMPROMISSO INDIVIDUAL -->
+            <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-individual" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
+                <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                <button type="submit" class="btn btn-action btn-danger">
+                    <i class="fas fa-trash"></i>
+                    <span>Excluir Compromisso</span>
+                </button>
+            </form>
+                        
+            <!-- FORMULÁRIOS PARA EVENTOS RECORRENTES -->
+            <?php if (!empty($compromisso['group_id'])): ?>
+                <!-- FORMULÁRIO 2: EXCLUIR ESTE E FUTUROS -->
+                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-future" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
+                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <input type="hidden" name="delete_future" value="1">
+                    <button type="submit" class="btn btn-action btn-danger">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Excluir Este e Futuros</span>
+                    </button>
+                </form>
+                
+                <!-- FORMULÁRIO 3: CANCELAR TODOS OS COMPROMISSOS -->
+                <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="cancel-form-all" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
+                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <button type="submit" class="btn btn-action btn-warning">
+                        <i class="fas fa-ban"></i>
+                        <span>Cancelar Todos os Compromissos</span>
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
+<script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/validation.js"></script>
 
 <script>
 // Função que mostra/esconde as opções de recorrência
