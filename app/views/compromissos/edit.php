@@ -237,14 +237,14 @@ if (!isset($agenda)) {
             <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
             <div class="action-group secondary-actions">
                 <!-- BOTÃO 3: EXCLUIR COMPROMISSO -->
-                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-individual">
+                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
                     <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                    <button type="submit" class="btn btn-action btn-danger" onclick="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
+                    <button type="submit" class="btn btn-action btn-danger">
                         <i class="fas fa-trash"></i>
                         <span>Excluir Compromisso</span>
                     </button>
                 </form>
-                
+                            
                 <!-- BOTÕES PARA EVENTOS RECORRENTES -->
                 <?php if (!empty($compromisso['group_id'])): ?>
                     <!-- BOTÃO 4: EXCLUIR ESTE E FUTUROS -->
