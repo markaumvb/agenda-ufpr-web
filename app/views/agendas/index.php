@@ -121,19 +121,28 @@
                             <i class="fas fa-edit"></i> Editar
                         </a>
                         
-                        <?php if (isset($agenda['can_be_deleted']) && $agenda['can_be_deleted']): ?>
-                            <!-- CORRIGIDO: Removido onsubmit inline para evitar confirmação dupla -->
-                            <form action="<?= PUBLIC_URL ?>/agendas/delete" method="post" class="delete-form">
-                                <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="fa-solid fa-trash"></i> Excluir
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <button class="btn btn-sm btn-danger disabled" title="Não é possível excluir esta agenda pois possui compromissos pendentes ou aguardando aprovação" disabled>
-                                <i class="fa-solid fa-trash"></i> Excluir
-                            </button>
-                        <?php endif; ?>
+            <?php if (isset($agenda['can_be_deleted']) && $agenda['can_be_deleted']): ?>
+
+                <form action="<?= PUBLIC_URL ?>/agendas/delete" 
+                    method="post" 
+                    class="delete-form" 
+                    data-agenda-title="<?= htmlspecialchars($agenda['title']) ?>"
+                    style="display: inline;">
+                    <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
+                    <button type="submit" 
+                            class="btn btn-sm btn-danger delete-btn"
+                            data-agenda-id="<?= $agenda['id'] ?>"
+                            title="Excluir agenda">
+                        <i class="fa-solid fa-trash"></i> Excluir
+                    </button>
+                </form>
+            <?php else: ?>
+                <button class="btn btn-sm btn-danger disabled" 
+                        title="Não é possível excluir esta agenda pois possui compromissos realizados, cancelados ou aguardando aprovação" 
+                        disabled>
+                    <i class="fa-solid fa-trash"></i> Excluir
+                </button>
+            <?php endif; ?>
                         
                         <form action="<?= PUBLIC_URL ?>/agendas/toggle-active" method="post" style="display: inline;">
                             <input type="hidden" name="id" value="<?= $agenda['id'] ?>">

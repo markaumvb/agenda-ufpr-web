@@ -237,32 +237,35 @@ class AgendaController extends BaseController {
         exit;
     }
     
-public function delete() {
-        // Verificar se o usuário está logado
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: ' . PUBLIC_URL . '/login');
-            exit;
-        }
-        
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $_SESSION['flash_message'] = 'Método de requisição inválido.';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/agendas');
-            exit;
-        }
-        
-        // Verificar se o ID da agenda foi enviado
-        if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
-            $_SESSION['flash_message'] = 'ID da agenda não fornecido ou inválido.';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . PUBLIC_URL . '/agendas');
-            exit;
-        }
-        
-        $agendaId = (int)$_POST['id'];
-        $userId = $_SESSION['user_id'];
-        
+    public function delete() {
+    // Verificar se o usuário está logado
+    if (!isset($_SESSION['user_id'])) {
+        $_SESSION['flash_message'] = 'Usuário não autenticado.';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . PUBLIC_URL . '/login');
+        exit;
+    }
+    
+    // Verificar se é uma requisição POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        $_SESSION['flash_message'] = 'Método de requisição inválido.';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . PUBLIC_URL . '/agendas');
+        exit;
+    }
+    
+    // Verificar se o ID da agenda foi enviado
+    if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
+        $_SESSION['flash_message'] = 'ID da agenda não fornecido ou inválido.';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . PUBLIC_URL . '/agendas');
+        exit;
+    }
+    
+    $agendaId = (int)$_POST['id'];
+    $userId = $_SESSION['user_id'];
+    
+    try {
         // Carregar os modelos necessários
         require_once __DIR__ . '/../models/Agenda.php';
         require_once __DIR__ . '/../models/Compromisso.php';
@@ -294,6 +297,9 @@ public function delete() {
         // CORRIGIDO: Verificação aprimorada de compromissos
         $stats = $agendaModel->countCompromissosByStatus($agendaId);
         
+        // Log para debug
+        error_log("Tentativa de exclusão da agenda {$agendaId} - Stats: " . json_encode($stats));
+        
         // Verificar se há compromissos que impedem a exclusão
         $hasBlockingAppointments = (
             $stats['realizados'] > 0 || 
@@ -319,60 +325,108 @@ public function delete() {
             exit;
         }
         
+        // CORRIGIDO: Melhor controle de transação
+        $connection = $agendaModel->db;
+        
+        // Verificar se já está em transação
+        if ($connection->inTransaction()) {
+            error_log("Aviso: Transação já iniciada, fazendo rollback preventivo");
+            $connection->rollBack();
+        }
+        
+        // Iniciar nova transação
+        $connection->beginTransaction();
+        
         try {
-            // Iniciar transação
-            $agendaModel->db->beginTransaction();
-            
             // Se há compromissos pendentes, avisar que serão excluídos junto
             if ($stats['pendentes'] > 0) {
                 error_log("Excluindo agenda '{$agenda['title']}' com {$stats['pendentes']} compromisso(s) pendente(s)");
             }
             
-            // Exclui todos os compartilhamentos da agenda
+            // 1. Exclui todos os compartilhamentos da agenda
             require_once __DIR__ . '/../models/AgendaShare.php';
             $shareModel = new AgendaShare();
-            $shareModel->deleteAllFromAgenda($agendaId);
+            $shareResult = $shareModel->deleteAllFromAgenda($agendaId);
             
-            // Exclui todos os compromissos pendentes (se houver)
+            if (!$shareResult) {
+                throw new Exception("Falha ao excluir compartilhamentos da agenda");
+            }
+            
+            // 2. Exclui todas as notificações relacionadas aos compromissos da agenda
+            $notificationDeleteQuery = "DELETE FROM notifications WHERE compromisso_id IN (SELECT id FROM compromissos WHERE agenda_id = ?)";
+            $notificationStmt = $connection->prepare($notificationDeleteQuery);
+            $notificationResult = $notificationStmt->execute([$agendaId]);
+            
+            if (!$notificationResult) {
+                throw new Exception("Falha ao excluir notificações da agenda");
+            }
+            
+            // 3. Exclui todos os compromissos (pendentes e outros se houver)
+            $compromissoDeleteQuery = "DELETE FROM compromissos WHERE agenda_id = ?";
+            $compromissoStmt = $connection->prepare($compromissoDeleteQuery);
+            $compromissoResult = $compromissoStmt->execute([$agendaId]);
+            
+            if (!compromissoResult) {
+                throw new Exception("Falha ao excluir compromissos da agenda");
+            }
+            
+            // 4. Exclui a agenda
+            $agendaDeleteQuery = "DELETE FROM agendas WHERE id = ?";
+            $agendaStmt = $connection->prepare($agendaDeleteQuery);
+            $agendaResult = $agendaStmt->execute([$agendaId]);
+            
+            if (!$agendaResult) {
+                throw new Exception("Falha ao excluir a agenda");
+            }
+            
+            // Se chegou até aqui, faz commit
+            $connection->commit();
+            
+            // Mensagem de sucesso
+            $message = 'Agenda "' . htmlspecialchars($agenda['title']) . '" excluída com sucesso!';
             if ($stats['pendentes'] > 0) {
-                $compromissoModel->deleteAllFromAgenda($agendaId);
+                $message .= ' (' . $stats['pendentes'] . ' compromisso(s) pendente(s) também foram excluídos)';
             }
             
-            // Exclui a agenda
-            $result = $agendaModel->delete($agendaId);
+            $_SESSION['flash_message'] = $message;
+            $_SESSION['flash_type'] = 'success';
             
-            if ($result) {
-                // Commit da transação
-                $agendaModel->db->commit();
-                
-                $message = 'Agenda "' . htmlspecialchars($agenda['title']) . '" excluída com sucesso!';
-                if ($stats['pendentes'] > 0) {
-                    $message .= ' (' . $stats['pendentes'] . ' compromisso(s) pendente(s) também foram excluídos)';
-                }
-                
-                $_SESSION['flash_message'] = $message;
-                $_SESSION['flash_type'] = 'success';
-            } else {
-                // Rollback da transação
-                $agendaModel->db->rollBack();
-                $_SESSION['flash_message'] = 'Erro ao excluir a agenda. Tente novamente.';
-                $_SESSION['flash_type'] = 'danger';
-            }
+            error_log("Agenda {$agendaId} excluída com sucesso pelo usuário {$userId}");
             
         } catch (Exception $e) {
             // Rollback da transação em caso de erro
-            if ($agendaModel->db->inTransaction()) {
-                $agendaModel->db->rollBack();
+            if ($connection->inTransaction()) {
+                $connection->rollBack();
             }
             
-            error_log('Erro ao excluir agenda: ' . $e->getMessage());
-            $_SESSION['flash_message'] = 'Erro interno ao excluir a agenda. Tente novamente.';
-            $_SESSION['flash_type'] = 'danger';
+            // Re-throw para ser capturado pelo catch externo
+            throw $e;
         }
         
-        header('Location: ' . PUBLIC_URL . '/agendas');
-        exit;
+    } catch (Exception $e) {
+        // Log do erro detalhado
+        error_log('Erro detalhado ao excluir agenda ' . $agendaId . ': ' . $e->getMessage());
+        error_log('Stack trace: ' . $e->getTraceAsString());
+        
+        // Verificar se há transação pendente e fazer rollback
+        if (isset($connection) && $connection->inTransaction()) {
+            try {
+                $connection->rollBack();
+                error_log('Rollback realizado com sucesso');
+            } catch (Exception $rollbackError) {
+                error_log('Erro no rollback: ' . $rollbackError->getMessage());
+            }
+        }
+        
+        // Mensagem de erro para o usuário (sem expor detalhes técnicos)
+        $_SESSION['flash_message'] = 'Erro ao excluir a agenda. Por favor, tente novamente ou contate o administrador.';
+        $_SESSION['flash_type'] = 'danger';
     }
+    
+    // Redirecionar sempre para a lista de agendas
+    header('Location: ' . PUBLIC_URL . '/agendas');
+    exit;
+}
 
     public function toggleActive() {
         // Verificar se o usuário está logado

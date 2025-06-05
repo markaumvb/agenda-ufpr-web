@@ -239,54 +239,44 @@ class Agenda {
         }
     }
     
-    public function delete($id) {
-        try {
-            $query = "
-                SELECT COUNT(*) FROM compromissos 
-                WHERE agenda_id = :agenda_id 
-                AND (status = 'pendente' OR status = 'aguardando_aprovacao')
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':agenda_id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            if ((int)$stmt->fetchColumn() > 0) {
-                return false;
-            }
-            
-            $this->db->beginTransaction();
-            
-            $query = "DELETE FROM agenda_shares WHERE agenda_id = :id";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $query = "DELETE FROM compromissos WHERE agenda_id = :id";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $query = "DELETE FROM agendas WHERE id = :id";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $result = $stmt->execute();
-            
-            if ($result) {
-                $this->db->commit();
-                return true;
-            } else {
-                $this->db->rollBack();
-                return false;
-            }
-        } catch (PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            error_log('Erro ao excluir agenda: ' . $e->getMessage());
+   public function delete($id) {
+    try {
+        // CORRIGIDO: Verificação mais robusta de compromissos
+        $statsQuery = "
+            SELECT 
+                SUM(CASE WHEN status = 'realizado' THEN 1 ELSE 0 END) as realizados,
+                SUM(CASE WHEN status = 'cancelado' THEN 1 ELSE 0 END) as cancelados,
+                SUM(CASE WHEN status = 'pendente' THEN 1 ELSE 0 END) as pendentes,
+                SUM(CASE WHEN status = 'aguardando_aprovacao' THEN 1 ELSE 0 END) as aguardando_aprovacao,
+                COUNT(*) as total
+            FROM compromissos 
+            WHERE agenda_id = :agenda_id
+        ";
+        
+        $stmt = $this->db->prepare($statsQuery);
+        $stmt->bindParam(':agenda_id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Se não há compromissos, pode excluir diretamente
+        if (!$stats || $stats['total'] == 0) {
+            return $this->deleteAgendaOnly($id);
+        }
+        
+        // Verificar se há compromissos que impedem a exclusão
+        if ($stats['realizados'] > 0 || $stats['cancelados'] > 0 || $stats['aguardando_aprovacao'] > 0) {
+            error_log("Agenda {$id} não pode ser excluída: tem compromissos realizados/cancelados/aguardando");
             return false;
         }
+        
+        // Se chegou aqui, só há compromissos pendentes (que podem ser excluídos)
+        return $this->deleteAgendaWithCompromissos($id);
+        
+    } catch (PDOException $e) {
+        error_log('Erro ao verificar status dos compromissos da agenda ' . $id . ': ' . $e->getMessage());
+        return false;
     }
+}
     
     public function countCompromissosByStatus($agendaId) {
         try {
@@ -330,11 +320,55 @@ class Agenda {
         }
     }
     
-    /**
-     * CORRIGIDO: Verifica se uma agenda pode ser excluída
-     * Agendas só podem ser excluídas se NÃO tiverem nenhum compromisso
-     * ou se tiverem apenas compromissos pendentes (que serão excluídos junto)
-     */
+private function deleteAgendaOnly($id) {
+    try {
+        // Verificar se já está em transação
+        $wasInTransaction = $this->db->inTransaction();
+        
+        if (!$wasInTransaction) {
+            $this->db->beginTransaction();
+        }
+        
+        // 1. Excluir compartilhamentos
+        $shareQuery = "DELETE FROM agenda_shares WHERE agenda_id = :id";
+        $stmt = $this->db->prepare($shareQuery);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Falha ao excluir compartilhamentos");
+        }
+        
+        // 2. Excluir a agenda
+        $agendaQuery = "DELETE FROM agendas WHERE id = :id";
+        $stmt = $this->db->prepare($agendaQuery);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Falha ao excluir agenda");
+        }
+        
+        // Verificar se excluiu realmente
+        if ($stmt->rowCount() === 0) {
+            throw new Exception("Nenhuma agenda foi excluída - ID pode não existir");
+        }
+        
+        if (!$wasInTransaction) {
+            $this->db->commit();
+        }
+        
+        error_log("Agenda {$id} excluída com sucesso (sem compromissos)");
+        return true;
+        
+    } catch (Exception $e) {
+        if (!$wasInTransaction && $this->db->inTransaction()) {
+            $this->db->rollBack();
+        }
+        error_log('Erro ao excluir agenda vazia ' . $id . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
+
     public function canBeDeleted($agendaId) {
         try {
             // Contar compromissos que impedem a exclusão (realizados e cancelados)
