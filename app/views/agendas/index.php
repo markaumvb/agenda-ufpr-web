@@ -12,7 +12,7 @@
                    value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
             <label class="checkbox-container" style="margin-left: 10px;">
                 <input type="checkbox" name="include_inactive" value="1" 
-                       <?= isset($_GET['include_inactive']) && $_GET['include_inactive'] == 1 ? 'checked' : '' ?>>
+                       <?= isset($_GET['include_inactive']) && $_GET['include_inactive'] == '1' ? 'checked' : '' ?>
                 <span class="checkmark"></span>
                 Incluir agendas desativadas
             </label>
