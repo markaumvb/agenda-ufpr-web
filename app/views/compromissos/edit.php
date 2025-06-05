@@ -234,8 +234,8 @@ if (!isset($agenda)) {
                 </a>
             </div>
             
-            <!-- BOTÕES SECUNDÁRIOS (apenas se status for pendente) -->
-            <?php if ($compromisso['status'] === 'pendente'): ?>
+
+            <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
             <div class="action-group secondary-actions">
                 <!-- BOTÃO 3: EXCLUIR COMPROMISSO -->
                 <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="console.log('Formulário de delete sendo submetido', this); return confirm('Tem certeza que deseja excluir este compromisso?');">
@@ -365,14 +365,14 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateDuration();
     
     // Prevenir conflitos apenas em formulários de delete
-    const deleteForms = document.querySelectorAll('form[action*="/delete"]');
+/*     const deleteForms = document.querySelectorAll('form[action*="/delete"]');
     deleteForms.forEach(function(form) {
         form.addEventListener('submit', function(e) {
             if (!confirm('Tem certeza que deseja excluir?')) {
                 e.preventDefault();
             }
         });
-    });
+    }); */
     
     // Links de cancelar NÃO devem ter confirmação
     const cancelLinks = document.querySelectorAll('a.btn-secondary[href*="compromissos?agenda_id"]');

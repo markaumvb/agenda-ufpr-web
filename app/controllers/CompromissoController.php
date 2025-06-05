@@ -739,9 +739,9 @@ public function delete() {
     error_log("Compromisso encontrado - ID: " . $compromisso['id'] . ", Status: " . $compromisso['status']);
     
     // NOVA REGRA: Verificar se o status é 'pendente'
-    if ($compromisso['status'] !== 'pendente') {
-        error_log("ERRO: Status não é pendente - Status atual: " . $compromisso['status']);
-        $_SESSION['flash_message'] = 'Apenas compromissos com status pendente podem ser excluídos. Status atual: ' . $compromisso['status'];
+    if (!in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])) {
+        error_log("ERRO: Status não permite exclusão - Status atual: " . $compromisso['status']);
+        $_SESSION['flash_message'] = 'Apenas compromissos pendentes ou aguardando aprovação podem ser excluídos. Status atual: ' . $compromisso['status'];
         $_SESSION['flash_type'] = 'danger';
         header('Location: ' . BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id']);
         exit;
