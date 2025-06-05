@@ -122,8 +122,8 @@
                         </a>
                         
                         <?php if (isset($agenda['can_be_deleted']) && $agenda['can_be_deleted']): ?>
-                            <form action="<?= PUBLIC_URL ?>/agendas/delete" method="post" class="delete-form" 
-                                onsubmit="return confirm('Tem certeza que deseja excluir esta agenda?');">
+                            <!-- CORRIGIDO: Removido onsubmit inline para evitar confirmação dupla -->
+                            <form action="<?= PUBLIC_URL ?>/agendas/delete" method="post" class="delete-form">
                                 <input type="hidden" name="id" value="<?= $agenda['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="fa-solid fa-trash"></i> Excluir

@@ -29,13 +29,41 @@ function initAgendaForm() {
 }
 
 function initDeleteConfirmations() {
-  // Confirmação para exclusão de agenda
+  // CORRIGIDO: Confirmação única para exclusão de agenda
   const deleteForms = document.querySelectorAll(".delete-form");
+
+  // Remover event listeners anteriores para evitar duplicação
   deleteForms.forEach((form) => {
+    // Criar um clone do formulário para remover todos os event listeners
+    const newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+  });
+
+  // Adicionar event listeners aos novos formulários
+  const newDeleteForms = document.querySelectorAll(".delete-form");
+  newDeleteForms.forEach((form) => {
     form.addEventListener("submit", function (event) {
-      if (!confirm("Tem certeza que deseja excluir esta agenda?")) {
-        event.preventDefault();
+      event.preventDefault(); // Previne o envio imediato
+
+      // Obter o nome da agenda se disponível
+      const agendaCard = this.closest(".agenda-card");
+      const agendaTitle = agendaCard
+        ? agendaCard.querySelector(".agenda-title")?.textContent
+        : "";
+
+      // Mensagem personalizada
+      let confirmMessage = "Tem certeza que deseja excluir esta agenda?";
+      if (agendaTitle) {
+        confirmMessage = `Tem certeza que deseja excluir a agenda "${agendaTitle}"?`;
       }
+      confirmMessage += "\n\nEsta ação não pode ser desfeita.";
+
+      // Mostrar confirmação única
+      if (confirm(confirmMessage)) {
+        // Se confirmou, submeter o formulário
+        this.submit();
+      }
+      // Se não confirmou, não faz nada (o evento já foi preventDefault)
     });
   });
 }

@@ -6,6 +6,13 @@ class Agenda {
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function __get($property) {
+        if ($property === 'db') {
+            return $this->db;
+        }
+        return null;
+    }
+
     public function countAllByUser($userId, $search = null) {
         try {
             $query = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
@@ -39,7 +46,7 @@ class Agenda {
         }
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (a.title LIKE :search1 OR a.description LIKE :search2)";
+            $sql .= " AND (a.title LIKE :search OR a.description LIKE :search)";
         }
         
         $sql .= " ORDER BY a.is_active DESC, a.title ASC";
@@ -53,8 +60,7 @@ class Agenda {
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->bindParam(':limit', $perPage, PDO::PARAM_INT);
@@ -68,7 +74,7 @@ class Agenda {
     }
 }
 
-public function countByUser($userId, $search = null, $includeInactive = false) {
+    public function countByUser($userId, $search = null, $includeInactive = false) {
     try {
         $sql = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id";
         
@@ -77,7 +83,7 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
         
         if ($search !== null && trim($search) !== '') {
-            $sql .= " AND (title LIKE :search1 OR description LIKE :search2)";
+            $sql .= " AND (title LIKE :search OR description LIKE :search)";
         }
         
         $stmt = $this->db->prepare($sql);
@@ -85,8 +91,7 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         
         if ($search !== null && trim($search) !== '') {
             $searchParam = "%{$search}%";
-            $stmt->bindParam(':search1', $searchParam, PDO::PARAM_STR);
-            $stmt->bindParam(':search2', $searchParam, PDO::PARAM_STR);
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
         }
         
         $stmt->execute();
@@ -325,14 +330,50 @@ public function countByUser($userId, $search = null, $includeInactive = false) {
         }
     }
     
+    /**
+     * CORRIGIDO: Verifica se uma agenda pode ser excluída
+     * Agendas só podem ser excluídas se NÃO tiverem nenhum compromisso
+     * ou se tiverem apenas compromissos pendentes (que serão excluídos junto)
+     */
     public function canBeDeleted($agendaId) {
-        $sql = "SELECT COUNT(*) as count FROM compromissos 
-                WHERE agenda_id = ? AND status IN ('realizado', 'cancelado')";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$agendaId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return (int) $result['count'] === 0;
+        try {
+            // Contar compromissos que impedem a exclusão (realizados e cancelados)
+            $sql = "SELECT 
+                        SUM(CASE WHEN status = 'realizado' THEN 1 ELSE 0 END) as realizados,
+                        SUM(CASE WHEN status = 'cancelado' THEN 1 ELSE 0 END) as cancelados,
+                        SUM(CASE WHEN status = 'aguardando_aprovacao' THEN 1 ELSE 0 END) as aguardando,
+                        SUM(CASE WHEN status = 'pendente' THEN 1 ELSE 0 END) as pendentes,
+                        COUNT(*) as total
+                    FROM compromissos 
+                    WHERE agenda_id = ?";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$agendaId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result || $result['total'] == 0) {
+                // Sem compromissos = pode excluir
+                return true;
+            }
+            
+            // REGRA: Pode excluir apenas se:
+            // - NÃO há compromissos realizados
+            // - NÃO há compromissos cancelados  
+            // - NÃO há compromissos aguardando aprovação
+            // - Pode ter compromissos pendentes (serão excluídos junto)
+            
+            $canDelete = (
+                (int)$result['realizados'] === 0 && 
+                (int)$result['cancelados'] === 0 && 
+                (int)$result['aguardando'] === 0
+            );
+            
+            return $canDelete;
+            
+        } catch (PDOException $e) {
+            error_log('Erro ao verificar se agenda pode ser excluída: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function updateStatus($agendaId, $isActive) {

@@ -2,12 +2,10 @@
 por favor veja meu código analise antes de tudo toda minha base de conhecimento, se estiver faltando arquivo me informe qual arquivo para enviar, e só prossiga se somente todos os arquivos necessários estiverem na base de conhecimento para essas mudanças seja mais detalhado em quais linhas devo fazer as modificações (número da linha) de qual até qual linha e veja também se for uma função me mostre a função completa Quando estou criando / editando o compromisso, ao digitar o número 1 na data e hora inicio: 
 
 
-* https://200.238.174.7/agenda_ufpr/agendas/all 
-** precisa de campo para buscar as agendas (creio que o método ja exista)
-** precisa de paginação
+PAGINAÇÃO!!!
 
 
-
+quando clico em excluir agenda (na tela minhas agendas) está aparecendo 3x a pergunta para excluir, deveria aparecer apenas 1x e apagar a agenda caso aceite... lembrando que agendas que tem compromissos devem ser matidas como estão, não podem ser exlcuidas
 
 se estiver faltando algum arquivo me avise antes de prosseguir, e só prossiga se todos os arquivos estiverem presentes na base de conhecimento
 
