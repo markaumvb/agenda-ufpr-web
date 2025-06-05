@@ -174,7 +174,7 @@
                 <?php
                 $baseUrl = PUBLIC_URL . '/agendas';
                 $searchParam = !empty($paginationData['search']) ? '&search=' . urlencode($paginationData['search']) : '';
-                $inactiveParam = isset($_GET['include_inactive']) && $_GET['include_inactive'] ? '&include_inactive=1' : '';
+                $inactiveParam = isset($_GET['include_inactive']) && $_GET['include_inactive'] == '1' ? '&include_inactive=1' : '';
                 $queryParams = $searchParam . $inactiveParam;
                 
                 // Botão "Anterior"
