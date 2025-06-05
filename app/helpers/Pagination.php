@@ -1,9 +1,5 @@
 <?php
-// app/helpers/Pagination.php
 
-/**
- * Classe para lidar com paginação de resultados
- */
 class Pagination {
     private $totalItems;      // Total de itens
     private $itemsPerPage;    // Itens por página
@@ -12,15 +8,7 @@ class Pagination {
     private $baseUrl;         // URL base para links
     private $queryParams;     // Parâmetros de consulta adicionais
 
-    /**
-     * Construtor
-     *
-     * @param int $totalItems Total de itens
-     * @param int $itemsPerPage Itens por página (padrão: 10)
-     * @param int $currentPage Página atual (padrão: 1)
-     * @param string $baseUrl URL base para links de paginação
-     * @param array $queryParams Parâmetros de consulta adicionais
-     */
+
     public function __construct($totalItems, $itemsPerPage = 10, $currentPage = 1, $baseUrl = '', $queryParams = []) {
         $this->totalItems = (int) $totalItems;
         $this->itemsPerPage = (int) $itemsPerPage;
@@ -39,66 +27,37 @@ class Pagination {
         }
     }
     
-    /**
-     * Retorna o offset para consultas SQL
-     * 
-     * @return int O offset para LIMIT na consulta SQL
-     */
+
     public function getOffset() {
         return ($this->currentPage - 1) * $this->itemsPerPage;
     }
     
-    /**
-     * Retorna o limite para consultas SQL
-     * 
-     * @return int O valor para LIMIT na consulta SQL
-     */
+
     public function getLimit() {
         return $this->itemsPerPage;
     }
     
-    /**
-     * Retorna a página atual
-     * 
-     * @return int A página atual
-     */
+
     public function getCurrentPage() {
         return $this->currentPage;
     }
     
-    /**
-     * Retorna o total de páginas
-     * 
-     * @return int O total de páginas
-     */
+
     public function getTotalPages() {
         return $this->totalPages;
     }
     
-    /**
-     * Verifica se há uma próxima página
-     * 
-     * @return bool Se há uma próxima página
-     */
+
     public function hasNextPage() {
         return $this->currentPage < $this->totalPages;
     }
     
-    /**
-     * Verifica se há uma página anterior
-     * 
-     * @return bool Se há uma página anterior
-     */
+
     public function hasPreviousPage() {
         return $this->currentPage > 1;
     }
     
-    /**
-     * Gera a URL para uma página específica
-     * 
-     * @param int $page Número da página
-     * @return string URL completa
-     */
+
     private function createUrl($page) {
         $params = $this->queryParams;
         $params['page'] = $page;
@@ -106,12 +65,7 @@ class Pagination {
         return $this->baseUrl . '?' . http_build_query($params);
     }
     
-    /**
-     * Renderiza os links de paginação
-     * 
-     * @param int $maxLinks Número máximo de links de página a exibir (opcional)
-     * @return string HTML com os links de paginação
-     */
+
     public function createLinks($maxLinks = 5) {
         if ($this->totalPages <= 1) {
             return '';
@@ -170,11 +124,7 @@ class Pagination {
         return $html;
     }
     
-    /**
-     * Retorna informações sobre a paginação atual
-     * 
-     * @return string Texto com informações sobre a paginação
-     */
+
     public function getInfo() {
         $start = ($this->currentPage - 1) * $this->itemsPerPage + 1;
         $end = min($start + $this->itemsPerPage - 1, $this->totalItems);
