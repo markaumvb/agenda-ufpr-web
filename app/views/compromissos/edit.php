@@ -20,6 +20,7 @@ if (!isset($agenda)) {
         </div>
     <?php endif; ?>
     
+    <!-- FORMULÁRIO PRINCIPAL DE EDIÇÃO -->
     <form action="<?= PUBLIC_URL ?>/compromissos/update" method="post" id="compromisso-form" class="compromisso-form" novalidate>
         <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
         <input type="hidden" name="agenda_id" value="<?= $compromisso['agenda_id'] ?>">
@@ -218,59 +219,63 @@ if (!isset($agenda)) {
         </div>
         <?php endif; ?>
         
+        <!-- BOTÕES PRINCIPAIS (DENTRO DO FORMULÁRIO) -->
         <div class="form-actions">
-            <!-- BOTÕES PRINCIPAIS -->
             <div class="action-group primary-actions">
-                <!-- BOTÃO 1: SALVAR ALTERAÇÕES -->
                 <button type="submit" class="btn btn-action btn-primary">
                     <i class="fas fa-save"></i>
                     <span>Salvar Alterações</span>
                 </button>
                 
-                <!-- BOTÃO 2: CANCELAR -->
                 <a href="<?= PUBLIC_URL ?>/compromissos?agenda_id=<?= $compromisso['agenda_id'] ?>" class="btn btn-action btn-secondary">
                     <i class="fas fa-times"></i>
                     <span>Cancelar</span>
                 </a>
             </div>
-            
-            <!-- BOTÕES SECUNDÁRIOS (apenas se status for pendente) -->
-            <?php if ($compromisso['status'] === 'pendente'): ?>
-            <div class="action-group secondary-actions">
-                <!-- BOTÃO 3: EXCLUIR COMPROMISSO -->
-                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="console.log('Formulário de delete sendo submetido', this); return confirm('Tem certeza que deseja excluir este compromisso?');">
+        </div>
+    </form>
+    
+    <!-- ===== FORMULÁRIOS DE EXCLUSÃO (FORA DO FORMULÁRIO PRINCIPAL) ===== -->
+    <?php if (in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])): ?>
+    <div class="delete-actions-section">
+        <h3 class="section-title">
+            <i class="fas fa-exclamation-triangle text-danger"></i> Ações de Exclusão
+        </h3>
+        
+        <div class="action-group secondary-actions">
+            <!-- FORMULÁRIO 1: EXCLUIR COMPROMISSO INDIVIDUAL -->
+            <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-individual" onsubmit="return confirm('Tem certeza que deseja excluir este compromisso específico?');">
+                <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                <button type="submit" class="btn btn-action btn-danger">
+                    <i class="fas fa-trash"></i>
+                    <span>Excluir Compromisso</span>
+                </button>
+            </form>
+                        
+            <!-- FORMULÁRIOS PARA EVENTOS RECORRENTES -->
+            <?php if (!empty($compromisso['group_id'])): ?>
+                <!-- FORMULÁRIO 2: EXCLUIR ESTE E FUTUROS -->
+                <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" class="delete-form-future" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
                     <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <input type="hidden" name="delete_future" value="1">
                     <button type="submit" class="btn btn-action btn-danger">
-                        <i class="fas fa-trash"></i>
-                        <span>Excluir Compromisso</span>
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Excluir Este e Futuros</span>
                     </button>
                 </form>
                 
-                <!-- BOTÕES PARA EVENTOS RECORRENTES -->
-                <?php if (!empty($compromisso['group_id'])): ?>
-                    <!-- BOTÃO 4: EXCLUIR ESTE E FUTUROS -->
-                    <form action="<?= PUBLIC_URL ?>/compromissos/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este e todos os compromissos futuros desta série?');">
-                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                        <input type="hidden" name="delete_future" value="1">
-                        <button type="submit" class="btn btn-action btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                            <span>Excluir Este e Futuros</span>
-                        </button>
-                    </form>
-                    
-                    <!-- BOTÃO 5: CANCELAR TODOS OS COMPROMISSOS -->
-                    <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
-                        <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
-                        <button type="submit" class="btn btn-action btn-warning">
-                            <i class="fas fa-ban"></i>
-                            <span>Cancelar Todos os Compromissos</span>
-                        </button>
-                    </form>
-                <?php endif; ?>
-            </div>
+                <!-- FORMULÁRIO 3: CANCELAR TODOS OS COMPROMISSOS -->
+                <form action="<?= PUBLIC_URL ?>/compromissos/cancel-future" method="post" class="cancel-form-all" onsubmit="return confirm('Tem certeza que deseja cancelar todos os compromissos desta série (incluindo o atual)?');">
+                    <input type="hidden" name="id" value="<?= $compromisso['id'] ?>">
+                    <button type="submit" class="btn btn-action btn-warning">
+                        <i class="fas fa-ban"></i>
+                        <span>Cancelar Todos os Compromissos</span>
+                    </button>
+                </form>
             <?php endif; ?>
         </div>
-    </form>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script src="<?= PUBLIC_URL ?>/app/assets/js/compromissos/form.js"></script>
@@ -364,27 +369,6 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleRepeatOptions();
     calculateDuration();
     
-    // Prevenir conflitos apenas em formulários de delete
-    const deleteForms = document.querySelectorAll('form[action*="/delete"]');
-    deleteForms.forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('Tem certeza que deseja excluir?')) {
-                e.preventDefault();
-            }
-        });
-    });
-    
-    // Links de cancelar NÃO devem ter confirmação
-    const cancelLinks = document.querySelectorAll('a.btn-secondary[href*="compromissos?agenda_id"]');
-    cancelLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            // Não fazer nada - deixar navegação normal
-        });
-    });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
     const startInput = document.getElementById('start_datetime');
     const endInput = document.getElementById('end_datetime');
     

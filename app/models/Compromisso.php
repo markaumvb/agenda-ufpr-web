@@ -798,30 +798,40 @@ try {
         }
     }
     
-    /**
-     * Exclui um compromisso
-     * 
-     * @param int $id ID do compromisso
-     * @param bool $deleteFutureOccurrences Se deve excluir ocorrências futuras
-     * @return bool Resultado da operação
-     */
-    public function delete($id, $deleteFutureOccurrences = false) {
+
+public function delete($id, $deleteFutureOccurrences = false) {
         try {
+            error_log("COMPROMISSO DELETE: Iniciando exclusão de ID={$id}, deleteFuture=" . ($deleteFutureOccurrences ? 'true' : 'false'));
+            
             // Obter o compromisso
             $compromisso = $this->getById($id);
             
             if (!$compromisso) {
+                error_log("COMPROMISSO DELETE: Compromisso ID={$id} não encontrado");
                 return false;
             }
             
-            // Se não for parte de um grupo ou não quiser excluir as ocorrências futuras,
+            error_log("COMPROMISSO DELETE: Compromisso encontrado - Status: {$compromisso['status']}, Group ID: " . ($compromisso['group_id'] ?? 'NULL'));
+            
+            // Se não for parte de um grupo OU não quiser excluir as ocorrências futuras,
             // excluir apenas o evento específico
             if (empty($compromisso['group_id']) || !$deleteFutureOccurrences) {
+                error_log("COMPROMISSO DELETE: Excluindo apenas o compromisso individual");
+                
                 $query = "DELETE FROM compromissos WHERE id = :id";
                 $stmt = $this->db->prepare($query);
                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-                return $stmt->execute();
+                
+                $result = $stmt->execute();
+                $rowsAffected = $stmt->rowCount();
+                
+                error_log("COMPROMISSO DELETE: Query individual executada - Resultado: " . ($result ? 'true' : 'false') . ", Linhas afetadas: {$rowsAffected}");
+                
+                return $result && $rowsAffected > 0;
             }
+            
+            // Para eventos recorrentes com deleteFutureOccurrences = true
+            error_log("COMPROMISSO DELETE: Excluindo compromisso recorrente e futuras ocorrências");
             
             // Iniciar transação
             $this->db->beginTransaction();
@@ -832,28 +842,40 @@ try {
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             
             if (!$stmt->execute()) {
+                error_log("COMPROMISSO DELETE: Falha ao excluir evento atual");
                 $this->db->rollBack();
                 return false;
             }
+            
+            $currentRowsAffected = $stmt->rowCount();
+            error_log("COMPROMISSO DELETE: Evento atual excluído - Linhas afetadas: {$currentRowsAffected}");
             
             // Excluir todas as ocorrências futuras do mesmo grupo
             $query = "
                 DELETE FROM compromissos
                 WHERE group_id = :group_id
                 AND start_datetime >= :current_time
+                AND id != :id
             ";
             
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':group_id', $compromisso['group_id'], PDO::PARAM_STR);
             $stmt->bindParam(':current_time', $compromisso['start_datetime'], PDO::PARAM_STR);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             
             if (!$stmt->execute()) {
+                error_log("COMPROMISSO DELETE: Falha ao excluir ocorrências futuras");
                 $this->db->rollBack();
                 return false;
             }
             
+            $futureRowsAffected = $stmt->rowCount();
+            error_log("COMPROMISSO DELETE: Ocorrências futuras excluídas - Linhas afetadas: {$futureRowsAffected}");
+            
             // Confirmar transação
             $this->db->commit();
+            
+            error_log("COMPROMISSO DELETE: Exclusão concluída com sucesso - Total de linhas afetadas: " . ($currentRowsAffected + $futureRowsAffected));
             
             return true;
             
@@ -861,7 +883,7 @@ try {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
-            error_log('Erro ao excluir compromisso: ' . $e->getMessage());
+            error_log('COMPROMISSO DELETE: Erro ao excluir compromisso - ' . $e->getMessage());
             return false;
         }
     }
@@ -930,15 +952,7 @@ try {
         }
     }
     
-    /**
-     * Verifica se há conflito de horário para um novo compromisso
-     * 
-     * @param int $agendaId ID da agenda
-     * @param string $startDatetime Data e hora de início (formato Y-m-d H:i:s)
-     * @param string $endDatetime Data e hora de término (formato Y-m-d H:i:s)
-     * @param int $excludeId ID do compromisso a ser excluído da verificação (opcional)
-     * @return bool True se houver conflito, false caso contrário
-     */
+
     public function hasTimeConflict($agendaId, $startDatetime, $endDatetime, $excludeId = null) {
         try {
             // Melhorar a lógica de detecção de conflitos

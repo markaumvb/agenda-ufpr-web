@@ -1,140 +1,65 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Aguardar um pouco para garantir que a página carregou completamente
+  // Aguardar um pouco para garantir que a página carregou
   setTimeout(function () {
-    initializeForm();
-  }, 200);
+    initializeMainFormValidation();
+  }, 100);
 
-  function initializeForm() {
-    // Encontrar o formulário
-    let form = document.getElementById("compromisso-form");
-    if (!form) {
-      form = document.querySelector(".compromisso-form");
+  function initializeMainFormValidation() {
+    // Encontrar APENAS o formulário principal (update/create)
+    const mainForm = document.querySelector(
+      "form[action*='update'], form[action*='save']"
+    );
+
+    if (!mainForm) {
+      return; // Não há formulário principal para validar
     }
 
-    if (!form) {
-      return;
-    }
-
-    console.log("✅ Formulário encontrado:", form);
-
-    // DESABILITAR VALIDAÇÃO NATIVA DE FORMA BRUTAL
-    form.setAttribute("novalidate", "novalidate");
-    form.noValidate = true;
-
-    // Elementos de erro
+    // Elementos de validação
     const errorContainer = document.getElementById("error-container");
     const errorList = document.getElementById("error-list");
-
-    // INTERCEPTAR E CANCELAR QUALQUER EVENTO DE VALIDAÇÃO
-    const eventsToBlock = ["invalid", "oninvalid"];
-
-    eventsToBlock.forEach((eventType) => {
-      form.addEventListener(
-        eventType,
-        function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          return false;
-        },
-        true
-      );
-    });
-
-    // REMOVER VALIDAÇÃO DE TODOS OS INPUTS DE FORMA AGRESSIVA
-    const allInputs = form.querySelectorAll("input, textarea, select");
-    allInputs.forEach((input) => {
-      // Remover todos os atributos de validação
-      const validationAttrs = [
-        "required",
-        "pattern",
-        "min",
-        "max",
-        "step",
-        "minlength",
-        "maxlength",
-      ];
-      validationAttrs.forEach((attr) => input.removeAttribute(attr));
-
-      // Desabilitar validação customizada
-      input.setCustomValidity("");
-
-      // BLOQUEAR EVENTOS DE VALIDAÇÃO EM CADA INPUT
-      eventsToBlock.forEach((eventType) => {
-        input.addEventListener(
-          eventType,
-          function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-          },
-          true
-        );
-      });
-
-      // Para inputs datetime-local, interceptar mudanças de valor
-      if (input.type === "datetime-local") {
-        // Interceptar TODOS os eventos que podem disparar validação
-        ["input", "change", "blur", "keyup", "keydown", "focus"].forEach(
-          (eventType) => {
-            input.addEventListener(eventType, function (e) {
-              // NÃO fazer validação, apenas limpar erros se existirem
-              if (errorContainer && errorContainer.style.display === "block") {
-                errorContainer.style.display = "none";
-              }
-
-              // Forçar setCustomValidity vazio para evitar validação nativa
-              input.setCustomValidity("");
-            });
-          }
-        );
-      }
-    });
-
-    // CONFIGURAR SINCRONIZAÇÃO DE DATAS SEM VALIDAÇÃO
     const startInput = document.getElementById("start_datetime");
     const endInput = document.getElementById("end_datetime");
 
+    // Desabilitar validação HTML5 nativa apenas no formulário principal
+    mainForm.setAttribute("novalidate", "novalidate");
+    mainForm.noValidate = true;
+
+    // Sincronização de datas
     if (startInput && endInput) {
       startInput.addEventListener("change", function () {
         if (!startInput.value) return;
 
         try {
           const startDate = new Date(startInput.value);
-
-          // Sincronizar apenas se o campo final estiver vazio
           if (!endInput.value && !isNaN(startDate.getTime())) {
             const endDate = new Date(startDate);
             endDate.setHours(endDate.getHours() + 1);
             endInput.value = formatDateTime(endDate);
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignorar erros silenciosamente
+        }
       });
     }
 
-    // INTERCEPTAR SUBMIT PARA FAZER VALIDAÇÃO CUSTOMIZADA
-    form.addEventListener(
-      "submit",
-      function (e) {
-        e.preventDefault();
-        e.stopPropagation();
+    // Interceptar submit APENAS do formulário principal
+    mainForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
 
-        // Executar validação customizada
-        const errors = validateFormData();
+      const errors = validateMainForm();
 
-        if (errors.length > 0) {
-          showErrors(errors);
-        } else {
-          // Enviar formulário sem validação
-          submitFormSafely();
-        }
-      },
-      true
-    );
+      if (errors.length > 0) {
+        showErrors(errors);
+      } else {
+        hideErrors();
+        // Submeter o formulário de forma segura
+        submitMainForm();
+      }
+    });
 
-    // FUNÇÃO DE VALIDAÇÃO (executada apenas no submit)
-    function validateFormData() {
+    // Função de validação
+    function validateMainForm() {
       const errors = [];
 
       // Validar título
@@ -202,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return errors;
     }
 
-    // FUNÇÃO PARA EXIBIR ERROS
+    // Função para exibir erros
     function showErrors(errors) {
       if (!errorContainer || !errorList) {
         alert("Erros encontrados:\n" + errors.join("\n"));
@@ -220,29 +145,41 @@ document.addEventListener("DOMContentLoaded", function () {
       errorContainer.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
-    // FUNÇÃO PARA ENVIAR FORMULÁRIO COM SEGURANÇA
-    function submitFormSafely() {
-      // Criar um formulário temporário limpo
-      const tempForm = document.createElement("form");
-      tempForm.action = form.action;
-      tempForm.method = form.method;
-      tempForm.style.display = "none";
+    // Função para esconder erros
+    function hideErrors() {
+      if (errorContainer) {
+        errorContainer.style.display = "none";
+      }
+    }
 
-      // Copiar todos os dados para o formulário temporário
-      const formData = new FormData(form);
+    // Função para submeter o formulário principal
+    function submitMainForm() {
+      // Remover o event listener temporariamente para evitar loop
+      const tempForm = mainForm.cloneNode(true);
+
+      // Copiar todos os dados do formulário original
+      const formData = new FormData(mainForm);
+
+      // Criar formulário temporário para submissão
+      const submitForm = document.createElement("form");
+      submitForm.action = mainForm.action;
+      submitForm.method = mainForm.method;
+      submitForm.style.display = "none";
+
+      // Adicionar todos os dados como campos hidden
       for (let [key, value] of formData.entries()) {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = key;
         input.value = value;
-        tempForm.appendChild(input);
+        submitForm.appendChild(input);
       }
 
-      document.body.appendChild(tempForm);
-      tempForm.submit();
+      document.body.appendChild(submitForm);
+      submitForm.submit();
     }
 
-    // FUNÇÃO AUXILIAR PARA FORMATAR DATA
+    // Função auxiliar para formatar data
     function formatDateTime(date) {
       return (
         date.getFullYear() +
