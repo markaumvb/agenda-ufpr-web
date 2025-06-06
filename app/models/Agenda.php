@@ -194,29 +194,17 @@ class Agenda {
         $stmt->bindParam(':is_active', $isActive, PDO::PARAM_INT);
         $stmt->bindParam(':min_time_before', $minTimeBefore, PDO::PARAM_INT);
         
-        error_log('Executando INSERT...');
-        error_log('Tentando inserir: user_id=' . $data['user_id'] . ', title=' . $data['title']);
-        error_log('Valores bind: isActive=' . $isActive . ', minTimeBefore=' . $minTimeBefore);
         $executeResult = $stmt->execute();
         error_log('Execute result: ' . ($executeResult ? 'true' : 'false'));
         
         if ($executeResult) {
             $lastId = $this->db->lastInsertId();
-            error_log('LastInsertId: ' . $lastId);
-            error_log('=== SUCESSO AGENDA CREATE ===');
             return $lastId;
         } else {
-            error_log('Execute retornou false');
-            error_log('ErrorInfo: ' . print_r($stmt->errorInfo(), true));
             return false;
         }
         
     } catch (PDOException $e) {
-        error_log('=== ERRO PDO AGENDA CREATE ===');
-        error_log('Mensagem: ' . $e->getMessage());
-        error_log('Código: ' . $e->getCode());
-        error_log('Stack trace: ' . $e->getTraceAsString());
-        error_log('Data array: ' . print_r($data, true));
         return false;
     }
 }

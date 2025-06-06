@@ -63,7 +63,10 @@ public function isRegistrationComplete($id) {
             $stmt->bindParam(':name', $data['name'], PDO::PARAM_STR);
             $stmt->bindParam(':email', $data['email'], PDO::PARAM_STR);
             
-            return $stmt->execute();
+            if ($stmt->execute()) {
+                return $this->db->lastInsertId();
+            }
+            return false;
         } catch (PDOException $e) {
             error_log('Erro ao criar usuário: ' . $e->getMessage());
             return false;

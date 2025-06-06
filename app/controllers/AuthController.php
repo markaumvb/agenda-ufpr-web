@@ -180,10 +180,17 @@ public function login() {
             exit;
         }
         
-        // Login automático após registro
-        $_SESSION['user_id'] = $userId;
-        $_SESSION['username'] = $username;
-        $_SESSION['name'] = $name;
+        // Buscar o usuário recém-criado para pegar o ID correto
+        $newUser = $this->userModel->findByUsername($username);
+        if ($newUser) {
+            $_SESSION['user_id'] = $newUser['id'];
+            $_SESSION['username'] = $newUser['username'];
+            $_SESSION['name'] = $newUser['name'];
+        } else {
+            $_SESSION['validation_errors'] = ['Erro ao recuperar dados do usuário criado.'];
+            header('Location: ' . PUBLIC_URL . '/register');
+            exit;
+        }
         
         // Limpar dados temporários da sessão
         unset($_SESSION['authenticated_username']);
