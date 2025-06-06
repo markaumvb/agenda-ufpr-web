@@ -1,7 +1,7 @@
 <div class="page-header">
     <div class="header-container">
         <h1>Compartilhar Agenda</h1>
-        <a href="<?= PUBLIC_URL ?>/agendas" class="btn btn-secondary">Voltar para Agendas</a>
+        <a href="<?= BASE_URL ?>/agendas" class="btn btn-secondary">Voltar para Agendas</a>
     </div>
     
     <div class="agenda-meta">
@@ -22,7 +22,7 @@
             <p>Status atual: <strong><?= $agenda['is_public'] ? 'Agenda Pública' : 'Agenda Privada' ?></strong></p>
             
             <!-- Formulário para tornar pública/privada -->
-            <form action="<?= PUBLIC_URL ?>/shares/toggle-public" method="post" class="mt-3">
+            <form action="<?= BASE_URL ?>/shares/toggle-public" method="post" class="mt-3">
                 <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
                 
                 <?php if ($agenda['is_public']): ?>
@@ -52,7 +52,7 @@
             <h3>Compartilhar com Usuários</h3>
         </div>
         <div class="card-body">
-            <form action="<?= PUBLIC_URL ?>/shares/add" method="post" class="share-form">
+            <form action="<?= BASE_URL ?>/shares/add" method="post" class="share-form">
                 <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
                 
                 <div class="form-row">
@@ -101,7 +101,7 @@
                                         <td><?= htmlspecialchars($share['name']) ?></td>
                                         <td><?= htmlspecialchars($share['email']) ?></td>
                                         <td>
-                                            <form action="<?= PUBLIC_URL ?>/shares/update-permission" method="post" class="permission-form">
+                                            <form action="<?= BASE_URL ?>/shares/update-permission" method="post" class="permission-form">
                                                 <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
                                                 <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
                                                 
@@ -115,7 +115,7 @@
                                         <td>
                                             <div class="action-buttons-group">
                                                 <!-- Botão Enviar E-mail -->
-                                                <form action="<?= PUBLIC_URL ?>/shares/send-email" method="post" class="d-inline" title="Enviar e-mail de notificação sobre o compartilhamento">
+                                                <form action="<?= BASE_URL ?>/shares/send-email" method="post" class="d-inline email-form" title="Enviar e-mail de notificação sobre o compartilhamento">
                                                     <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
                                                     <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
                                                     <button type="submit" class="btn btn-sm btn-info btn-email">
@@ -124,7 +124,7 @@
                                                 </form>
                                                 
                                                 <!-- Botão Remover -->
-                                                <form action="<?= PUBLIC_URL ?>/shares/remove" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja remover o compartilhamento com este usuário?')">
+                                                <form action="<?= BASE_URL ?>/shares/remove" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja remover o compartilhamento com este usuário?')">
                                                     <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
                                                     <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
                                                     <button type="submit" class="btn btn-sm btn-danger">

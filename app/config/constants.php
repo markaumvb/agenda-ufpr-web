@@ -12,10 +12,10 @@ define('APP_VERSION', '1.0.0');
 // Configurações de e-mail
 define('MAIL_HOST', 'smtp.ufpr.br');
 define('MAIL_PORT', 587);
-define('MAIL_USERNAME', 'sistema.agenda@ufpr.br');
+define('MAIL_USERNAME', 'sistematijs@ufpr.br');
 define('MAIL_PASSWORD', 'brvcsyqkbkkqhzmd'); // Senha real do EmailService
 define('MAIL_FROM_NAME', 'Sistema de Agendamento UFPR');
-define('MAIL_FROM_EMAIL', 'sistema.agenda@ufpr.br');
+define('MAIL_FROM_EMAIL', 'sistematijs@ufpr.br');
 // Configurações SMTP adicionais
 define('MAIL_ENCRYPTION', 'tls'); // tls ou ssl
 define('MAIL_AUTH', true); // Autenticação SMTP

@@ -445,4 +445,6 @@ class ShareController extends BaseController {
         header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
+
+
 }

@@ -411,6 +411,7 @@ $routes = [
         'action' => 'index',
         'method' => 'GET'
     ],
+
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública
