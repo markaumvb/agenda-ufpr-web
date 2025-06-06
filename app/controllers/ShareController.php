@@ -307,6 +307,110 @@ public function add() {
         header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
         exit;
     }
+
+    public function sendEmail() {
+        // Verificar se é uma requisição POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/agendas');
+            exit;
+        }
+        
+        // Obter dados do formulário
+        $agendaId = filter_input(INPUT_POST, 'agenda_id', FILTER_VALIDATE_INT);
+        $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
+        
+        // Validar dados
+        if (!$agendaId || !$userId) {
+            $_SESSION['flash_message'] = 'Dados inválidos para envio de e-mail';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Verificar se o usuário atual é o dono da agenda
+        if (!$this->authService->isAgendaOwner($agendaId, $_SESSION['user_id'])) {
+            $_SESSION['flash_message'] = 'Você não tem permissão para enviar notificações desta agenda';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/agendas');
+            exit;
+        }
+        
+        // Buscar dados da agenda
+        $agenda = $this->agendaModel->getById($agendaId);
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Buscar dados do usuário proprietário (atual)
+        $ownerUser = $this->userModel->getById($_SESSION['user_id']);
+        if (!$ownerUser) {
+            $_SESSION['flash_message'] = 'Erro ao obter dados do proprietário';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Buscar dados do usuário que recebeu o compartilhamento
+        $sharedUser = $this->userModel->getById($userId);
+        if (!$sharedUser) {
+            $_SESSION['flash_message'] = 'Usuário compartilhado não encontrado';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Verificar se realmente existe um compartilhamento
+        $shareAccess = $this->shareModel->checkAccess($agendaId, $userId);
+        if (!$shareAccess) {
+            $_SESSION['flash_message'] = 'Compartilhamento não encontrado';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Determinar permissões
+        $canEdit = (bool)$shareAccess['can_edit'];
+        
+        // 📧 ENVIAR E-MAIL
+        try {
+            require_once __DIR__ . '/../services/EmailService.php';
+            $emailService = new EmailService();
+            
+            $emailSent = $emailService->sendAgendaShareNotification(
+                $ownerUser,    // Dados do proprietário
+                $sharedUser,   // Dados do usuário que recebeu o compartilhamento
+                $agenda,       // Dados da agenda
+                $canEdit       // Permissão de edição
+            );
+            
+            if ($emailSent) {
+                $_SESSION['flash_message'] = "✅ E-mail de notificação enviado com sucesso para {$sharedUser['name']} ({$sharedUser['email']})!";
+                $_SESSION['flash_type'] = 'success';
+                
+                // Log para auditoria
+                error_log("E-mail de compartilhamento enviado - Agenda: '{$agenda['title']}' (ID: {$agendaId}) - De: {$ownerUser['email']} - Para: {$sharedUser['email']} - Permissão: " . ($canEdit ? 'Edição' : 'Visualização'));
+                
+            } else {
+                $_SESSION['flash_message'] = "❌ Erro ao enviar e-mail de notificação para {$sharedUser['name']}. Verifique as configurações de e-mail.";
+                $_SESSION['flash_type'] = 'danger';
+                
+                error_log("Falha no envio de e-mail de compartilhamento - Agenda: '{$agenda['title']}' (ID: {$agendaId}) - Para: {$sharedUser['email']}");
+            }
+            
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "❌ Erro ao enviar e-mail: " . $e->getMessage();
+            $_SESSION['flash_type'] = 'danger';
+            
+            error_log("Exceção no envio de e-mail de compartilhamento - Agenda: '{$agenda['title']}' (ID: {$agendaId}) - Erro: " . $e->getMessage());
+        }
+        
+        // Redirecionar de volta para a página de compartilhamentos
+        header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+        exit;
+    }
     
     /**
      * Gera uma URL pública para uma agenda

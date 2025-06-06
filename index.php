@@ -398,6 +398,11 @@ $routes = [
         'action' => 'bulkReject',
         'method' => 'POST'
     ],
+    '/shares/send-email' => [
+        'controller' => 'ShareController',
+        'action' => 'sendEmail',
+        'method' => 'POST'
+    ],
 ];
 
 // Verificar se a rota corresponde a um padrão de agenda pública

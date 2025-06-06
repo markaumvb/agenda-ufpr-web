@@ -111,13 +111,27 @@
                                                     <span class="toggle-label"><?= $share['can_edit'] ? 'Pode Editar' : 'Apenas Ver' ?></span>
                                                 </label>
                                             </form>
-                                        </td>
+                                        </td>   
                                         <td>
-                                            <form action="<?= PUBLIC_URL ?>/shares/remove" method="post" onsubmit="return confirm('Tem certeza que deseja remover o compartilhamento com este usuário?')">
-                                                <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
-                                                <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-danger">Remover</button>
-                                            </form>
+                                            <div class="action-buttons-group">
+                                                <!-- Botão Enviar E-mail -->
+                                                <form action="<?= PUBLIC_URL ?>/shares/send-email" method="post" class="d-inline" title="Enviar e-mail de notificação sobre o compartilhamento">
+                                                    <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+                                                    <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
+                                                    <button type="submit" class="btn btn-sm btn-info btn-email">
+                                                        <i class="fas fa-envelope"></i> Enviar E-mail
+                                                    </button>
+                                                </form>
+                                                
+                                                <!-- Botão Remover -->
+                                                <form action="<?= PUBLIC_URL ?>/shares/remove" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja remover o compartilhamento com este usuário?')">
+                                                    <input type="hidden" name="agenda_id" value="<?= $agenda['id'] ?>">
+                                                    <input type="hidden" name="user_id" value="<?= $share['user_id'] ?>">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash"></i> Remover
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
