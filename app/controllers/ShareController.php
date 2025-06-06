@@ -111,7 +111,7 @@ class ShareController extends BaseController {
     /**
      * Adiciona um novo compartilhamento de agenda
      */
-    public function add() {
+public function add() {
         // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/agendas');
@@ -157,12 +157,57 @@ class ShareController extends BaseController {
             exit;
         }
         
+        // Buscar dados da agenda
+        $agenda = $this->agendaModel->getById($agendaId);
+        if (!$agenda) {
+            $_SESSION['flash_message'] = 'Agenda não encontrada';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
+        // Buscar dados do usuário proprietário
+        $ownerUser = $this->userModel->getById($_SESSION['user_id']);
+        if (!$ownerUser) {
+            $_SESSION['flash_message'] = 'Erro ao obter dados do proprietário';
+            $_SESSION['flash_type'] = 'danger';
+            header('Location: ' . BASE_URL . '/shares?agenda_id=' . $agendaId);
+            exit;
+        }
+        
         // Compartilhar a agenda
         $result = $this->shareModel->shareAgenda($agendaId, $user['id'], $canEdit);
         
         if ($result) {
-            $_SESSION['flash_message'] = 'Agenda compartilhada com sucesso';
-            $_SESSION['flash_type'] = 'success';
+            // ✅ NOVO: ENVIAR E-MAIL DE COMPARTILHAMENTO
+            try {
+                require_once __DIR__ . '/../services/EmailService.php';
+                $emailService = new EmailService();
+                
+                $emailSent = $emailService->sendAgendaShareNotification(
+                    $ownerUser,  // Dados do proprietário
+                    $user,       // Dados do usuário que recebeu o compartilhamento
+                    $agenda,     // Dados da agenda
+                    $canEdit     // Permissão de edição
+                );
+                
+                if ($emailSent) {
+                    $_SESSION['flash_message'] = "Agenda compartilhada com sucesso! E-mail de notificação enviado para {$user['email']}.";
+                    $_SESSION['flash_type'] = 'success';
+                    error_log("E-mail de compartilhamento enviado para {$user['email']} - Agenda: {$agenda['title']}");
+                } else {
+                    $_SESSION['flash_message'] = "Agenda compartilhada com sucesso, mas houve erro no envio do e-mail de notificação.";
+                    $_SESSION['flash_type'] = 'warning';
+                    error_log("Erro ao enviar e-mail de compartilhamento para {$user['email']} - Agenda: {$agenda['title']}");
+                }
+                
+            } catch (Exception $e) {
+                // Se houver erro no e-mail, não falhar o compartilhamento
+                $_SESSION['flash_message'] = "Agenda compartilhada com sucesso, mas houve erro no envio do e-mail: " . $e->getMessage();
+                $_SESSION['flash_type'] = 'warning';
+                error_log("Exceção ao enviar e-mail de compartilhamento: " . $e->getMessage());
+            }
+            
         } else {
             $_SESSION['flash_message'] = 'Erro ao compartilhar agenda';
             $_SESSION['flash_type'] = 'danger';

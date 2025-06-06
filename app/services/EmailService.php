@@ -1,50 +1,276 @@
 <?php
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 class EmailService {
-    private $host;
-    private $port;
-    private $username;
-    private $password;
-    private $fromEmail;
-    private $fromName;
+    private $mailer;
     
     /**
-     * Construtor
+     * Construtor - Configurar PHPMailer
      */
     public function __construct() {
-        // Carregar configurações definidas em constants.php
-        $this->host = defined('MAIL_HOST') ? MAIL_HOST : 'smtp.ufpr.br';
-        $this->port = defined('MAIL_PORT') ? MAIL_PORT : 587;
-        $this->username = defined('MAIL_USERNAME') ? MAIL_USERNAME : 'sistema.agenda@ufpr.br';
-        $this->password = defined('MAIL_PASSWORD') ? MAIL_PASSWORD : 'brvcsyqkbkkqhzmd';
-        $this->fromEmail = $this->username;
-        $this->fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'Sistema de Agendamento UFPR';
+        $this->mailer = new PHPMailer(true);
+        $this->configureSMTP();
+    }
+    
+    /**
+     * Configurar SMTP usando constantes do config
+     */
+    private function configureSMTP() {
+        try {
+            // Configurações do servidor
+            $this->mailer->isSMTP();
+            $this->mailer->Host = MAIL_HOST;
+            $this->mailer->SMTPAuth = MAIL_AUTH;
+            $this->mailer->Username = MAIL_USERNAME;
+            $this->mailer->Password = MAIL_PASSWORD;
+            $this->mailer->SMTPSecure = MAIL_ENCRYPTION;
+            $this->mailer->Port = MAIL_PORT;
+            $this->mailer->SMTPDebug = MAIL_DEBUG;
+            
+            // Configurações de charset
+            $this->mailer->CharSet = 'UTF-8';
+            $this->mailer->Encoding = 'base64';
+            
+            // Remetente padrão
+            $this->mailer->setFrom(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
+            
+        } catch (Exception $e) {
+            error_log('Erro ao configurar SMTP: ' . $e->getMessage());
+            throw new Exception('Falha na configuração do e-mail');
+        }
+    }
+    
+    public function send($to, $subject, $body, $isHtml = true) {
+        try {
+            // Limpar destinatários anteriores
+            $this->mailer->clearAddresses();
+            $this->mailer->clearReplyTos();
+            
+            // Configurar destinatário
+            $this->mailer->addAddress($to);
+            
+            // Configurar conteúdo
+            $this->mailer->isHTML($isHtml);
+            $this->mailer->Subject = $subject;
+            $this->mailer->Body = $body;
+            
+            // Enviar
+            $result = $this->mailer->send();
+            
+            if ($result) {
+                error_log("E-mail enviado com sucesso para: $to - Assunto: $subject");
+            }
+            
+            return $result;
+            
+        } catch (Exception $e) {
+            error_log('Erro ao enviar e-mail: ' . $e->getMessage());
+            return false;
+        }
     }
 
-    public function send($to, $subject, $body, $isHtml = true) {
-        // Preparar cabeçalhos
-        $headers = [
-            'From' => $this->fromName . ' <' . $this->fromEmail . '>',
-            'Reply-To' => $this->fromEmail,
-            'X-Mailer' => 'PHP/' . phpversion(),
-            'MIME-Version' => '1.0'
-        ];
+    public function sendAgendaShareNotification($ownerUser, $sharedWithUser, $agenda, $canEdit) {
+        $subject = 'Agendamento UFPR - Compartilhamento';
         
-        // Definir tipo de conteúdo
-        if ($isHtml) {
-            $headers['Content-Type'] = 'text/html; charset=UTF-8';
-        } else {
-            $headers['Content-Type'] = 'text/plain; charset=UTF-8';
-        }
+        // Data/hora atual formatada
+        $currentDateTime = date('d/m/Y \à\s H:i');
         
-        // Preparar cabeçalhos para mail()
-        $headerString = '';
-        foreach ($headers as $name => $value) {
-            $headerString .= $name . ': ' . $value . "\r\n";
-        }
+        // Tipo de permissão
+        $permissionType = $canEdit ? 'edição (pode criar, editar e excluir compromissos)' : 'visualização (apenas visualizar compromissos)';
+        $permissionBadge = $canEdit ? 'Pode Editar' : 'Apenas Visualizar';
+        $permissionColor = $canEdit ? '#28a745' : '#6c757d';
         
-        // Tentar enviar o e-mail
-        return mail($to, $subject, $body, $headerString);
+        // Preparar corpo do e-mail em HTML
+        $body = "
+            <html>
+            <head>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        line-height: 1.6; 
+                        color: #333; 
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container { 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background: #ffffff;
+                    }
+                    .header { 
+                        background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
+                        color: #fff; 
+                        padding: 20px; 
+                        text-align: center; 
+                        border-radius: 8px 8px 0 0;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                    }
+                    .content { 
+                        padding: 30px 25px; 
+                        background: #ffffff;
+                    }
+                    .agenda-info {
+                        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 20px;
+                        margin: 20px 0;
+                        border-left: 4px solid " . ($agenda['color'] ?? '#004a8f') . ";
+                    }
+                    .agenda-title {
+                        font-size: 1.3rem;
+                        font-weight: 600;
+                        color: #004a8f;
+                        margin-bottom: 10px;
+                    }
+                    .agenda-description {
+                        color: #4a5568;
+                        margin-bottom: 15px;
+                        line-height: 1.5;
+                    }
+                    .permission-badge {
+                        display: inline-block;
+                        background-color: {$permissionColor};
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 0.9rem;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .info-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 20px 0;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+                    .info-table td {
+                        padding: 12px 15px;
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .info-table td:first-child {
+                        background-color: #f8fafc;
+                        font-weight: 600;
+                        color: #2d3748;
+                        width: 35%;
+                    }
+                    .info-table tr:last-child td {
+                        border-bottom: none;
+                    }
+                    .btn {
+                        display: inline-block;
+                        padding: 12px 24px;
+                        background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
+                        color: #fff;
+                        text-decoration: none;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        margin: 10px 5px;
+                        text-align: center;
+                        transition: all 0.3s ease;
+                    }
+                    .btn:hover {
+                        background: linear-gradient(135deg, #003a70 0%, #004a8f 100%);
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 12px rgba(0, 74, 143, 0.3);
+                    }
+                    .footer { 
+                        background-color: #f8fafc; 
+                        padding: 20px; 
+                        text-align: center; 
+                        font-size: 12px; 
+                        color: #6c757d; 
+                        border-radius: 0 0 8px 8px;
+                        border-top: 1px solid #e2e8f0;
+                    }
+                    .highlight-box {
+                        background: linear-gradient(135deg, #e6f3ff 0%, #f0f7ff 100%);
+                        border: 1px solid #b3d9ff;
+                        border-radius: 8px;
+                        padding: 15px;
+                        margin: 20px 0;
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h1>📅 Agenda Compartilhada</h1>
+                    </div>
+                    
+                    <div class='content'>
+                        <p>Olá, <strong>{$sharedWithUser['name']}</strong>!</p>
+                        
+                        <p><strong>{$ownerUser['name']}</strong> compartilhou uma agenda com você no Sistema de Agendamento UFPR.</p>
+                        
+                        <div class='agenda-info'>
+                            <div class='agenda-title'>{$agenda['title']}</div>
+                            " . (!empty($agenda['description']) ? "<div class='agenda-description'>{$agenda['description']}</div>" : "") . "
+                            <div style='margin-top: 10px;'>
+                                <span class='permission-badge'>{$permissionBadge}</span>
+                            </div>
+                        </div>
+                        
+                        <table class='info-table'>
+                            <tr>
+                                <td>👤 Proprietário:</td>
+                                <td><strong>{$ownerUser['name']}</strong> ({$ownerUser['email']})</td>
+                            </tr>
+                            <tr>
+                                <td>📅 Data/Hora do Compartilhamento:</td>
+                                <td><strong>{$currentDateTime}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>🔐 Permissão Concedida:</td>
+                                <td><strong>{$permissionType}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>📊 Status da Agenda:</td>
+                                <td>" . ($agenda['is_public'] ? '<strong style=\"color: #28a745;\">Pública</strong>' : '<strong style=\"color: #6c757d;\">Privada</strong>') . "</td>
+                            </tr>
+                        </table>
+                        
+                        <div class='highlight-box'>
+                            <p style='margin: 0; font-weight: 600; color: #004a8f;'>
+                                🎉 Agora você pode acessar esta agenda diretamente no sistema!
+                            </p>
+                        </div>
+                        
+                        <p style='text-align: center; margin-top: 30px;'>
+                            <a href='" . BASE_URL . "/compromissos?agenda_id={$agenda['id']}' class='btn'>
+                                👁️ Ver Agenda Compartilhada
+                            </a>
+                            " . ($canEdit ? "<a href='" . BASE_URL . "/compromissos/new?agenda_id={$agenda['id']}' class='btn'>➕ Criar Compromisso</a>" : "") . "
+                        </p>
+                        
+                        <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>
+                            <strong>💡 Dica:</strong> Acesse o sistema em <a href='" . BASE_URL . "' style='color: #004a8f;'>" . BASE_URL . "</a> e veja todas as agendas compartilhadas com você na seção \"Agendas Compartilhadas\".
+                        </p>
+                    </div>
+                    
+                    <div class='footer'>
+                        <p>Este é um e-mail automático do Sistema de Agendamento UFPR.</p>
+                        <p>Por favor, não responda este e-mail.</p>
+                        <p>&copy; " . date('Y') . " - Universidade Federal do Paraná - Campus Jandaia do Sul</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        ";
+        
+        return $this->send($sharedWithUser['email'], $subject, $body, true);
     }
     
 
@@ -102,56 +328,6 @@ class EmailService {
         
         return $this->send($user['email'], $subject, $body);
     }
-    
-
-    public function sendAgendaShareNotification($owner, $user, $agenda, $canEdit) {
-        $subject = 'Agenda Compartilhada: ' . $agenda['title'];
-        
-        $permissionType = $canEdit ? 'edição' : 'visualização';
-        
-        // Preparar corpo do e-mail em HTML
-        $body = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; }
-                    .header { background-color: #004a8f; color: #fff; padding: 20px; text-align: center; }
-                    .content { padding: 20px; }
-                    .footer { background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666; }
-                    .btn { display: inline-block; padding: 10px 20px; background-color: #004a8f; color: #fff; text-decoration: none; border-radius: 4px; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1>Agenda Compartilhada</h1>
-                    </div>
-                    <div class='content'>
-                        <p>Olá, {$user['name']}!</p>
-                        <p><strong>{$owner['name']}</strong> compartilhou uma agenda com você:</p>
-                        
-                        <h2>{$agenda['title']}</h2>
-                        <p>{$agenda['description']}</p>
-                        
-                        <p>Você tem permissão de <strong>{$permissionType}</strong> para esta agenda.</p>
-                        
-                        <p style='margin-top: 20px;'>
-                            <a href='" . BASE_URL . "/compromissos?agenda_id={$agenda['id']}' class='btn'>Ver Agenda</a>
-                        </p>
-                    </div>
-                    <div class='footer'>
-                        <p>Este é um e-mail automático. Por favor, não responda.</p>
-                        <p>Sistema de Agendamento UFPR &copy; " . date('Y') . "</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        ";
-        
-        return $this->send($user['email'], $subject, $body);
-    }
-    
 
     
     public function sendExternalUserConfirmation($compromisso, $agenda) {
@@ -540,10 +716,7 @@ class EmailService {
         return $this->send($compromisso['external_email'], $subject, $body);
     }
     
-    /**
-     * Formata telefone para exibição
-     */
-    private function formatPhone($phone) {
+     private function formatPhone($phone) {
         if (empty($phone)) return 'Não informado';
         
         // Remove tudo que não é número

@@ -1,5 +1,4 @@
 <?php
-// Ambiente (development ou production)
 define('ENVIRONMENT', 'development');
 
 // Configurações de URL
@@ -14,8 +13,13 @@ define('APP_VERSION', '1.0.0');
 define('MAIL_HOST', 'smtp.ufpr.br');
 define('MAIL_PORT', 587);
 define('MAIL_USERNAME', 'sistema.agenda@ufpr.br');
-define('MAIL_PASSWORD', 'senha_do_email');
+define('MAIL_PASSWORD', 'brvcsyqkbkkqhzmd'); // Senha real do EmailService
 define('MAIL_FROM_NAME', 'Sistema de Agendamento UFPR');
+define('MAIL_FROM_EMAIL', 'sistema.agenda@ufpr.br');
+// Configurações SMTP adicionais
+define('MAIL_ENCRYPTION', 'tls'); // tls ou ssl
+define('MAIL_AUTH', true); // Autenticação SMTP
+define('MAIL_DEBUG', 0); // 0=off, 1=client, 2=server
 
 // Configurações RADIUS (autenticação)
 define('RADIUS_SERVER', '200.17.209.10');
@@ -29,7 +33,7 @@ if (ENVIRONMENT === 'development') {
 
 // Configurações de segurança
 define('SESSION_NAME', 'agenda_ufpr_session');
-define('SESSION_LIFETIME', 86400); // 24 horas em segundos
+define('SESSION_LIFETIME', 86400); // 24 horas
 
 // Configurar tratamento de erros de acordo com o ambiente
 if (ENVIRONMENT === 'development') {

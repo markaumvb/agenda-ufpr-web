@@ -57,7 +57,7 @@
                 
                 <div class="form-row">
                     <div class="form-group form-group-large">
-                        <label for="username">Nome de Usuário</label>
+                        <label for="username">e-mail(@ufpr.br) do usuário</label>
                         <input type="text" id="username" name="username" required class="form-control" placeholder="Digite o nome de usuário para compartilhar">
                     </div>
                     

@@ -1,5 +1,6 @@
 {
   "require": {
-    "dapphp/radius": "^2.0"
+    "dapphp/radius": "^2.0",
+    "phpmailer/phpmailer": "^6.10"
   }
 }
