@@ -67,9 +67,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   sidebarLinks.forEach((link) => {
     const href = link.getAttribute("href");
-    if (href && currentPath.includes(href) && href !== PUBLIC_URL + "/") {
+    if (
+      href &&
+      currentPath.includes(href) &&
+      href !== (window.PUBLIC_URL || "") + "/"
+    ) {
       link.classList.add("active");
-    } else if (currentPath === PUBLIC_URL + "/" && href === PUBLIC_URL + "/") {
+    } else if (
+      currentPath === (window.PUBLIC_URL || "") + "/" &&
+      href === (window.PUBLIC_URL || "") + "/"
+    ) {
       link.classList.add("active");
     }
   });

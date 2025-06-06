@@ -93,7 +93,7 @@ class AgendaController extends BaseController {
         $description = trim(filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING) ?? '');
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
         $isActive = isset($_POST['is_active']) ? 1 : 0;
-        $color = filter_input(INPUT_POST, 'color', FILTER_SANITIZE_STRING) ?: '#3788d8';
+        $color = trim($_POST['color'] ?? '#3788d8');
         $minTimeBefore = filter_input(INPUT_POST, 'min_time_before', FILTER_VALIDATE_INT, ['options' => ['default' => 0, 'min_range' => 0, 'max_range' => 48]]);
         // Validar os dados     
         if (empty($title)) {
@@ -200,7 +200,7 @@ class AgendaController extends BaseController {
         $description = filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW);
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
         $isActive = isset($_POST['is_active']) ? 1 : 0;
-        $color = htmlspecialchars(filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?? '') ?: '#3788d8';
+        $color = trim($_POST['color'] ?? '#3788d8');
         $minTimeBefore = filter_input(INPUT_POST, 'min_time_before', FILTER_VALIDATE_INT, ['options' => ['default' => 0, 'min_range' => 0, 'max_range' => 48]]);
 
         
