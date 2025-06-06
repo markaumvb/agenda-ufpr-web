@@ -138,50 +138,88 @@ class Agenda {
     }
     
     public function create($data) {
-        try {
-            $existsQuery = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id AND title = :title";
-            $existsStmt = $this->db->prepare($existsQuery);
-            $existsStmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
-            $existsStmt->bindParam(':title', $data['title'], PDO::PARAM_STR);
-            $existsStmt->execute();
-            
-            if ((int)$existsStmt->fetchColumn() > 0) {
-                $data['title'] = $data['title'] . ' (' . date('d/m/Y H:i') . ')';
-            }
-            
-            $publicHash = '';
-            if ($data['is_public']) {
-                $publicHash = md5(uniqid(rand(), true));
-            }
-            
-            $isActive = isset($data['is_active']) ? $data['is_active'] : 1;
-            $minTimeBefore = isset($data['min_time_before']) ? $data['min_time_before'] : 0;
-            
-            $query = "
-                INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash, is_active, min_time_before)
-                VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash, :is_active, :min_time_before)
-            ";
-            
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
-            $stmt->bindParam(':title', $data['title'], PDO::PARAM_STR);
-            $stmt->bindParam(':description', $data['description'], PDO::PARAM_STR);
-            $stmt->bindParam(':is_public', $data['is_public'], PDO::PARAM_INT);
-            $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
-            $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
-            $stmt->bindParam(':is_active', $isActive, PDO::PARAM_INT);
-            $stmt->bindParam(':min_time_before', $minTimeBefore, PDO::PARAM_INT);
-            
-            if ($stmt->execute()) {
-                return $this->db->lastInsertId();
-            }
-            
-            return false;
-        } catch (PDOException $e) {
-            error_log('Erro ao criar agenda: ' . $e->getMessage());
+    error_log('=== INICIO AGENDA CREATE ===');
+    error_log('Data recebido: ' . print_r($data, true));
+    
+    try {
+        // Verificar se já existe agenda com o mesmo título para o usuário
+        $existsQuery = "SELECT COUNT(*) FROM agendas WHERE user_id = :user_id AND title = :title";
+        $existsStmt = $this->db->prepare($existsQuery);
+        $existsStmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
+        $existsStmt->bindParam(':title', $data['title'], PDO::PARAM_STR);
+        
+        error_log('Executando query de verificação...');
+        $existsStmt->execute();
+        $exists = (int)$existsStmt->fetchColumn();
+        error_log('Agendas existentes com mesmo nome: ' . $exists);
+        
+        if ($exists > 0) {
+            $data['title'] = $data['title'] . ' (' . date('d/m/Y H:i') . ')';
+            error_log('Título alterado para: ' . $data['title']);
+        }
+        
+        // Gerar hash público se necessário
+        $publicHash = '';
+        if ($data['is_public']) {
+            $publicHash = md5(uniqid(rand(), true));
+            error_log('Hash público gerado: ' . $publicHash);
+        }
+        
+        // Valores padrão
+        $isActive = isset($data['is_active']) ? $data['is_active'] : 1;
+        $minTimeBefore = isset($data['min_time_before']) ? $data['min_time_before'] : 0;
+        
+        error_log('Valores finais:');
+        error_log('isActive: ' . $isActive);
+        error_log('minTimeBefore: ' . $minTimeBefore);
+        error_log('publicHash: [' . $publicHash . ']');
+        
+        // Query de inserção
+        $query = "
+            INSERT INTO agendas (user_id, title, description, is_public, color, created_at, public_hash, is_active, min_time_before)
+            VALUES (:user_id, :title, :description, :is_public, :color, NOW(), :public_hash, :is_active, :min_time_before)
+        ";
+        
+        error_log('Query: ' . $query);
+        
+        $stmt = $this->db->prepare($query);
+        
+        error_log('Fazendo bind dos parâmetros...');
+        $stmt->bindParam(':user_id', $data['user_id'], PDO::PARAM_INT);
+        $stmt->bindParam(':title', $data['title'], PDO::PARAM_STR);
+        $stmt->bindParam(':description', $data['description'], PDO::PARAM_STR);
+        $stmt->bindParam(':is_public', $data['is_public'], PDO::PARAM_INT);
+        $stmt->bindParam(':color', $data['color'], PDO::PARAM_STR);
+        $stmt->bindParam(':public_hash', $publicHash, PDO::PARAM_STR);
+        $stmt->bindParam(':is_active', $isActive, PDO::PARAM_INT);
+        $stmt->bindParam(':min_time_before', $minTimeBefore, PDO::PARAM_INT);
+        
+        error_log('Executando INSERT...');
+        error_log('Tentando inserir: user_id=' . $data['user_id'] . ', title=' . $data['title']);
+        error_log('Valores bind: isActive=' . $isActive . ', minTimeBefore=' . $minTimeBefore);
+        $executeResult = $stmt->execute();
+        error_log('Execute result: ' . ($executeResult ? 'true' : 'false'));
+        
+        if ($executeResult) {
+            $lastId = $this->db->lastInsertId();
+            error_log('LastInsertId: ' . $lastId);
+            error_log('=== SUCESSO AGENDA CREATE ===');
+            return $lastId;
+        } else {
+            error_log('Execute retornou false');
+            error_log('ErrorInfo: ' . print_r($stmt->errorInfo(), true));
             return false;
         }
+        
+    } catch (PDOException $e) {
+        error_log('=== ERRO PDO AGENDA CREATE ===');
+        error_log('Mensagem: ' . $e->getMessage());
+        error_log('Código: ' . $e->getCode());
+        error_log('Stack trace: ' . $e->getTraceAsString());
+        error_log('Data array: ' . print_r($data, true));
+        return false;
     }
+}
     
     public function update($id, $data) {
         try {

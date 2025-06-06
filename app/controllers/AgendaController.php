@@ -82,53 +82,90 @@ class AgendaController extends BaseController {
      * Salva uma nova agenda no banco de dados
      */
     public function store() {
-        // Verificar se é uma requisição POST
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/agendas');
-            exit;
-        }
-        
-        // Obter os dados do formulário
-        $title = trim(filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING) ?? '');
-        $description = trim(filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING) ?? '');
-        $isPublic = isset($_POST['is_public']) ? 1 : 0;
-        $isActive = isset($_POST['is_active']) ? 1 : 0;
-        $color = trim($_POST['color'] ?? '#3788d8');
-        $minTimeBefore = filter_input(INPUT_POST, 'min_time_before', FILTER_VALIDATE_INT, ['options' => ['default' => 0, 'min_range' => 0, 'max_range' => 48]]);
-        // Validar os dados     
-        if (empty($title)) {
-            $_SESSION['flash_message'] = 'O título da agenda é obrigatório';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas/new');
-            exit;
-        }
-        
-        // Preparar os dados para salvar
-        $data = [
-            'user_id' => $_SESSION['user_id'],
-            'title' => $title,
-            'description' => $description,
-            'is_public' => $isPublic,
-            'is_active' => $isActive,
-            'color' => $color,
-            'min_time_before' => $minTimeBefore
-        ];
-        
-        // Salvar no banco
-        $result = $this->agendaModel->create($data);
-        
-        if ($result) {
-            $_SESSION['flash_message'] = 'Agenda criada com sucesso';
-            $_SESSION['flash_type'] = 'success';
-            header('Location: ' . BASE_URL . '/agendas');
-        } else {
-            $_SESSION['flash_message'] = 'Erro ao criar agenda';
-            $_SESSION['flash_type'] = 'danger';
-            header('Location: ' . BASE_URL . '/agendas/new');
-        }
-        
+    // Log de início
+    error_log('=== INICIO STORE AGENDA ===');
+    error_log('POST recebido: ' . print_r($_POST, true));
+    error_log('SESSION user_id: ' . ($_SESSION['user_id'] ?? 'NÃO DEFINIDO'));
+    
+    // Verificar se é uma requisição POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        error_log('ERRO: Não é POST, método: ' . $_SERVER['REQUEST_METHOD']);
+        header('Location: ' . BASE_URL . '/agendas');
         exit;
     }
+    
+    // Obter os dados do formulário de forma mais simples
+    $title = trim($_POST['title'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $isPublic = isset($_POST['is_public']) ? 1 : 0;
+    $isActive = isset($_POST['is_active']) ? 1 : 0;
+    $color = trim($_POST['color'] ?? '#3788d8');
+    $minTimeBefore = (int)($_POST['min_time_before'] ?? 0);
+    
+    error_log('Dados processados:');
+    error_log('title: [' . $title . ']');
+    error_log('description: [' . $description . ']');
+    error_log('isPublic: ' . $isPublic);
+    error_log('isActive: ' . $isActive);
+    error_log('color: [' . $color . ']');
+    error_log('minTimeBefore: ' . $minTimeBefore);
+    
+    // Validar os dados     
+    if (empty($title)) {
+        error_log('ERRO: Título vazio');
+        $_SESSION['flash_message'] = 'O título da agenda é obrigatório';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/agendas/new');
+        exit;
+    }
+    
+    // Preparar os dados para salvar
+    $data = [
+        'user_id' => $_SESSION['user_id'],
+        'title' => $title,
+        'description' => $description,
+        'is_public' => $isPublic,
+        'is_active' => $isActive,
+        'color' => $color,
+        'min_time_before' => $minTimeBefore
+    ];
+    
+    error_log('Array data para create: ' . print_r($data, true));
+    
+    // Testar conexão antes de tentar salvar
+    try {
+        $testQuery = $this->agendaModel->db->query('SELECT 1');
+        error_log('Conexão DB: OK');
+    } catch (Exception $e) {
+        error_log('ERRO conexão DB: ' . $e->getMessage());
+        $_SESSION['flash_message'] = 'Erro de conexão com banco de dados';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/agendas/new');
+        exit;
+    }
+    
+    // Salvar no banco
+    error_log('Chamando agendaModel->create()...');
+    error_log('USER_ID da sessão: ' . $_SESSION['user_id'] . ' | DADOS: title=' . $title . ', color=' . $color);
+
+    $result = $this->agendaModel->create($data);
+    error_log('Resultado create: ' . ($result ? 'Sucesso ID=' . $result : 'FALHA'));
+    
+    if ($result) {
+        error_log('Sucesso! Redirecionando...');
+        $_SESSION['flash_message'] = 'Agenda criada com sucesso';
+        $_SESSION['flash_type'] = 'success';
+        header('Location: ' . BASE_URL . '/agendas');
+    } else {
+        error_log('FALHA! Redirecionando com erro...');
+        $_SESSION['flash_message'] = 'Erro ao criar agenda';
+        $_SESSION['flash_type'] = 'danger';
+        header('Location: ' . BASE_URL . '/agendas/new');
+    }
+    
+    error_log('=== FIM STORE AGENDA ===');
+    exit;
+}
     
     /**
      * Exibe o formulário para editar uma agenda

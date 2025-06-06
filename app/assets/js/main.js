@@ -92,10 +92,7 @@ const AgendaUFPR = {
 
       // Atualização em tempo real da cor
       if (colorInput) {
-        colorInput.addEventListener("input", function () {
-          // Você pode adicionar uma visualização da cor selecionada aqui
-          console.log("Cor selecionada:", colorInput.value);
-        });
+        colorInput.addEventListener("input", function () {});
       }
     },
 

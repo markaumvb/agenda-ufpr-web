@@ -22,16 +22,11 @@ function initAgendaForm() {
 
   // Atualização em tempo real da cor selecionada
   if (colorInput) {
-    colorInput.addEventListener("input", function () {
-      console.log("Cor selecionada:", colorInput.value);
-    });
+    colorInput.addEventListener("input", function () {});
   }
 }
 
 function initDeleteConfirmations() {
-  // CORRIGIDO: Método mais simples e eficaz para evitar duplicação
-  console.log("🗑️ Inicializando confirmações de exclusão...");
-
   // Remover todos os event listeners existentes usando uma abordagem diferente
   const deleteForms = document.querySelectorAll(".delete-form");
 
@@ -51,13 +46,8 @@ function initDeleteConfirmations() {
         event.preventDefault(); // Sempre prevenir envio inicial
         event.stopPropagation(); // Evitar propagação
 
-        console.log(
-          `🗑️ Tentativa de exclusão capturada - Formulário ${index + 1}`
-        );
-
         // Verificar se já está sendo processado
         if (this.hasAttribute("data-processing")) {
-          console.log("⚠️ Exclusão já está sendo processada, ignorando...");
           return false;
         }
 
@@ -81,8 +71,6 @@ function initDeleteConfirmations() {
         const confirmed = confirm(confirmMessage);
 
         if (confirmed) {
-          console.log("✅ Exclusão confirmada pelo usuário");
-
           // Desabilitar o botão para evitar cliques múltiplos
           const submitBtn = this.querySelector('button[type="submit"]');
           if (submitBtn) {
@@ -102,19 +90,12 @@ function initDeleteConfirmations() {
         return false;
       },
       { once: false }
-    ); // Não usar 'once: true' para permitir múltiplas tentativas se necessário
-
-    console.log(`✅ Event listener adicionado ao formulário ${index + 1}`);
+    );
   });
-
-  console.log(
-    `🗑️ Total de formulários de exclusão configurados: ${deleteForms.length}`
-  );
 }
 
 // Função para resetar listeners se necessário (para debugging)
 function resetDeleteListeners() {
-  console.log("🔄 Resetando listeners de exclusão...");
   const deleteForms = document.querySelectorAll(".delete-form");
   deleteForms.forEach((form) => {
     form.removeAttribute("data-delete-listener");
