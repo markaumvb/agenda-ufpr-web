@@ -64,14 +64,17 @@ $body_class = $is_auth_page ? 'auth-page' : '';
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/compromissos.css">';
     }
     
-    // CSS para compartilhamento
+    // CSS para compartilhamento - CORRIGIDO: Garantir carregamento
     if (strpos($currentUri, '/shares') !== false || strpos($currentUri, '/public-agenda') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/shares.css">';
+        // ADICIONADO: CSS específico para módulos de shares
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/modules/shares.css">';
     }
     
     // CSS para notificações
     if (strpos($currentUri, '/notifications') !== false) {
         echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/notifications.css">';
+        echo '<link rel="stylesheet" href="' . PUBLIC_URL . '/app/assets/css/modules/notifications.css">';
     }
     
     // CSS para autenticação
@@ -122,6 +125,57 @@ $body_class = $is_auth_page ? 'auth-page' : '';
     .fc-event[data-status="aguardando_aprovacao"] {
         background-color: var(--info-color) !important;
         border-color: var(--info-color) !important;
+    }
+
+    /* ADICIONADO: CSS Emergencial para botões de shares se outros CSS falharem */
+    .btn-email {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        color: #fff !important;
+        border-color: #17a2b8 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.25rem !important;
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        border-radius: 4px !important;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+    }
+
+    .btn-email:hover {
+        background: linear-gradient(135deg, #138496 0%, #117a8b 100%) !important;
+        color: #fff !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3) !important;
+        text-decoration: none !important;
+    }
+
+    .action-buttons-group {
+        display: flex !important;
+        gap: 0.5rem !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+
+    .action-buttons-group .btn {
+        margin: 0 !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.25rem !important;
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        border-radius: 4px !important;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
+        border: none !important;
+        cursor: pointer !important;
     }
     </style>
     

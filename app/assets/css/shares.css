@@ -1,5 +1,3 @@
-/* ===== ESTILOS ESPECÍFICOS PARA COMPARTILHAMENTO ===== */
-
 /* Cabeçalho da página */
 .agenda-meta {
   margin-top: var(--spacing-md);
@@ -300,6 +298,79 @@
   margin: 0;
 }
 
+/* ===== BOTÕES DE AÇÃO - CORRIGIDO ===== */
+.action-buttons-group {
+  display: flex !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+}
+
+.action-buttons-group .btn {
+  margin: 0 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.action-buttons-group .btn i {
+  font-size: 0.75rem !important;
+}
+
+/* Botão de enviar e-mail - CORRIGIDO */
+.btn-email {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  color: #fff !important;
+  border-color: #17a2b8 !important;
+}
+
+.btn-email:hover {
+  background: linear-gradient(135deg, #138496 0%, #117a8b 100%) !important;
+  color: #fff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3) !important;
+  text-decoration: none !important;
+}
+
+.btn-email:focus {
+  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.25) !important;
+}
+
+.btn-email.loading {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Melhorias no botão de remover - CORRIGIDO */
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  color: #fff !important;
+  border-color: #dc3545 !important;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%) !important;
+  color: #fff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3) !important;
+  text-decoration: none !important;
+}
+
+.btn-danger:focus {
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
+}
+
 /* Agendas compartilhadas - estilos específicos */
 .agenda-owner {
   margin-bottom: 1rem !important;
@@ -385,7 +456,7 @@
   gap: var(--spacing-sm);
 }
 
-/* Container do campo de busca */
+/* ===== SEARCH BOX - COMPATIBILIDADE ===== */
 .search-box {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 2px solid #e2e8f0;
@@ -464,7 +535,6 @@
   text-decoration: none;
 }
 
-/* Botão primário (Buscar) */
 .search-form .btn-primary {
   background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
   color: #ffffff;
@@ -476,7 +546,6 @@
   color: #ffffff;
 }
 
-/* Botão secundário (Limpar) */
 .search-form .btn-secondary {
   background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
   color: #ffffff;
@@ -488,142 +557,48 @@
   color: #ffffff;
 }
 
-/* Ícones nos botões */
-.search-form .btn i {
+/* Informação sobre resultados da busca */
+.search-info {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #f6ad55;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #856404;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.search-info i {
+  color: #d69e2e;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.search-info strong {
+  color: #744210;
+  font-weight: 600;
+}
+
+/* Contador de resultados nos títulos das seções */
+.results-count {
   font-size: 0.9rem;
-  margin-right: 0.25rem;
+  font-weight: 500;
+  color: #718096;
+  margin-left: 0.5rem;
+  background: rgba(113, 128, 150, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(113, 128, 150, 0.2);
 }
 
 /* ===== RESPONSIVIDADE ===== */
 
 @media (max-width: 768px) {
-  .search-box {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 12px;
-  }
-
-  .search-form {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-
-  .search-form input[type="text"] {
-    min-width: auto;
-    width: 100%;
-  }
-
-  .search-form .btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.875rem 1.25rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .search-box {
-    margin-left: -1rem;
-    margin-right: -1rem;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-  }
-
-  .search-form input[type="text"] {
-    font-size: 0.9rem;
-    padding: 0.875rem 1rem;
-  }
-
-  .search-form .btn {
-    font-size: 0.9rem;
-    padding: 0.75rem 1rem;
-  }
-}
-
-/* ===== ESTADO DE BUSCA ATIVA ===== */
-
-/* Estilo quando há uma busca ativa */
-.search-box.has-search {
-  background: linear-gradient(135deg, #e6f3ff 0%, #f0f7ff 100%);
-  border-color: #004a8f;
-}
-
-.search-box.has-search input[type="text"] {
-  border-color: #004a8f;
-  background-color: #ffffff;
-  font-weight: 500;
-}
-
-/* ===== ANIMAÇÕES SUAVES ===== */
-
-.search-form {
-  animation: slideIn 0.5s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Loading state para o botão de busca */
-.search-form .btn.loading {
-  opacity: 0.7;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.search-form .btn.loading::after {
-  content: "";
-  width: 16px;
-  height: 16px;
-  margin-left: 0.5rem;
-  border: 2px solid transparent;
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* ===== INTEGRAÇÃO COM O TEMA EXISTENTE ===== */
-
-/* Garantir que os estilos sejam consistentes com o resto da aplicação */
-.search-form input[type="text"]:invalid {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
-}
-
-.search-form input[type="text"]:valid {
-  border-color: #28a745;
-}
-
-/* Melhorar a acessibilidade */
-.search-form input[type="text"]:focus-visible {
-  outline: 2px solid #004a8f;
-  outline-offset: 2px;
-}
-
-.search-form .btn:focus-visible {
-  outline: 2px solid #004a8f;
-  outline-offset: 2px;
-}
-
-/* Responsividade */
-@media (max-width: var(--breakpoint-sm)) {
   .form-row {
     flex-direction: column;
     align-items: stretch;
@@ -665,9 +640,57 @@
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.4rem !important;
   }
+
+  /* Responsividade para botões de ação */
+  .action-buttons-group {
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+  }
+
+  .action-buttons-group .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .search-box {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-form input[type="text"] {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .search-form .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem 1.25rem;
+  }
+
+  .search-info {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .results-count {
+    font-size: 0.8rem;
+    margin-left: 0;
+    margin-top: 0.25rem;
+    display: block;
+  }
 }
 
-@media (max-width: var(--breakpoint-xs)) {
+@media (max-width: 576px) {
   .public-agendas-table th:nth-child(3),
   .public-agendas-table td:nth-child(3) {
     display: none; /* Esconde a coluna de proprietário em telas muito pequenas */
@@ -697,5 +720,40 @@
 
   .stat-label {
     font-size: 0.6rem !important;
+  }
+
+  .action-buttons-group .btn {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+
+  .action-buttons-group .btn i {
+    font-size: 0.7rem !important;
+  }
+
+  .search-box {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .search-form input[type="text"] {
+    font-size: 0.9rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .search-form .btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .search-info {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }

@@ -159,6 +159,16 @@ $routes = [
         'action' => 'generatePublicUrl',
         'method' => 'POST'
     ],
+    '/agendas/toggle-active' => [
+        'controller' => 'AgendaController',
+        'action' => 'toggleActive',
+        'method' => 'POST'
+    ],
+    '/agendas/all' => [
+        'controller' => 'AgendaController',
+        'action' => 'allAgendas',
+        'method' => 'GET'
+    ],
     
     // Rotas de compromissos
     '/compromissos' => [
@@ -206,8 +216,43 @@ $routes = [
         'action' => 'cancelFuture',
         'method' => 'POST'
     ],
+    '/compromissos/update-date' => [
+        'controller' => 'CompromissoController',
+        'action' => 'updateDate',
+        'method' => 'POST'
+    ],
+    '/compromissos/new-public' => [
+        'controller' => 'CompromissoController',
+        'action' => 'newPublic',
+        'method' => 'GET'
+    ],
+    '/compromissos/external-form' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalForm',
+        'method' => 'GET'
+    ],
+    '/compromissos/external-create' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalCreate',
+        'method' => 'POST'
+    ],
+    '/compromissos/external-store' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalStore',
+        'method' => 'POST'
+    ],
+    '/compromissos/external-new' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalNew',  
+        'method' => 'GET'
+    ],
+    '/compromissos/external-success' => [
+        'controller' => 'CompromissoController',
+        'action' => 'externalSuccess',
+        'method' => 'GET'
+    ],
     
-    // Rotas de compartilhamento
+    // Rotas de compartilhamento - CORRIGIDAS
     '/shares' => [
         'controller' => 'ShareController',
         'action' => 'index',
@@ -238,41 +283,13 @@ $routes = [
         'action' => 'generatePublicUrl',
         'method' => 'POST'
     ],
-    '/api/check-server-status' => [
-        'controller' => 'ApiController',
-        'action' => 'checkServerStatus',
-        'method' => 'GET'
-    ],
-    '/api/check-time-conflict' => [
-        'controller' => 'ApiController',
-        'action' => 'checkTimeConflict',
-        'method' => 'GET'
-    ],
-    '/api/search-users' => [
-        'controller' => 'ApiController',
-        'action' => 'searchUsers',
-        'method' => 'GET'
-    ],
-    '/api/notifications' => [
-        'controller' => 'ApiController',
-        'action' => 'getNotifications',
-        'method' => 'GET'
-    ],
-    '/api/mark-notification-read' => [
-        'controller' => 'ApiController',
-        'action' => 'markNotificationRead',
+    '/shares/send-email' => [
+        'controller' => 'ShareController',
+        'action' => 'sendEmail',
         'method' => 'POST'
     ],
-    '/api/mark-all-notifications-read' => [
-        'controller' => 'ApiController',
-        'action' => 'markAllNotificationsRead',
-        'method' => 'POST'
-    ],
-    '/compromissos/update-date' => [
-        'controller' => 'CompromissoController',
-        'action' => 'updateDate',
-        'method' => 'POST'
-    ],
+    
+    // Rotas de meus compromissos
     '/meuscompromissos' => [
         'controller' => 'MeusCompromissosController',
         'action' => 'index',
@@ -298,21 +315,18 @@ $routes = [
         'action' => 'rejectCompromisso',
         'method' => 'POST'
     ],
-    '/agendas/toggle-active' => [
-        'controller' => 'AgendaController',
-        'action' => 'toggleActive',
+    '/meuscompromissos/bulk-approve' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'bulkApprove',
         'method' => 'POST'
     ],
-    '/api/pending-approvals' => [
-        'controller' => 'ApiController',
-        'action' => 'getPendingApprovals',
-        'method' => 'GET'
+    '/meuscompromissos/bulk-reject' => [
+        'controller' => 'MeusCompromissosController',
+        'action' => 'bulkReject',
+        'method' => 'POST'
     ],
-    '/agendas/all' => [
-        'controller' => 'AgendaController',
-        'action' => 'allAgendas',
-        'method' => 'GET'
-    ],
+    
+    // Rotas de notificações
     '/notifications' => [
         'controller' => 'NotificationController',
         'action' => 'index',
@@ -348,60 +362,54 @@ $routes = [
         'action' => 'rejectCompromisso',
         'method' => 'POST'
     ],
+    
+    // Rotas de API
+    '/api/check-server-status' => [
+        'controller' => 'ApiController',
+        'action' => 'checkServerStatus',
+        'method' => 'GET'
+    ],
+    '/api/check-time-conflict' => [
+        'controller' => 'ApiController',
+        'action' => 'checkTimeConflict',
+        'method' => 'GET'
+    ],
+    '/api/search-users' => [
+        'controller' => 'ApiController',
+        'action' => 'searchUsers',
+        'method' => 'GET'
+    ],
+    '/api/notifications' => [
+        'controller' => 'ApiController',
+        'action' => 'getNotifications',
+        'method' => 'GET'
+    ],
+    '/api/mark-notification-read' => [
+        'controller' => 'ApiController',
+        'action' => 'markNotificationRead',
+        'method' => 'POST'
+    ],
+    '/api/mark-all-notifications-read' => [
+        'controller' => 'ApiController',
+        'action' => 'markAllNotificationsRead',
+        'method' => 'POST'
+    ],
+    '/api/pending-approvals' => [
+        'controller' => 'ApiController',
+        'action' => 'getPendingApprovals',
+        'method' => 'GET'
+    ],
     '/api/check-min-time-before' => [
         'controller' => 'ApiController',
         'action' => 'checkMinTimeBefore',
         'method' => 'GET'
     ],
+    
+    // Rota de timeline
     '/timeline' => [
         'controller' => 'TimelineController',
         'action' => 'index',
         'method' => 'GET'
-    ],
-    '/compromissos/new-public' => [
-        'controller' => 'CompromissoController',
-        'action' => 'newPublic',
-        'method' => 'GET'
-    ],
-    '/compromissos/external-form' => [
-        'controller' => 'CompromissoController',
-        'action' => 'externalForm',
-        'method' => 'GET'
-    ],
-    '/compromissos/external-create' => [
-        'controller' => 'CompromissoController',
-        'action' => 'externalCreate',
-        'method' => 'POST'
-    ],
-    '/compromissos/external-store' => [
-        'controller' => 'CompromissoController',
-        'action' => 'externalStore',
-        'method' => 'POST'
-    ],
-    '/compromissos/external-new' => [
-        'controller' => 'CompromissoController',
-        'action' => 'externalNew',  
-        'method' => 'GET'
-    ],
-    '/compromissos/external-success' => [
-        'controller' => 'CompromissoController',
-        'action' => 'externalSuccess',
-        'method' => 'GET'
-    ],
-    '/meuscompromissos/bulk-approve' => [
-        'controller' => 'MeusCompromissosController',
-        'action' => 'bulkApprove',
-        'method' => 'POST'
-    ],
-    '/meuscompromissos/bulk-reject' => [
-        'controller' => 'MeusCompromissosController',
-        'action' => 'bulkReject',
-        'method' => 'POST'
-    ],
-    '/shares/send-email' => [
-        'controller' => 'ShareController',
-        'action' => 'sendEmail',
-        'method' => 'POST'
     ],
 ];
 
