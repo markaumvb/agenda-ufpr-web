@@ -72,7 +72,6 @@ window.AgendaSearch = window.AgendaSearch || {};
     if (clearButton) {
       clearButton.addEventListener("click", function (e) {
         e.preventDefault();
-        console.log("🗑️ Limpando busca");
         window.location.href = form.getAttribute("action");
       });
     }
@@ -154,7 +153,6 @@ window.AgendaSearch = window.AgendaSearch || {};
     const searchTerm = urlParams.get("search");
 
     if (searchTerm && searchTerm.trim() !== "") {
-      console.log("🎯 Destacando termos de busca:", searchTerm);
       highlightSearchTerms(searchTerm.trim());
     }
   }
@@ -215,10 +213,6 @@ window.AgendaSearch = window.AgendaSearch || {};
         element.setAttribute("data-highlighted", "true");
       });
     });
-
-    if (highlightCount > 0) {
-      console.log(`✨ ${highlightCount} ocorrências destacadas`);
-    }
   }
 
   function setupPagination() {
@@ -237,16 +231,8 @@ window.AgendaSearch = window.AgendaSearch || {};
         if (linkPage === currentPage) {
           link.classList.add("current");
         }
-      } catch (error) {
-        console.warn("⚠️ Erro ao processar link de paginação:", error);
-      }
+      } catch (error) {}
     });
-
-    if (paginationLinks.length > 0) {
-      console.log(
-        `📄 Configurada paginação para ${paginationLinks.length} links`
-      );
-    }
   }
 
   function escapeRegex(string) {
@@ -302,8 +288,6 @@ window.AgendaSearch = window.AgendaSearch || {};
         }, 300);
       }
     }, config.messageTimeout);
-
-    console.log(`💬 Mensagem exibida: ${message}`);
   }
 
   function injectStyles() {
@@ -413,7 +397,6 @@ window.AgendaSearch = window.AgendaSearch || {};
     `;
 
     document.head.appendChild(styles);
-    console.log("💄 Estilos de busca injetados");
   }
 
   // ==========================================

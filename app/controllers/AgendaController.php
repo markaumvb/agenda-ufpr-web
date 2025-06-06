@@ -89,11 +89,11 @@ class AgendaController extends BaseController {
         }
         
         // Obter os dados do formulário
-        $title = htmlspecialchars(filter_input(INPUT_POST, 'title', FILTER_UNSAFE_RAW) ?? '');
-        $description = htmlspecialchars(filter_input(INPUT_POST, 'description', FILTER_UNSAFE_RAW) ?? '');
+        $title = trim(filter_input(INPUT_POST, 'title', FILTER_SANITIZE_STRING) ?? '');
+        $description = trim(filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING) ?? '');
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
         $isActive = isset($_POST['is_active']) ? 1 : 0;
-        $color = filter_input(INPUT_POST, 'color', FILTER_UNSAFE_RAW) ?: '#3788d8';
+        $color = filter_input(INPUT_POST, 'color', FILTER_SANITIZE_STRING) ?: '#3788d8';
         $minTimeBefore = filter_input(INPUT_POST, 'min_time_before', FILTER_VALIDATE_INT, ['options' => ['default' => 0, 'min_range' => 0, 'max_range' => 48]]);
         // Validar os dados     
         if (empty($title)) {
