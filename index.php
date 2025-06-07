@@ -407,10 +407,10 @@ $routes = [
     
     // Rota de timeline
     '/timeline' => [
-        'controller' => 'TimelineController',
+        'controller' => 'TimeLineController',
         'action' => 'index',
         'method' => 'GET'
-    ],
+    ]
 
 ];
 
