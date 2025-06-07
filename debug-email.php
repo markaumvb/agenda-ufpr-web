@@ -1,206 +1,205 @@
 <?php
-
-
-// Carregar configurações
-require_once __DIR__ . '/app/config/constants.php';
-require_once __DIR__ . '/vendor/autoload.php';
+/**
+ * Script de Debug para EmailService - Versão Simplificada
+ * Salve como: debug-email.php na raiz do projeto
+ * Acesse via: https://200.238.174.7/agenda_ufpr/debug-email.php
+ */
 
 // Configurar exibição de erros
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>🔧 Debug do EmailService</h1>";
+echo "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Debug E-mail</title></head><body>";
+echo "<h1>🔧 Debug do EmailService - Versão Simplificada</h1>";
 echo "<hr>";
 
-// 1. VERIFICAR CONSTANTES DE E-MAIL
-echo "<h2>📧 1. Verificação das Constantes de E-mail</h2>";
+// 1. Carregar configurações
+echo "<h2>⚙️ 1. Carregando Configurações</h2>";
+try {
+    require_once __DIR__ . '/app/config/constants.php';
+    echo "✅ Constantes carregadas<br>";
+} catch (Exception $e) {
+    echo "❌ Erro ao carregar constantes: " . $e->getMessage() . "<br>";
+    exit;
+}
+
+try {
+    require_once __DIR__ . '/vendor/autoload.php';
+    echo "✅ Autoload carregado<br>";
+} catch (Exception $e) {
+    echo "❌ Erro ao carregar autoload: " . $e->getMessage() . "<br>";
+    exit;
+}
+
+echo "<hr>";
+
+// 2. VERIFICAR CONSTANTES
+echo "<h2>📧 2. Verificação das Constantes</h2>";
 echo "<table border='1' style='border-collapse: collapse; width: 100%;'>";
 echo "<tr><th>Constante</th><th>Valor</th><th>Status</th></tr>";
 
-$emailConstants = [
-    'MAIL_HOST' => MAIL_HOST,
-    'MAIL_PORT' => MAIL_PORT,
-    'MAIL_USERNAME' => MAIL_USERNAME,
-    'MAIL_PASSWORD' => '***OCULTO***',
-    'MAIL_FROM_NAME' => MAIL_FROM_NAME,
-    'MAIL_FROM_EMAIL' => MAIL_FROM_EMAIL,
-    'MAIL_ENCRYPTION' => MAIL_ENCRYPTION,
-    'MAIL_AUTH' => MAIL_AUTH ? 'true' : 'false',
-    'MAIL_DEBUG' => MAIL_DEBUG
+$constants = [
+    'MAIL_HOST' => defined('MAIL_HOST') ? MAIL_HOST : 'NÃO DEFINIDO',
+    'MAIL_PORT' => defined('MAIL_PORT') ? MAIL_PORT : 'NÃO DEFINIDO',
+    'MAIL_USERNAME' => defined('MAIL_USERNAME') ? MAIL_USERNAME : 'NÃO DEFINIDO',
+    'MAIL_PASSWORD' => defined('MAIL_PASSWORD') ? '***OCULTO***' : 'NÃO DEFINIDO',
+    'MAIL_FROM_EMAIL' => defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : 'NÃO DEFINIDO',
+    'MAIL_ENCRYPTION' => defined('MAIL_ENCRYPTION') ? MAIL_ENCRYPTION : 'NÃO DEFINIDO',
+    'MAIL_AUTH' => defined('MAIL_AUTH') ? (MAIL_AUTH ? 'true' : 'false') : 'NÃO DEFINIDO'
 ];
 
-foreach ($emailConstants as $const => $value) {
-    $status = !empty($value) ? "✅ OK" : "❌ VAZIO";
-    echo "<tr><td>{$const}</td><td>{$value}</td><td>{$status}</td></tr>";
+foreach ($constants as $name => $value) {
+    $status = ($value !== 'NÃO DEFINIDO' && !empty($value)) ? "✅ OK" : "❌ PROBLEMA";
+    echo "<tr><td>{$name}</td><td>{$value}</td><td>{$status}</td></tr>";
 }
 echo "</table>";
-
 echo "<hr>";
 
-// 2. VERIFICAR PHPMailer
-echo "<h2>📦 2. Verificação do PHPMailer</h2>";
-try {
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\SMTP;
-    use PHPMailer\PHPMailer\Exception;
+// 3. TESTE BÁSICO DO PHPMailer
+echo "<h2>📦 3. Teste Básico do PHPMailer</h2>";
+
+if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+    echo "❌ PHPMailer não foi carregado. Verificando autoload...<br>";
     
-    echo "✅ PHPMailer carregado com sucesso<br>";
-    echo "📍 Versão do PHPMailer: " . PHPMailer::VERSION . "<br>";
-} catch (Exception $e) {
-    echo "❌ Erro ao carregar PHPMailer: " . $e->getMessage() . "<br>";
+    // Tentar carregar manualmente
+    $composerAutoload = __DIR__ . '/vendor/autoload.php';
+    if (file_exists($composerAutoload)) {
+        echo "📁 Arquivo autoload encontrado: {$composerAutoload}<br>";
+        require_once $composerAutoload;
+        
+        if (class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            echo "✅ PHPMailer carregado após inclusão manual<br>";
+        } else {
+            echo "❌ PHPMailer ainda não carregado. Execute 'composer install'<br>";
+        }
+    } else {
+        echo "❌ Arquivo autoload não encontrado. Execute 'composer install'<br>";
+    }
+} else {
+    echo "✅ PHPMailer está disponível<br>";
 }
 
 echo "<hr>";
 
-// 3. TESTE DE CONEXÃO SMTP
-echo "<h2>🔌 3. Teste de Conexão SMTP</h2>";
-try {
-    $testMailer = new PHPMailer(true);
+// 4. TESTE DE CONECTIVIDADE BÁSICA
+echo "<h2>🔌 4. Teste de Conectividade</h2>";
+
+if (defined('MAIL_HOST') && defined('MAIL_PORT')) {
+    $host = MAIL_HOST;
+    $port = MAIL_PORT;
     
-    // Configurar para debug verbose
-    $testMailer->SMTPDebug = SMTP::DEBUG_CONNECTION;
-    $testMailer->Debugoutput = function($str, $level) {
-        echo "<div style='background: #f0f0f0; padding: 5px; margin: 2px; font-family: monospace; font-size: 12px;'>";
-        echo htmlspecialchars($str);
-        echo "</div>";
-    };
+    echo "Testando conexão para {$host}:{$port}...<br>";
     
-    $testMailer->isSMTP();
-    $testMailer->Host = MAIL_HOST;
-    $testMailer->SMTPAuth = MAIL_AUTH;
-    $testMailer->Username = MAIL_USERNAME;
-    $testMailer->Password = MAIL_PASSWORD;
-    $testMailer->SMTPSecure = MAIL_ENCRYPTION;
-    $testMailer->Port = MAIL_PORT;
-    $testMailer->Timeout = 10; // 10 segundos de timeout
-    
-    echo "<h3>🔍 Detalhes da Conexão SMTP:</h3>";
-    
-    // Tentar conectar
-    if ($testMailer->smtpConnect()) {
-        echo "<div style='color: green; font-weight: bold;'>✅ Conexão SMTP estabelecida com sucesso!</div>";
-        $testMailer->smtpClose();
+    $fp = @fsockopen($host, $port, $errno, $errstr, 10);
+    if ($fp) {
+        echo "✅ Conexão TCP estabelecida com sucesso<br>";
+        fclose($fp);
     } else {
-        echo "<div style='color: red; font-weight: bold;'>❌ Falha na conexão SMTP</div>";
+        echo "❌ Falha na conexão TCP: {$errno} - {$errstr}<br>";
+    }
+} else {
+    echo "❌ MAIL_HOST ou MAIL_PORT não definidos<br>";
+}
+
+echo "<hr>";
+
+// 5. TESTE DO EmailService
+echo "<h2>⚙️ 5. Teste do EmailService</h2>";
+
+try {
+    $emailServicePath = __DIR__ . '/app/services/EmailService.php';
+    if (!file_exists($emailServicePath)) {
+        throw new Exception("Arquivo EmailService.php não encontrado: {$emailServicePath}");
     }
     
-} catch (Exception $e) {
-    echo "<div style='color: red; font-weight: bold;'>❌ Erro na conexão SMTP: " . $e->getMessage() . "</div>";
-    echo "<pre>" . $e->getTraceAsString() . "</pre>";
-}
-
-echo "<hr>";
-
-// 4. TESTE DO EmailService
-echo "<h2>⚙️ 4. Teste do EmailService</h2>";
-try {
-    require_once __DIR__ . '/app/services/EmailService.php';
+    require_once $emailServicePath;
+    echo "✅ EmailService.php incluído<br>";
     
+    if (!class_exists('EmailService')) {
+        throw new Exception("Classe EmailService não foi definida");
+    }
+    
+    echo "✅ Classe EmailService encontrada<br>";
+    
+    // Tentar instanciar
     $emailService = new EmailService();
     echo "✅ EmailService instanciado com sucesso<br>";
     
-    // E-mail de teste
-    $testEmail = 'fabio.gat88@gmail.com'; // Use um e-mail válido para teste
-    $testSubject = 'Teste do Sistema de Agendamento UFPR - ' . date('d/m/Y H:i:s');
-    $testBody = "
-        <html>
-        <body>
-            <h2>✅ Teste de E-mail</h2>
-            <p>Este é um e-mail de teste do sistema de agendamento.</p>
-            <p><strong>Data/Hora:</strong> " . date('d/m/Y H:i:s') . "</p>
-            <p><strong>Servidor:</strong> " . $_SERVER['HTTP_HOST'] . "</p>
-            <p>Se você recebeu este e-mail, o sistema está funcionando corretamente!</p>
-        </body>
-        </html>
-    ";
+    // E-mail de teste simples
+    $testEmail = 'markaumvb@gmail.com'; // Altere para um e-mail de teste válido
+    $testSubject = 'Teste Sistema UFPR - ' . date('H:i:s');
+    $testMessage = 'Este é um teste simples do sistema de e-mail. Enviado em: ' . date('d/m/Y H:i:s');
     
-    echo "<h3>📨 Enviando e-mail de teste...</h3>";
-    echo "<strong>Para:</strong> {$testEmail}<br>";
-    echo "<strong>Assunto:</strong> {$testSubject}<br><br>";
+    echo "<br><strong>📨 Tentando enviar e-mail de teste...</strong><br>";
+    echo "Para: {$testEmail}<br>";
+    echo "Assunto: {$testSubject}<br><br>";
     
-    $result = $emailService->send($testEmail, $testSubject, $testBody, true);
+    // Capturar possíveis erros
+    ob_start();
+    $result = $emailService->send($testEmail, $testSubject, $testMessage, false);
+    $output = ob_get_clean();
+    
+    if (!empty($output)) {
+        echo "<div style='background: #f8f9fa; padding: 10px; border: 1px solid #ddd;'>";
+        echo "<strong>Output capturado:</strong><br>";
+        echo "<pre>" . htmlspecialchars($output) . "</pre>";
+        echo "</div>";
+    }
     
     if ($result) {
-        echo "<div style='color: green; font-weight: bold; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb;'>";
-        echo "✅ E-MAIL ENVIADO COM SUCESSO!<br>";
+        echo "<div style='background: #d4edda; padding: 10px; border: 1px solid #c3e6cb; color: #155724;'>";
+        echo "<strong>✅ E-MAIL ENVIADO COM SUCESSO!</strong><br>";
         echo "Verifique a caixa de entrada de {$testEmail}";
         echo "</div>";
     } else {
-        echo "<div style='color: red; font-weight: bold; padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb;'>";
-        echo "❌ FALHA NO ENVIO DO E-MAIL";
+        echo "<div style='background: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; color: #721c24;'>";
+        echo "<strong>❌ FALHA NO ENVIO</strong><br>";
+        echo "Verifique os logs e configurações acima.";
         echo "</div>";
     }
     
 } catch (Exception $e) {
-    echo "<div style='color: red; font-weight: bold;'>❌ Erro no EmailService: " . $e->getMessage() . "</div>";
-    echo "<pre>" . $e->getTraceAsString() . "</pre>";
+    echo "<div style='background: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; color: #721c24;'>";
+    echo "<strong>❌ ERRO:</strong> " . $e->getMessage() . "<br>";
+    echo "<strong>Arquivo:</strong> " . $e->getFile() . "<br>";
+    echo "<strong>Linha:</strong> " . $e->getLine();
+    echo "</div>";
 }
 
 echo "<hr>";
 
-// 5. VERIFICAR LOGS DE ERRO
-echo "<h2>📋 5. Últimos Logs de Erro</h2>";
-$errorLog = ini_get('error_log');
-if ($errorLog && file_exists($errorLog)) {
-    echo "<strong>Arquivo de log:</strong> {$errorLog}<br><br>";
+// 6. VERIFICAR LOGS
+echo "<h2>📋 6. Logs do Sistema</h2>";
+
+// Verificar error_log padrão
+$errorLogFile = ini_get('error_log');
+if ($errorLogFile && file_exists($errorLogFile)) {
+    echo "📁 Log encontrado: {$errorLogFile}<br>";
     
-    $logLines = file($errorLog);
-    $lastLines = array_slice($logLines, -20); // Últimas 20 linhas
-    
-    echo "<div style='background: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: scroll;'>";
-    foreach ($lastLines as $line) {
-        if (stripos($line, 'mail') !== false || stripos($line, 'smtp') !== false) {
-            echo "<div style='color: red;'>" . htmlspecialchars($line) . "</div>";
-        } else {
+    $lines = @file($errorLogFile);
+    if ($lines) {
+        $recent = array_slice($lines, -10); // Últimas 10 linhas
+        echo "<div style='background: #f8f9fa; padding: 10px; font-family: monospace; font-size: 12px;'>";
+        foreach ($recent as $line) {
             echo htmlspecialchars($line) . "<br>";
         }
+        echo "</div>";
     }
-    echo "</div>";
 } else {
-    echo "ℹ️ Log de erros não encontrado ou não configurado<br>";
+    echo "ℹ️ Log de erros não configurado ou não encontrado<br>";
 }
 
 echo "<hr>";
 
-// 6. INFORMAÇÕES DO SISTEMA
-echo "<h2>💻 6. Informações do Sistema</h2>";
-echo "<table border='1' style='border-collapse: collapse;'>";
-echo "<tr><th>Item</th><th>Valor</th></tr>";
-echo "<tr><td>PHP Version</td><td>" . phpversion() . "</td></tr>";
-echo "<tr><td>OpenSSL</td><td>" . (extension_loaded('openssl') ? '✅ Habilitado' : '❌ Desabilitado') . "</td></tr>";
-echo "<tr><td>Socket</td><td>" . (extension_loaded('socket') ? '✅ Habilitado' : '❌ Desabilitado') . "</td></tr>";
-echo "<tr><td>CURL</td><td>" . (extension_loaded('curl') ? '✅ Habilitado' : '❌ Desabilitado') . "</td></tr>";
-echo "<tr><td>Date/Time</td><td>" . date('Y-m-d H:i:s T') . "</td></tr>";
-echo "<tr><td>Server</td><td>" . $_SERVER['HTTP_HOST'] . "</td></tr>";
-echo "</table>";
-
-echo "<hr>";
-
-// 7. DICAS DE RESOLUÇÃO
-echo "<h2>💡 7. Possíveis Soluções</h2>";
-echo "<div style='background: #e7f3ff; padding: 15px; border-left: 4px solid #2196F3;'>";
-echo "<h3>Se o e-mail não foi enviado, verifique:</h3>";
-echo "<ul>";
-echo "<li><strong>Firewall:</strong> Porta 587 (TLS) deve estar aberta</li>";
-echo "<li><strong>Autenticação:</strong> Username e password corretos</li>";
-echo "<li><strong>TLS/SSL:</strong> Certificados válidos</li>";
-echo "<li><strong>Configuração SMTP:</strong> smtp.ufpr.br permite conexões externas?</li>";
-echo "<li><strong>Rate Limiting:</strong> Servidor pode estar limitando envios</li>";
-echo "<li><strong>DNS:</strong> Resolução do hostname smtp.ufpr.br</li>";
-echo "</ul>";
-
-echo "<h3>Comandos úteis para debug no servidor:</h3>";
-echo "<code style='background: #f0f0f0; padding: 10px; display: block; margin: 10px 0;'>";
-echo "# Testar conectividade SMTP<br>";
-echo "telnet smtp.ufpr.br 587<br><br>";
-echo "# Verificar DNS<br>";
-echo "nslookup smtp.ufpr.br<br><br>";
-echo "# Testar porta<br>";
-echo "nc -zv smtp.ufpr.br 587";
-echo "</code>";
-echo "</div>";
+// 7. INFORMAÇÕES FINAIS
+echo "<h2>💻 7. Informações do Sistema</h2>";
+echo "<strong>PHP:</strong> " . phpversion() . "<br>";
+echo "<strong>OpenSSL:</strong> " . (extension_loaded('openssl') ? 'Disponível' : 'Não disponível') . "<br>";
+echo "<strong>Sockets:</strong> " . (extension_loaded('sockets') ? 'Disponível' : 'Não disponível') . "<br>";
+echo "<strong>Data/Hora:</strong> " . date('Y-m-d H:i:s T') . "<br>";
 
 echo "<hr>";
 echo "<p><em>Debug concluído às " . date('Y-m-d H:i:s') . "</em></p>";
+echo "</body></html>";
 ?>

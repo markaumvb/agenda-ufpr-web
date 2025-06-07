@@ -446,5 +446,4 @@ class ShareController extends BaseController {
         exit;
     }
 
-
 }

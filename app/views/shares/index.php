@@ -88,7 +88,6 @@
                             <thead>
                                 <tr>
                                     <th>Usuário</th>
-                                    <th>Nome</th>
                                     <th>Email</th>
                                     <th>Permissão</th>
                                     <th>Ações</th>
@@ -98,7 +97,6 @@
                                 <?php foreach ($shares as $share): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($share['username']) ?></td>
-                                        <td><?= htmlspecialchars($share['name']) ?></td>
                                         <td><?= htmlspecialchars($share['email']) ?></td>
                                         <td>
                                             <form action="<?= BASE_URL ?>/shares/update-permission" method="post" class="permission-form">

@@ -10,7 +10,7 @@ define('APP_NAME', 'Sistema de Agendamento UFPR / Jandaia do Sul');
 define('APP_VERSION', '1.0.0');
 
 // Configurações de e-mail
-define('MAIL_HOST', 'smtp.ufpr.br');
+define('MAIL_HOST', 'smtp.office365.com');
 define('MAIL_PORT', 587);
 define('MAIL_USERNAME', 'sistematijs@ufpr.br');
 define('MAIL_PASSWORD', 'brvcsyqkbkkqhzmd'); // Senha real do EmailService

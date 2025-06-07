@@ -87,7 +87,7 @@ class EmailService {
         $body = "
             <html>
             <head>
-                <style>
+<style>
                     body { 
                         font-family: Arial, sans-serif; 
                         line-height: 1.6; 
@@ -111,6 +111,7 @@ class EmailService {
                         margin: 0;
                         font-size: 1.5rem;
                         font-weight: 600;
+                        color: #ffffff !important;
                     }
                     .content { 
                         padding: 30px 25px; 
@@ -168,23 +169,41 @@ class EmailService {
                     .info-table tr:last-child td {
                         border-bottom: none;
                     }
+                    
+                    /* BOTÕES CORRIGIDOS - CSS INLINE + IMPORTANT */
                     .btn {
-                        display: inline-block;
-                        padding: 12px 24px;
-                        background: linear-gradient(135deg, #004a8f 0%, #0066cc 100%);
-                        color: #fff;
-                        text-decoration: none;
-                        border-radius: 6px;
-                        font-weight: 600;
-                        margin: 10px 5px;
-                        text-align: center;
-                        transition: all 0.3s ease;
+                        display: inline-block !important;
+                        padding: 15px 25px !important;
+                        background-color: #004a8f !important;
+                        background: #004a8f !important;
+                        color: #ffffff !important;
+                        text-decoration: none !important;
+                        border-radius: 8px !important;
+                        font-weight: 600 !important;
+                        margin: 10px 8px !important;
+                        text-align: center !important;
+                        font-size: 14px !important;
+                        font-family: Arial, sans-serif !important;
+                        border: 2px solid #004a8f !important;
+                        box-shadow: 0 4px 12px rgba(0, 74, 143, 0.3) !important;
                     }
                     .btn:hover {
-                        background: linear-gradient(135deg, #003a70 0%, #004a8f 100%);
+                        background-color: #003a70 !important;
+                        background: #003a70 !important;
+                        color: #ffffff !important;
+                        text-decoration: none !important;
                         transform: translateY(-1px);
-                        box-shadow: 0 4px 12px rgba(0, 74, 143, 0.3);
+                        box-shadow: 0 6px 16px rgba(0, 74, 143, 0.4) !important;
                     }
+                    .btn:visited {
+                        color: #ffffff !important;
+                        text-decoration: none !important;
+                    }
+                    .btn:active {
+                        color: #ffffff !important;
+                        text-decoration: none !important;
+                    }
+                    
                     .footer { 
                         background-color: #f8fafc; 
                         padding: 20px; 
@@ -206,9 +225,6 @@ class EmailService {
             </head>
             <body>
                 <div class='container'>
-                    <div class='header'>
-                        <h1>📅 Agenda Compartilhada</h1>
-                    </div>
                     
                     <div class='content'>
                         <p>Olá, <strong>{$sharedWithUser['name']}</strong>!</p>
@@ -244,19 +260,32 @@ class EmailService {
                         
                         <div class='highlight-box'>
                             <p style='margin: 0; font-weight: 600; color: #004a8f;'>
-                                🎉 Agora você pode acessar esta agenda diretamente no sistema!
+                                Agora você pode acessar esta agenda diretamente no sistema!
                             </p>
                         </div>
                         
-                        <p style='text-align: center; margin-top: 30px;'>
-                            <a href='" . BASE_URL . "/compromissos?agenda_id={$agenda['id']}' class='btn'>
-                                👁️ Ver Agenda Compartilhada
-                            </a>
-                            " . ($canEdit ? "<a href='" . BASE_URL . "/compromissos/new?agenda_id={$agenda['id']}' class='btn'>➕ Criar Compromisso</a>" : "") . "
-                        </p>
+                        <div style='text-align: center; margin-top: 30px;'>
+                            <!-- BOTÕES COM CSS INLINE PARA MÁXIMA COMPATIBILIDADE -->
+                            <a href='" . BASE_URL . "/compromissos?agenda_id={$agenda['id']}' 
+                               style='display: inline-block; padding: 15px 25px; background-color: #004a8f; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 8px; text-align: center; font-size: 14px; font-family: Arial, sans-serif; border: 2px solid #004a8f; box-shadow: 0 4px 12px rgba(0, 74, 143, 0.3);'
+                               class='btn'>
+                                🔍 Ver Agenda Compartilhada
+                            </a>";
+                            
+        if ($canEdit) {
+            $body .= "
+                            <a href='" . BASE_URL . "/compromissos/new?agenda_id={$agenda['id']}' 
+                               style='display: inline-block; padding: 15px 25px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px 8px; text-align: center; font-size: 14px; font-family: Arial, sans-serif; border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);'
+                               class='btn'>
+                                📝 Criar Compromisso
+                            </a>";
+        }
+        
+        $body .= "
+                        </div>
                         
                         <p style='margin-top: 30px; font-size: 0.9em; color: #6c757d;'>
-                            <strong>💡 Dica:</strong> Acesse o sistema em <a href='" . BASE_URL . "' style='color: #004a8f;'>" . BASE_URL . "</a> e veja todas as agendas compartilhadas com você na seção \"Agendas Compartilhadas\".
+                            Acesse o sistema em <a href='" . BASE_URL . "' style='color: #004a8f;'>" . BASE_URL . "</a> e veja todas as agendas compartilhadas com você na seção \"Agendas Compartilhadas\".
                         </p>
                     </div>
                     
@@ -271,62 +300,6 @@ class EmailService {
         ";
         
         return $this->send($sharedWithUser['email'], $subject, $body, true);
-    }
-    
-
-    public function sendNewCompromissoNotification($user, $compromisso, $agenda) {
-        $subject = 'Novo Compromisso: ' . $compromisso['title'];
-        
-        // Formatar datas
-        $startDate = new DateTime($compromisso['start_datetime']);
-        $endDate = new DateTime($compromisso['end_datetime']);
-        
-        $formattedStart = $startDate->format('d/m/Y H:i');
-        $formattedEnd = $endDate->format('d/m/Y H:i');
-        
-        // Preparar corpo do e-mail em HTML
-        $body = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; }
-                    .header { background-color: #004a8f; color: #fff; padding: 20px; text-align: center; }
-                    .content { padding: 20px; }
-                    .footer { background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666; }
-                    .btn { display: inline-block; padding: 10px 20px; background-color: #004a8f; color: #fff; text-decoration: none; border-radius: 4px; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1>Novo Compromisso</h1>
-                    </div>
-                    <div class='content'>
-                        <p>Olá, {$user['name']}!</p>
-                        <p>Um novo compromisso foi adicionado à sua agenda <strong>{$agenda['title']}</strong>:</p>
-                        
-                        <h2>{$compromisso['title']}</h2>
-                        <p><strong>Data/Hora:</strong> {$formattedStart} até {$formattedEnd}</p>
-                        
-                        " . (!empty($compromisso['location']) ? "<p><strong>Local:</strong> {$compromisso['location']}</p>" : "") . "
-                        
-                        " . (!empty($compromisso['description']) ? "<p><strong>Descrição:</strong> {$compromisso['description']}</p>" : "") . "
-                        
-                        <p style='margin-top: 20px;'>
-                            <a href='" . BASE_URL . "/compromissos/view?id={$compromisso['id']}' class='btn'>Ver Compromisso</a>
-                        </p>
-                    </div>
-                    <div class='footer'>
-                        <p>Este é um e-mail automático. Por favor, não responda.</p>
-                        <p>Sistema de Agendamento UFPR &copy; " . date('Y') . "</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        ";
-        
-        return $this->send($user['email'], $subject, $body);
     }
 
     

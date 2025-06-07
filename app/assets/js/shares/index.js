@@ -577,7 +577,7 @@ window.copyToClipboard = function (inputId) {
       navigator.clipboard
         .writeText(input.value)
         .then(() => {
-          console.log("URL copiada com sucesso");
+          //console.log("URL copiada com sucesso");
         })
         .catch(() => {
           document.execCommand("copy");
