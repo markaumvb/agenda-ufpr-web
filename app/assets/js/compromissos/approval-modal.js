@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       })
       .catch((error) => {
-        console.error("Erro ao buscar compromissos pendentes:", error);
+        //console.error("Erro ao buscar compromissos pendentes:", error);
       });
   }
 
@@ -203,7 +203,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       })
       .catch((error) => {
-        console.error("Erro na requisição:", error);
         alert("Erro ao comunicar com o servidor");
       });
   }
@@ -252,7 +251,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       })
       .catch((error) => {
-        console.error("Erro na requisição:", error);
         alert("Erro ao comunicar com o servidor");
       });
   }

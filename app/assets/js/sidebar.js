@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Se algum dos elementos essenciais não existir, não continuar
   if (!sidebar || !mainContent) {
-    console.warn("Elementos essenciais do sidebar não encontrados");
+    //console.warn("Elementos essenciais do sidebar não encontrados");
     return;
   }
 

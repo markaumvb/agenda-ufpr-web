@@ -75,7 +75,6 @@ AgendaUFPR.notifications = {
       .then((response) => response.json())
       .then((data) => {
         if (data.error) {
-          console.error("Erro ao carregar notificações:", data.error);
           return;
         }
 
@@ -83,9 +82,7 @@ AgendaUFPR.notifications = {
         this.updateCounter();
         this.renderNotifications(data.notifications);
       })
-      .catch((error) => {
-        console.error("Erro na requisição:", error);
-      });
+      .catch((error) => {});
   },
 
   // Atualiza o contador de notificações
@@ -231,7 +228,7 @@ AgendaUFPR.notifications = {
         }
       })
       .catch((error) => {
-        console.error("Erro ao marcar notificação como lida:", error);
+        //console.error("Erro ao marcar notificação como lida:", error);
       });
   },
 
@@ -257,10 +254,7 @@ AgendaUFPR.notifications = {
         }
       })
       .catch((error) => {
-        console.error(
-          "Erro ao marcar todas as notificações como lidas:",
-          error
-        );
+        // console.error("Erro ao marcar todas as notificações como lidas:", error);
       });
   },
 };

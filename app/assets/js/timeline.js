@@ -27,13 +27,11 @@ document.addEventListener("DOMContentLoaded", function () {
   function initializeTimelineCalendar() {
     const calendarEl = document.getElementById("calendar");
     if (!calendarEl) {
-      console.warn("Elemento calendar não encontrado");
       return;
     }
 
     // Verificar se os eventos estão disponíveis
     const events = window.timelineEvents || [];
-    console.log("Timeline: Carregando", events.length, "eventos");
 
     // Preparar eventos para o FullCalendar com cores das agendas
     const calendarEvents = events.map((event) => {
@@ -320,10 +318,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Mostrar/ocultar mensagem de eventos vazios
     toggleEmptyMessage(filteredEvents.length === 0);
-
-    console.log(
-      `Timeline: Filtrado ${filteredEvents.length} de ${window.timelineEvents.length} eventos`
-    );
   }
 
   /**
@@ -570,9 +564,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return luminance > 0.5 ? "#000000" : "#ffffff";
   }
 
-  /**
-   * Utilitário para log com timestamp
-   */
   function log(message, ...args) {
     console.log(
       `[Timeline ${new Date().toLocaleTimeString()}]`,

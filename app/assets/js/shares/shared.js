@@ -14,12 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ".pagination-link:not(.disabled)"
   );
 
-  // ==========================================
-  // VERIFICAÇÃO INICIAL
-  // ==========================================
-
   if (!searchForm || !searchInput || !searchBox) {
-    console.log("Elementos de busca não encontrados, funcionalidade limitada");
     return;
   }
 

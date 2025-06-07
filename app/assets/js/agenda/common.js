@@ -82,7 +82,6 @@ function initDeleteConfirmations() {
           // Submeter o formulário
           this.submit();
         } else {
-          console.log("❌ Exclusão cancelada pelo usuário");
           // Remover marca de processamento se cancelou
           this.removeAttribute("data-processing");
         }

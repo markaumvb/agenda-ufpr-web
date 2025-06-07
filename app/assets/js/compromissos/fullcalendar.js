@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Obter o elemento do calendário
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) {
-    console.error("Elemento do calendário não encontrado!");
     return;
   }
 
