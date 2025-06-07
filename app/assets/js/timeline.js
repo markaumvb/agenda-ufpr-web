@@ -563,15 +563,4 @@ document.addEventListener("DOMContentLoaded", function () {
     // Retornar cor de contraste
     return luminance > 0.5 ? "#000000" : "#ffffff";
   }
-
-  function log(message, ...args) {
-    console.log(
-      `[Timeline ${new Date().toLocaleTimeString()}]`,
-      message,
-      ...args
-    );
-  }
-
-  // Log de inicialização
-  log("Timeline inicializada com sucesso");
 });

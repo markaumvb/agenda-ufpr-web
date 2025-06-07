@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 calculateDuration();
                 
             } catch (e) {
-                console.error('Erro ao sincronizar datas:', e);
+                //console.error('Erro ao sincronizar datas:', e);
             }
         });
         

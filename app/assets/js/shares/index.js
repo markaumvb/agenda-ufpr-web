@@ -48,7 +48,6 @@ document.addEventListener("DOMContentLoaded", function () {
       document.execCommand("copy");
       showCopyFeedback(button);
     } catch (err) {
-      console.error("Erro ao copiar: ", err);
       showMessage("Erro ao copiar URL", "danger");
     }
   }

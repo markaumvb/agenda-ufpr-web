@@ -290,7 +290,7 @@
                             endDatetime.value = `${year}-${month}-${day}T${hours}:${minutes}`;
                         }
                     } catch (e) {
-                        console.log('Erro ao processar data:', e);
+                        //console.log('Erro ao processar data:', e);
                     }
                 });
             }
