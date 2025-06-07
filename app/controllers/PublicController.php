@@ -204,7 +204,6 @@ class PublicController {
             }
         }
         
-        // Mapeamento dos nomes dos meses para português
         $monthNames = [
             1 => 'Janeiro',
             2 => 'Fevereiro',

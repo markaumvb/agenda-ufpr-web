@@ -82,9 +82,8 @@ private function getCompromissosData($userId) {
     // Obter todas as agendas acessíveis pelo usuário
     $agendas = $this->agendaModel->getAllAccessibleByUser($userId);
     
-    // Para cada agenda, buscar os compromissos
     $allCompromissos = [];
-    $processedIds = []; // Para evitar duplicatas
+    $processedIds = []; 
     
     foreach ($agendas as $agenda) {
         // Definir se o usuário é o dono da agenda
@@ -99,8 +98,7 @@ private function getCompromissosData($userId) {
         // Adicionar informações à agenda
         $agenda['is_owner'] = $isOwner;
         $agenda['can_edit'] = $canEdit;
-        
-        // Adicionar nome do dono da agenda
+        //nome do dono da agenda
         $ownerInfo = $this->userModel->getById($agenda['user_id']);
         $agenda['owner_name'] = $ownerInfo ? $ownerInfo['name'] : 'Desconhecido';
         
@@ -108,7 +106,7 @@ private function getCompromissosData($userId) {
         $compromissos = $this->compromissoModel->getAllByAgenda($agenda['id']);
         
         foreach ($compromissos as $compromisso) {
-            // Verificar se já foi processado
+            // Verificar se já passou
             if (in_array($compromisso['id'], $processedIds)) {
                 continue;
             }

@@ -162,7 +162,6 @@ public function login() {
             exit;
         }
         
-        // CORREÇÃO: Formatar e-mail corretamente
         $email = $this->formatUserEmail($username);
         
         // Criar o usuário
@@ -206,9 +205,6 @@ public function login() {
     
     /**
      * Formata o e-mail do usuário corretamente
-     * 
-     * @param string $username Nome de usuário
-     * @return string E-mail formatado
      */
     private function formatUserEmail($username) {
         // Se já contém @, usar como está

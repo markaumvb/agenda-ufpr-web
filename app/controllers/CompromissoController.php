@@ -127,7 +127,6 @@ public function create() {
     $isPublic = isset($_GET['public']) && $_GET['public'] == 1;
     
     if (!$agendaId) {
-        // Tratar erro...
         $_SESSION['flash_message'] = 'Agenda não especificada';
         $_SESSION['flash_type'] = 'danger';
         header('Location: ' . PUBLIC_URL . '/agendas');
@@ -139,7 +138,6 @@ public function create() {
     $agenda = $agendaModel->getById($agendaId);
     
     if (!$agenda) {
-        // Tratar erro...
         $_SESSION['flash_message'] = 'Agenda não encontrada';
         $_SESSION['flash_type'] = 'danger';
         header('Location: ' . PUBLIC_URL . '/agendas');
@@ -204,9 +202,9 @@ public function create() {
     }
     
     $endDate = clone $currentDate;
-    $endDate->add(new DateInterval('PT1H')); // Adiciona 1 hora
+    $endDate->add(new DateInterval('PT1H')); // aqui adicionar 1 hora na data final@!!!
     
-    // Formatar datas para o formato HTML datetime-local apenas se não houver dados da sessão
+
     if (!isset($formData['start_datetime'])) {
         $defaultStartDateTime = $currentDate->format('Y-m-d\TH:i');
     } else {
@@ -453,7 +451,7 @@ public function edit() {
         exit;
     }
     
-    // Formatar datas para o formulário HTML5
+    // Formatar datas para o formulário
     $compromisso['start_datetime'] = (new DateTime($compromisso['start_datetime']))->format('Y-m-d\TH:i');
     $compromisso['end_datetime'] = (new DateTime($compromisso['end_datetime']))->format('Y-m-d\TH:i');
     
@@ -516,15 +514,12 @@ public function update() {
             'status' => $status
         ];
         
-        // Validar dados usando o método comum
         $errors = $this->validateCompromissoData($data, $id);
         
     if (!empty($errors)) {
-        // Manter o sistema de flash messages para compatibilidade
+
         $_SESSION['flash_message'] = 'Por favor, corrija os erros abaixo.';
         $_SESSION['flash_type'] = 'danger';
-        
-        // Também armazenar os erros detalhados e dados do formulário para a nova interface
         $_SESSION['validation_errors'] = $errors;
         $_SESSION['form_data'] = $_POST;
         
@@ -532,7 +527,6 @@ public function update() {
         header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId);
         exit;
     }
-        
         // Buscar o compromisso atual
         $compromisso = $this->compromissoModel->getById($id);
         
@@ -571,7 +565,6 @@ public function update() {
             exit;
         }
         
-        // Preparar dados para atualizar
         $dataToUpdate = [
             'title' => $title,
             'description' => $description,
@@ -601,14 +594,12 @@ public function update() {
 
 public function updateDate() {
     $this->checkAuth();
-        // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Método não permitido']);
             exit;
         }
         
-        // Obter dados do formulário
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         $startDatetime = filter_input(INPUT_POST, 'start', FILTER_SANITIZE_STRING);
         $endDatetime = filter_input(INPUT_POST, 'end', FILTER_SANITIZE_STRING);
@@ -735,10 +726,7 @@ public function delete() {
         header('Location: ' . BASE_URL . '/agendas');
         exit;
     }
-    
-    error_log("Compromisso encontrado - ID: " . $compromisso['id'] . ", Status: " . $compromisso['status']);
-    
-    // NOVA REGRA: Verificar se o status é 'pendente'
+    //verifica se está pendente ou aguardando aprovação
     if (!in_array($compromisso['status'], ['pendente', 'aguardando_aprovacao'])) {
         error_log("ERRO: Status não permite exclusão - Status atual: " . $compromisso['status']);
         $_SESSION['flash_message'] = 'Apenas compromissos pendentes ou aguardando aprovação podem ser excluídos. Status atual: ' . $compromisso['status'];
@@ -753,17 +741,13 @@ public function delete() {
     // Verificar se o usuário é o dono da agenda ou tem permissão para editar
     $isOwner = $agenda['user_id'] == $_SESSION['user_id'];
     $canEdit = $isOwner;
-    
-    error_log("É dono da agenda: " . ($isOwner ? 'SIM' : 'NÃO'));
-    
+       
     if (!$isOwner) {
         require_once __DIR__ . '/../models/AgendaShare.php';
         $shareModel = new AgendaShare();
         $canEdit = $shareModel->canEdit($compromisso['agenda_id'], $_SESSION['user_id']);
     }
-    
-    error_log("Pode editar: " . ($canEdit ? 'SIM' : 'NÃO'));
-    
+        
     if (!$canEdit) {
         error_log("ERRO: Sem permissão para editar");
         $_SESSION['flash_message'] = 'Você não tem permissão para excluir este compromisso';
@@ -772,26 +756,18 @@ public function delete() {
         exit;
     }
     
-    error_log("Chamando delete no model...");
-    
     // Excluir o compromisso
     $result = $this->compromissoModel->delete($id, $deleteFuture);
     
-    error_log("Resultado do delete: " . ($result ? 'SUCESSO' : 'FALHA'));
-    
     if ($result) {
-        error_log("SUCESSO: Compromisso excluído");
         $_SESSION['flash_message'] = 'Compromisso excluído com sucesso';
         $_SESSION['flash_type'] = 'success';
     } else {
-        error_log("ERRO: Falha ao excluir compromisso");
         $_SESSION['flash_message'] = 'Erro ao excluir compromisso';
         $_SESSION['flash_type'] = 'danger';
     }
     
-    $redirectUrl = BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id'];
-    error_log("Redirecionando para: " . $redirectUrl);
-    
+    $redirectUrl = BASE_URL . '/compromissos?agenda_id=' . $compromisso['agenda_id'];    
     header('Location: ' . $redirectUrl);
     exit;
 }
@@ -916,7 +892,7 @@ public function delete() {
             exit;
         }
         
-        // CORREÇÃO: Atualizar apenas o compromisso individual, não o grupo todo
+        // Atualizar apenas o compromisso individual, não o grupo todo
         $data = [
             'title' => $compromisso['title'],
             'description' => $compromisso['description'],
@@ -929,7 +905,7 @@ public function delete() {
             'status' => $status
         ];
         
-        // SEMPRE atualizar apenas o compromisso individual, não o grupo
+        // atualizar apenas o compromisso individual, não o grupo
         $result = $this->compromissoModel->update($id, $data, false);
         
         if ($result) {
@@ -1076,9 +1052,8 @@ public function delete() {
     header("Location: " . PUBLIC_URL . "/compromissos/new?agenda_id=" . $agendaId . "&public=1");
     exit;
 }
-/**
-     * Formulário para captura de dados de usuários externos
-     */
+
+    //formulário externo( usuários externos)
     public function externalForm() {
         // Obter ID da agenda
         $agendaId = filter_input(INPUT_GET, 'agenda_id', FILTER_VALIDATE_INT);

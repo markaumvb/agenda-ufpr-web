@@ -55,7 +55,6 @@ class ShareController extends BaseController {
         // Obter os compartilhamentos da agenda
         $shares = $this->shareModel->getSharesByAgenda($agendaId);
         
-        // Exibir a view
         require_once __DIR__ . '/../views/shared/header.php';
         require_once __DIR__ . '/../views/shares/index.php';
         require_once __DIR__ . '/../views/shared/footer.php';
@@ -91,7 +90,6 @@ class ShareController extends BaseController {
         // Calcular número total de páginas para paginação
         $totalPages = ceil($totalSharedWithMe / $perPage);
         
-        // CORRIGIDO: Informações de paginação padronizadas para a view
         $paginationData = [
             'current_page' => $page,
             'total_pages' => $totalPages,
@@ -102,7 +100,6 @@ class ShareController extends BaseController {
             'search' => $search
         ];
         
-        // Carregar view
         require_once __DIR__ . '/../views/shared/header.php';
         require_once __DIR__ . '/../views/shares/shared.php';
         require_once __DIR__ . '/../views/shared/footer.php';
@@ -157,7 +154,7 @@ class ShareController extends BaseController {
             exit;
         }
         
-        // ✅ APENAS COMPARTILHAR A AGENDA (SEM E-MAIL)
+        // APENAS COMPARTILHAR A AGENDA (SEM E-MAIL)
         $result = $this->shareModel->shareAgenda($agendaId, $user['id'], $canEdit);
         
         if ($result) {
@@ -330,30 +327,25 @@ class ShareController extends BaseController {
         // Determinar permissões
         $canEdit = (bool)$shareAccess['can_edit'];
         
-        // 📧 ENVIAR E-MAIL
         try {
             require_once __DIR__ . '/../services/EmailService.php';
             $emailService = new EmailService();
             
             $emailSent = $emailService->sendAgendaShareNotification(
-                $ownerUser,    // Dados do proprietário
-                $sharedUser,   // Dados do usuário que recebeu o compartilhamento
-                $agenda,       // Dados da agenda
-                $canEdit       // Permissão de edição
+                $ownerUser,    
+                $sharedUser,   
+                $agenda,       
+                $canEdit       
             );
             
             if ($emailSent) {
                 $_SESSION['flash_message'] = "✅ E-mail de notificação enviado com sucesso para {$sharedUser['name']} ({$sharedUser['email']})!";
                 $_SESSION['flash_type'] = 'success';
                 
-                // Log para auditoria
-                error_log("E-mail de compartilhamento enviado - Agenda: '{$agenda['title']}' (ID: {$agendaId}) - De: {$ownerUser['email']} - Para: {$sharedUser['email']} - Permissão: " . ($canEdit ? 'Edição' : 'Visualização'));
-                
             } else {
                 $_SESSION['flash_message'] = "❌ Erro ao enviar e-mail de notificação para {$sharedUser['name']}. Verifique as configurações de e-mail.";
                 $_SESSION['flash_type'] = 'danger';
                 
-                error_log("Falha no envio de e-mail de compartilhamento - Agenda: '{$agenda['title']}' (ID: {$agendaId}) - Para: {$sharedUser['email']}");
             }
             
         } catch (Exception $e) {
@@ -372,7 +364,6 @@ class ShareController extends BaseController {
      * Gera uma URL pública para uma agenda
      */
     public function generatePublicUrl() {
-        // Verificar se é uma requisição POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/agendas');
             exit;
@@ -415,13 +406,12 @@ class ShareController extends BaseController {
             $hash = md5(uniqid(rand(), true));
         }
         
-        // Atualizar a agenda - PRESERVANDO o valor is_active
         $result = $this->agendaModel->update($agendaId, [
             'title' => $agenda['title'],
             'description' => $agenda['description'],
             'is_public' => $newIsPublic,
             'color' => $agenda['color'],
-            'is_active' => $agenda['is_active'] // Preservar o valor atual
+            'is_active' => $agenda['is_active']
         ]);
         
         // Se estiver tornando a agenda pública, atualizar o hash

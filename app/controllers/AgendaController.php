@@ -3,7 +3,6 @@ require_once __DIR__ . '/BaseController.php';
 class AgendaController extends BaseController {
     private $agendaModel;
     
-
     public function __construct() {
         // Carregar o modelo de agenda
         require_once __DIR__ . '/../models/Database.php';
@@ -306,9 +305,6 @@ class AgendaController extends BaseController {
         // CORRIGIDO: Verificação aprimorada de compromissos
         $stats = $agendaModel->countCompromissosByStatus($agendaId);
         
-        // Log para debug
-        error_log("Tentativa de exclusão da agenda {$agendaId} - Stats: " . json_encode($stats));
-        
         // Verificar se há compromissos que impedem a exclusão
         $hasBlockingAppointments = (
             $stats['realizados'] > 0 || 
@@ -334,25 +330,19 @@ class AgendaController extends BaseController {
             exit;
         }
         
-        // CORRIGIDO: Melhor controle de transação
         $connection = $agendaModel->db;
         
-        // Verificar se já está em transação
         if ($connection->inTransaction()) {
-            error_log("Aviso: Transação já iniciada, fazendo rollback preventivo");
             $connection->rollBack();
         }
         
-        // Iniciar nova transação
         $connection->beginTransaction();
         
         try {
-            // Se há compromissos pendentes, avisar que serão excluídos junto
             if ($stats['pendentes'] > 0) {
                 error_log("Excluindo agenda '{$agenda['title']}' com {$stats['pendentes']} compromisso(s) pendente(s)");
             }
-            
-            // 1. Exclui todos os compartilhamentos da agenda
+            // apagar os compartilhamentos
             require_once __DIR__ . '/../models/AgendaShare.php';
             $shareModel = new AgendaShare();
             $shareResult = $shareModel->deleteAllFromAgenda($agendaId);
@@ -399,9 +389,7 @@ class AgendaController extends BaseController {
             
             $_SESSION['flash_message'] = $message;
             $_SESSION['flash_type'] = 'success';
-            
-            error_log("Agenda {$agendaId} excluída com sucesso pelo usuário {$userId}");
-            
+                        
         } catch (Exception $e) {
             // Rollback da transação em caso de erro
             if ($connection->inTransaction()) {
@@ -413,15 +401,12 @@ class AgendaController extends BaseController {
         }
         
     } catch (Exception $e) {
-        // Log do erro detalhado
-        error_log('Erro detalhado ao excluir agenda ' . $agendaId . ': ' . $e->getMessage());
-        error_log('Stack trace: ' . $e->getTraceAsString());
         
         // Verificar se há transação pendente e fazer rollback
         if (isset($connection) && $connection->inTransaction()) {
             try {
                 $connection->rollBack();
-                error_log('Rollback realizado com sucesso');
+                //error_log('Rollback realizado com sucesso');
             } catch (Exception $rollbackError) {
                 error_log('Erro no rollback: ' . $rollbackError->getMessage());
             }
@@ -453,7 +438,7 @@ class AgendaController extends BaseController {
         }
         
         $agendaId = $_POST['id'];
-        $isActive = $_POST['is_active'] == '1'; // Converter para booleano
+        $isActive = $_POST['is_active'] == '1'; 
         $userId = $_SESSION['user_id'];
         
         // Carregar os modelos necessários
@@ -498,7 +483,6 @@ class AgendaController extends BaseController {
             }
         }
         
-        // Atualizar o status da agenda
         $result = $agendaModel->updateStatus($agendaId, $isActive);
         
         if ($result) {
@@ -525,7 +509,6 @@ public function allAgendas() {
     
     $userId = $_SESSION['user_id'];
     
-    // CORRIGIDO: Processar parâmetro de busca igual à home page
     $search = isset($_GET['search']) ? htmlspecialchars(trim($_GET['search'])) : '';
     
     // Inicializar modelos localmente
@@ -535,11 +518,9 @@ public function allAgendas() {
     require_once __DIR__ . '/../models/AgendaShare.php';
     $shareModel = new AgendaShare();
     
-    // Parâmetros de paginação
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $perPage = 12; // 12 agendas por página
+    $perPage = 12; 
     
-    // CORRIGIDO: Inicializar todas as variáveis sempre
     $myAgendas = [];
     $totalMyAgendas = 0;
     $sharedAgendas = [];
@@ -547,7 +528,6 @@ public function allAgendas() {
     $publicAgendas = [];
     $totalPublicAgendas = 0;
     
-    // CORRIGIDO: Buscar agendas do usuário (dono) COM BUSCA CONSISTENTE
     if (!empty($search)) {
         $myAgendas = $agendaModel->getAllByUser($userId, $search, true, $page, $perPage);
         $totalMyAgendas = $agendaModel->countByUser($userId, $search, true);
@@ -579,7 +559,6 @@ public function allAgendas() {
         ];
     }
     
-    // CORRIGIDO: Buscar agendas compartilhadas COM BUSCA CONSISTENTE
     if (!empty($search)) {
         $sharedAgendas = $shareModel->getSharedWithUser($userId, true, $page, $perPage, $search);
         $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true, $search);
@@ -588,7 +567,6 @@ public function allAgendas() {
         $totalSharedAgendas = $shareModel->countSharedWithUser($userId, true, null);
     }
     
-    // CORRIGIDO: Buscar agendas públicas COM BUSCA CONSISTENTE
     if (!empty($search)) {
         // Se há busca, usar método de busca específico
         $publicAgendas = $agendaModel->searchPublicAgendas($search, $page, $perPage, $userId);
@@ -604,7 +582,6 @@ public function allAgendas() {
     $totalPagesSharedAgendas = ceil($totalSharedAgendas / $perPage);
     $totalPagesPublicAgendas = ceil($totalPublicAgendas / $perPage);
     
-    // ADICIONADO: Dados de paginação para a view
     $paginationData = [
         'current_page' => $page,
         'total_pages' => max($totalPagesMyAgendas, $totalPagesSharedAgendas, $totalPagesPublicAgendas),

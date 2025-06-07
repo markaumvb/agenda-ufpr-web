@@ -1,5 +1,4 @@
 <?php
-// app/controllers/ApiController.php
 
 /**
  * Controlador para endpoints de API (AJAX)
@@ -34,8 +33,6 @@ class ApiController {
     
     /**
      * Verifica se o endpoint atual é público
-     * 
-     * @return bool Se o endpoint é público
      */
     private function isPublicEndpoint() {
         // Lista de endpoints públicos
@@ -240,9 +237,6 @@ class ApiController {
     
     /**
      * Envia resposta em JSON
-     * 
-     * @param mixed $data Dados a serem enviados
-     * @param int $statusCode Código de status HTTP
      */
     private function jsonResponse($data, $statusCode = 200) {
         // Definir cabeçalhos
